@@ -1,4 +1,3 @@
-const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 
 const studentSchema = new mongoose.Schema(
@@ -6,6 +5,15 @@ const studentSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
+      unique: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
       required: true,
       unique: true,
     },
@@ -63,22 +71,5 @@ const studentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-studentSchema.pre("save", async function () {
-  if (this.isModified("password")) {
-    this.password = await bcrypt.hash(this.password, 10);
-  }
-});
-
-studentSchema.methods.comparePassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
-}
-
-studentSchema.methods.generateToken = function () {
-  const token = jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE,
-  });
-  return token;
-};
 
 module.exports = mongoose.model("Student", studentSchema);
