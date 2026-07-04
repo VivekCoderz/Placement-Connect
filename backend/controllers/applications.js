@@ -6,6 +6,21 @@ const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
 const { sendEmail, generateICS } = require("../utils/email");
 
+module.exports.getMyApplications = ErrorWrapper(async (req, res, next) => {
+  const student = await Student.findOne({ userId: req.user.id });
+  if (!student) {
+    throw new ErrorHandler(404, "Student profile not found");
+  }
+
+  const applications = await Application.find({ studentId: student._id })
+    .populate({
+      path: "jobId",
+      populate: { path: "companyId", select: "name industry" },
+    });
+
+  return res.status(200).json({ applications });
+});
+
 module.exports.updateStatus = ErrorWrapper(async (req, res, next) => {
   const { id } = req.params;
   const { status, roundName, roundResult, scheduledAt, notes } = req.body;

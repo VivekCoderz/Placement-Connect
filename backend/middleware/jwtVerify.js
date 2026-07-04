@@ -1,10 +1,11 @@
 const jwt = require("jsonwebtoken");
-const ErrorWrapper = require("../utils/ErrorWrapper");
+const User = require("../models/User");
+const Student = require("../models/student");
+const Company = require("../models/company");
 const ErrorHandler = require("../utils/ErrorHandle");
-const studentModel = require("../models/student");
-const companyModel = require("../models/company");
+const ErrorWrapper = require("../utils/ErrorWrapper");
+const roleCheck = require("./roleCheck");
 
-// Verify JWT middleware
 const jwtVerify = ErrorWrapper(async (req, res, next) => {
   let token = req.cookies?.token;
 
@@ -17,36 +18,41 @@ const jwtVerify = ErrorWrapper(async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "GeetaUniversityPlacementConnect");
+    
+    // Fetch user and check status
+    const user = await User.findById(decoded.id).select("-password");
+    if (!user) {
+      throw new ErrorHandler(401, "Unauthorized: User no longer exists");
+    }
+    
+    if (!user.isActive) {
+      throw new ErrorHandler(403, "Access Denied: Account is deactivated");
+    }
+
+    req.user = user;
     next();
   } catch (err) {
+    if (err instanceof ErrorHandler) {
+      throw err;
+    }
     throw new ErrorHandler(401, "Unauthorized: Invalid or expired token");
   }
 });
 
-// Authorize roles middleware
-const authorizeRoles = (...roles) => {
-  return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({
-        message: `Forbidden: Role '${req.user?.role || "unknown"}' is not allowed to access this resource`
-      });
-    }
-    next();
-  };
-};
-
-// Fetch student or recruiter company if applicable
+// Fetch associated student or company profile
 const getAssociatedDetails = ErrorWrapper(async (req, res, next) => {
   if (req.user) {
     if (req.user.role === "student") {
-      const student = await studentModel.findOne({ userId: req.user.id });
+      const student = await Student.findOne({ userId: req.user.id });
       if (student) {
         req.student = student;
       }
-    } else if (req.user.role === "recruiter") {
-      const company = await companyModel.findOne({ recruiterId: req.user.id });
+    } else if (req.user.role === "company" || req.user.role === "recruiter") {
+      // Support both new schema (userId) and old schema (recruiterId) for fallback compatibility
+      const company = await Company.findOne({
+        $or: [{ recruiterId: req.user.id }, { userId: req.user.id }]
+      });
       if (company) {
         req.company = company;
       }
@@ -55,8 +61,8 @@ const getAssociatedDetails = ErrorWrapper(async (req, res, next) => {
   next();
 });
 
-module.exports = {
+module.exports = { 
   jwtVerify,
-  authorizeRoles,
+  authorizeRoles: roleCheck,
   getAssociatedDetails
 };

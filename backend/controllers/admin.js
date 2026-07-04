@@ -1,5 +1,5 @@
 const Company = require("../models/company");
-const User = require("../models/user");
+const User = require("../models/User");
 const Student = require("../models/student");
 const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");

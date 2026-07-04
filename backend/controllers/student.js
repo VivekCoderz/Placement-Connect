@@ -1,5 +1,5 @@
 const Student = require("../models/student");
-const User = require("../models/user");
+const User = require("../models/User");
 const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
 const bcrypt = require("bcrypt");
@@ -178,12 +178,13 @@ module.exports.updateEmailName = ErrorWrapper(async (req, res, next) => {
   }
 
   if (email) {
-    const existing = await User.findOne({ email, _id: { $ne: user._id } });
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = await User.findOne({ email: cleanEmail, _id: { $ne: user._id } });
     if (existing) {
       throw new ErrorHandler(400, "Email already in use");
     }
-    user.email = email;
-    student.email = email;
+    user.email = cleanEmail;
+    student.email = cleanEmail;
   }
 
   await user.save();
