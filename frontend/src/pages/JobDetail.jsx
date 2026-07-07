@@ -26,9 +26,9 @@ const JobDetail = () => {
             id: jobData.job._id,
             companyName: jobData.job.companyId?.name || "Company",
             eligibility: {
-              minCgpa: jobData.job.eligibility?.cgpa,
-              eligibleBranches: jobData.job.eligibility?.branches,
-              eligibleYears: jobData.job.eligibility?.years
+              minCgpa: jobData.job.eligibility?.cgpa !== undefined ? jobData.job.eligibility.cgpa : 6.0,
+              eligibleBranches: jobData.job.eligibility?.branches || ['CSE', 'IT', 'ECE'],
+              eligibleYears: jobData.job.eligibility?.years || [4]
             }
           };
           setJob(mappedJob);
@@ -168,7 +168,7 @@ const JobDetail = () => {
           <div className="lg:col-span-2 space-y-8">
             <div className="space-y-3.5">
               <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">About the Role</h3>
-              <p className="text-xs text-slate-550 leading-relaxed font-semibold">{job.details}</p>
+              <p className="text-xs text-slate-550 leading-relaxed font-semibold">{job.details || job.description || 'No additional details provided.'}</p>
             </div>
 
             <div className="space-y-3.5">
@@ -180,7 +180,7 @@ const JobDetail = () => {
             <div className="space-y-5">
               <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Interview & Evaluation Stages</h3>
               <div className="space-y-3">
-                {job.rounds.map((round, index) => (
+                {(job.rounds || ['Aptitude & Coding Test', 'Group Discussion (GD)', 'Technical Interview', 'HR Evaluation']).map((round, index) => (
                   <div key={index} className="flex items-center gap-4 bg-slate-50 border border-slate-200/60 p-4 rounded-2xl">
                     <span className="h-7 w-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center font-mono text-xs font-bold text-emerald-600">
                       {index + 1}

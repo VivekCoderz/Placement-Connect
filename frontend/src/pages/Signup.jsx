@@ -8,6 +8,8 @@ import {
   Percent,
   Clipboard,
   AlertCircle,
+  GraduationCap,
+  ArrowRight
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../redux/authSlice";
@@ -115,6 +117,9 @@ const Signup = () => {
 
       <div className="max-w-2xl w-full space-y-8 bg-white border border-slate-200/80 p-10 sm:p-12 rounded-3xl shadow-xl shadow-slate-200/50 relative z-10 animate-slide-up">
         <div className="text-center space-y-2">
+          <div className="mx-auto h-14 w-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-555 flex items-center justify-center shadow-md shadow-emerald-650/10 mb-4">
+            <GraduationCap className="h-8 w-8 text-white" />
+          </div>
           <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">
             Create Student Account
           </h2>

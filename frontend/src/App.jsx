@@ -14,6 +14,8 @@ import JobListings from './pages/JobListings';
 import JobDetail from './pages/JobDetail';
 import Applications from './pages/Applications';
 import Notifications from './pages/Notifications';
+import RecruiterSignup from './pages/RecruiterSignup';
+import RecruiterDashboard from './pages/RecruiterDashboard';
 
 function App() {
   const dispatch = useDispatch();
@@ -51,12 +53,25 @@ function App() {
           {/* Public Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/recruiter/signup" element={<RecruiterSignup />} />
+
+          {/* Protected Recruiter Portal Routes */}
+          <Route
+            path="/recruiter/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['company']}>
+                <Layout>
+                  <RecruiterDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Protected Student Portal Routes */}
           <Route
             path="/"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['student']}>
                 <Layout>
                   <JobListings />
                 </Layout>
@@ -66,7 +81,7 @@ function App() {
           <Route
             path="/job/:id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['student']}>
                 <Layout>
                   <JobDetail />
                 </Layout>
@@ -76,7 +91,7 @@ function App() {
           <Route
             path="/applications"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['student']}>
                 <Layout>
                   <Applications />
                 </Layout>
@@ -86,7 +101,7 @@ function App() {
           <Route
             path="/profile"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['student']}>
                 <Layout>
                   <Profile />
                 </Layout>
@@ -96,7 +111,7 @@ function App() {
           <Route
             path="/notifications"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['student']}>
                 <Layout>
                   <Notifications />
                 </Layout>

@@ -25,6 +25,7 @@ module.exports.approveCompany = ErrorWrapper(async (req, res, next) => {
   const recruiter = await User.findById(company.recruiterId);
   if (recruiter) {
     recruiter.isActive = true;
+    recruiter.isApproved = true;
     await recruiter.save();
 
     // Send email alert to recruiter

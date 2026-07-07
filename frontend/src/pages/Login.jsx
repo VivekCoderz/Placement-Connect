@@ -16,7 +16,11 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/');
+      if (user.role === 'company') {
+        navigate('/recruiter/dashboard');
+      } else {
+        navigate('/');
+      }
     }
   }, [user, navigate]);
 
@@ -159,12 +163,18 @@ const Login = () => {
           </div>
         </form>
 
-        {/* Signup Redirect link */}
-        <div className="text-center mt-6 animate-slide-up animation-delay-300">
+        {/* Signup Redirect links */}
+        <div className="text-center mt-6 space-y-2 animate-slide-up animation-delay-300">
           <p className="text-sm text-slate-500 font-semibold">
             Don't have an account?{' '}
             <Link to="/signup" className="text-emerald-650 hover:text-emerald-500 font-bold transition-colors">
               Register here
+            </Link>
+          </p>
+          <p className="text-xs text-slate-400 font-semibold border-t border-slate-200/60 pt-3">
+            Are you a recruiter?{' '}
+            <Link to="/recruiter/signup" className="text-cyan-600 hover:text-cyan-500 font-bold transition-colors">
+              Register your company
             </Link>
           </p>
         </div>

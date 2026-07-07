@@ -22,9 +22,9 @@ const JobListings = () => {
           id: job._id,
           companyName: job.companyId?.name || job.companyInfo?.name || "Company",
           eligibility: {
-            minCgpa: job.eligibility?.cgpa,
-            eligibleBranches: job.eligibility?.branches,
-            eligibleYears: job.eligibility?.years
+            minCgpa: job.eligibility?.cgpa !== undefined ? job.eligibility.cgpa : 6.0,
+            eligibleBranches: job.eligibility?.branches || ['CSE', 'IT', 'ECE'],
+            eligibleYears: job.eligibility?.years || [4]
           }
         }));
         setJobs(mapped);
