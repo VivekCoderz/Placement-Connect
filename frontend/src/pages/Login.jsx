@@ -1,221 +1,154 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, KeyRound, Loader2, AlertCircle } from "lucide-react";
-import { useSelector, useDispatch } from "react-redux";
-import { loginState } from "../store/authSlice";
-import api from "../utils/api";
-import AuthLayout from "../components/AuthLayout";
+import React, { useState } from "react";
+import {
+  GraduationCap,
+  Mail,
+  Lock,
+  ArrowRight,
+  UserRound,
+  Building2,
+  ShieldCheck,
+  BriefcaseBusiness,
+} from "lucide-react";
+import { motion } from "framer-motion";
 
-export const Login = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+const roles = [
+  { id: "student", label: "Student", icon: UserRound },
+  { id: "recruiter", label: "Recruiter", icon: Building2 },
+  { id: "placement", label: "Placement Cell", icon: BriefcaseBusiness },
+  { id: "admin", label: "Admin", icon: ShieldCheck },
+];
 
-  // Local state for simplified management
-  const [loginMethod, setLoginMethod] = useState("email");
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  // Clear errors when toggling login method
-  useEffect(() => {
-    setError("");
-    setIdentifier("");
-  }, [loginMethod]);
-
-  // Redirect if authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
-    }
-  }, [isAuthenticated, navigate]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (!identifier.trim()) {
-      setError(`${loginMethod === "email" ? "Email" : "Roll Number"} is required`);
-      return;
-    }
-
-    if (!password) {
-      setError("Password is required");
-      return;
-    }
-
-    const payload = {};
-    if (loginMethod === "email") {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(identifier.trim())) {
-        setError("Please enter a valid email address");
-        return;
-      }
-      payload.email = identifier.trim();
-    } else {
-      payload.rollNumber = identifier.trim();
-    }
-
-    payload.password = password;
-
-    setIsLoading(true);
-    try {
-      // 1. Authenticate user (cookie is automatically set by browser)
-      const loginRes = await api.post("/auth/login", payload);
-
-      // 2. Fetch full profile (includes student/company details)
-      const profileRes = await api.get("/auth/me");
-      const user = { ...profileRes.data.data.user };
-      if (user.role === "company") {
-        user.role = "recruiter";
-      }
-      const details = profileRes.data.data.details;
-
-      // 3. Update Redux state
-      dispatch(loginState({ user, details }));
-    } catch (err) {
-      setError(err.response?.data?.message || "Invalid credentials or login failed");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const Login = () => {
+  const [role, setRole] = useState("student");
 
   return (
-    <AuthLayout
-      title="Welcome Back"
-      subtitle="Access the Geeta University placement portal to track applications, post jobs, or manage drives."
-    >
-      <div className="w-full max-w-md mx-auto space-y-8">
-        <div>
-          <h3 className="text-2xl font-bold text-text-primary tracking-tight">Sign In</h3>
-          <p className="text-sm text-text-secondary mt-1">
-            Choose your login method below
+    <div className="min-h-screen bg-[#F8FAFC] relative overflow-hidden flex items-center justify-center px-4 py-10">
+      <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-indigo-200/40 blur-3xl" />
+      <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-violet-200/40 blur-3xl" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45 }}
+        className="relative w-full max-w-[460px]"
+      >
+        <div className="text-center mb-8">
+          <div className="mx-auto mb-4 h-14 w-14 rounded-2xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] flex items-center justify-center shadow-lg shadow-indigo-200">
+            <GraduationCap className="text-white" size={30} />
+          </div>
+
+          <h1 className="text-3xl font-bold text-[#0F172A]">
+            PlacementConnect
+          </h1>
+          <p className="mt-2 text-[#64748B]">
+            Sign in to manage your placement journey
           </p>
         </div>
 
-        {/* Login Method Toggle */}
-        <div className="flex p-1 bg-slate-100 rounded-xl border border-slate-200 h-11 items-center">
-          <button
-            type="button"
-            onClick={() => setLoginMethod("email")}
-            className={`flex-1 flex items-center justify-center h-9 text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer ${
-              loginMethod === "email"
-                ? "bg-primary text-white shadow-sm"
-                : "text-text-secondary hover:text-text-primary bg-transparent"
-            }`}
-          >
-            Email Address
-          </button>
-          <button
-            type="button"
-            onClick={() => setLoginMethod("roll")}
-            className={`flex-1 flex items-center justify-center h-9 text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer ${
-              loginMethod === "roll"
-                ? "bg-primary text-white shadow-sm"
-                : "text-text-secondary hover:text-text-primary bg-transparent"
-            }`}
-          >
-            Student Roll Number
-          </button>
-        </div>
+        <div className="bg-white rounded-[28px] border border-[#E2E8F0] shadow-[0_24px_80px_rgba(15,23,42,0.08)] p-6 sm:p-8">
+          <div className="mb-6">
+            <p className="text-sm font-semibold text-[#334155] mb-3">
+              Continue as
+            </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Error Banner */}
-          {error && (
-            <div className="flex items-start space-x-3 bg-rose-50 border border-rose-100 text-rose-800 text-sm p-4 rounded-lg animate-shake">
-              <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="font-semibold">Authentication Error</p>
-                <p className="text-rose-600/80 text-xs mt-0.5">{error}</p>
+            <div className="grid grid-cols-2 gap-3">
+              {roles.map((item) => {
+                const Icon = item.icon;
+                const active = role === item.id;
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setRole(item.id)}
+                    className={`flex items-center gap-2 rounded-[16px] border px-3 py-3 text-sm font-semibold transition-all ${
+                      active
+                        ? "border-[#4F46E5] bg-indigo-50 text-[#4F46E5] shadow-sm"
+                        : "border-[#E2E8F0] text-[#64748B] hover:border-[#4F46E5] hover:bg-[#F8FAFC]"
+                    }`}
+                  >
+                    <Icon size={18} />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <form className="space-y-5">
+            <div>
+              <label className="block text-sm font-semibold text-[#334155] mb-2">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail
+                  size={20}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]"
+                />
+                <input
+                  type="email"
+                  placeholder="name@geetauniversity.edu.in"
+                  className="w-full rounded-[16px] border border-[#E2E8F0] bg-[#F8FAFC] py-3.5 pl-12 pr-4 text-[#0F172A] outline-none transition focus:border-[#4F46E5] focus:bg-white focus:ring-4 focus:ring-indigo-100"
+                />
               </div>
             </div>
-          )}
 
-          {/* Identifier Input */}
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-text-secondary">
-              {loginMethod === "email" ? "Email Address" : "Roll Number"}
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                {loginMethod === "email" ? (
-                  <Mail className="w-5 h-5" />
-                ) : (
-                  <KeyRound className="w-5 h-5" />
-                )}
-              </span>
-              <input
-                type={loginMethod === "email" ? "email" : "text"}
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                placeholder={
-                  loginMethod === "email" ? "name@geetauniversity.edu.in" : "210304001"
-                }
-                className="w-full bg-slate-50 border border-slate-200 text-text-primary rounded-lg pl-10 pr-4 py-3 text-sm placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 focus:bg-white transition-all duration-300"
-                disabled={isLoading}
-              />
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <label className="block text-sm font-semibold text-[#334155]">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  className="text-sm font-semibold text-[#4F46E5] hover:text-[#4338CA]"
+                >
+                  Forgot?
+                </button>
+              </div>
+
+              <div className="relative">
+                <Lock
+                  size={20}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]"
+                />
+                <input
+                  type="password"
+                  placeholder="Enter your password"
+                  className="w-full rounded-[16px] border border-[#E2E8F0] bg-[#F8FAFC] py-3.5 pl-12 pr-4 text-[#0F172A] outline-none transition focus:border-[#4F46E5] focus:bg-white focus:ring-4 focus:ring-indigo-100"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Password Input */}
-          <div className="space-y-1">
-            <div className="flex justify-between items-center">
-              <label className="text-xs font-semibold text-text-secondary">Password</label>
-            </div>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                <Lock className="w-5 h-5" />
-              </span>
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-slate-50 border border-slate-200 text-text-primary rounded-lg pl-10 pr-10 py-3 text-sm placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 focus:bg-white transition-all duration-300"
-                disabled={isLoading}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-650 cursor-pointer"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full flex items-center justify-center space-x-2 py-3 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98] transition-all duration-200 cursor-pointer shadow-md shadow-primary/10 disabled:opacity-50 disabled:pointer-events-none"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Signing In...</span>
-              </>
-            ) : (
-              <span>Sign In</span>
-            )}
-          </button>
-        </form>
-
-        <div className="text-center pt-2">
-          <p className="text-xs text-text-secondary">
-            Don't have an account?{" "}
-            <Link
-              to="/register"
-              className="font-semibold text-primary hover:text-primary-hover transition-colors"
+            <button
+              type="submit"
+              className="group flex w-full items-center justify-center gap-2 rounded-[16px] bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] py-3.5 font-semibold text-white shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5 hover:shadow-xl"
             >
-              Sign Up here
-            </Link>
-          </p>
+              Sign In
+              <ArrowRight
+                size={18}
+                className="transition group-hover:translate-x-1"
+              />
+            </button>
+          </form>
+
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[#E2E8F0]" />
+            <span className="text-xs font-medium text-[#94A3B8]">
+              NEW TO PLACEMENTCONNECT?
+            </span>
+            <div className="h-px flex-1 bg-[#E2E8F0]" />
+          </div>
+
+          <button className="w-full rounded-[16px] border border-[#E2E8F0] bg-white py-3.5 font-semibold text-[#334155] transition hover:border-[#4F46E5] hover:text-[#4F46E5]">
+            Create Student / Recruiter Account
+          </button>
         </div>
-      </div>
-    </AuthLayout>
+
+        <p className="mt-6 text-center text-sm text-[#94A3B8]">
+          © 2026 Geeta University Training & Placement Cell
+        </p>
+      </motion.div>
+    </div>
   );
 };
 
