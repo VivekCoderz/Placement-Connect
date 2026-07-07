@@ -1,17 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from '../redux/authSlice';
 import api from '../utils/api';
 
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const user = useSelector((state) => state.auth.user);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

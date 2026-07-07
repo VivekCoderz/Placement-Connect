@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   User,
@@ -9,13 +9,21 @@ import {
   Clipboard,
   AlertCircle,
 } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../redux/authSlice";
 import api from "../utils/api";
 
 const Signup = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const user = useSelector((state) => state.auth.user);
+  
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
