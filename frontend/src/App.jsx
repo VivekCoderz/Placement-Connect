@@ -17,6 +17,7 @@ import Notifications from './pages/Notifications';
 import RecruiterSignup from './pages/RecruiterSignup';
 import RecruiterDashboard from './pages/RecruiterDashboard';
 import PlacementDashboard from './pages/PlacementDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   const dispatch = useDispatch();
@@ -74,6 +75,17 @@ function App() {
               <ProtectedRoute allowedRoles={['placementCell']}>
                 <Layout>
                   <PlacementDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Layout>
+                  <AdminDashboard />
                 </Layout>
               </ProtectedRoute>
             }

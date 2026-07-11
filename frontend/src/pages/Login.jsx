@@ -20,6 +20,8 @@ const Login = () => {
         navigate('/recruiter/dashboard');
       } else if (user.role === 'placementCell') {
         navigate('/placement/dashboard');
+      } else if (user.role === 'admin') {
+        navigate('/admin/dashboard');
       } else {
         navigate('/');
       }
@@ -59,6 +61,8 @@ const Login = () => {
         navigate('/recruiter/dashboard');
       } else if (combinedUser.role === 'placementCell') {
         navigate('/placement/dashboard');
+      } else if (combinedUser.role === 'admin') {
+        navigate('/admin/dashboard');
       } else {
         navigate('/');
       }
@@ -71,9 +75,9 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center py-16 px-6 sm:px-8 relative overflow-hidden">
-      {/* Premium Ambient Background Animations (Floating Green/Teal Gradient Orbs) */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-emerald-400/10 blur-[100px] pointer-events-none animate-float-slow" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-teal-400/10 blur-[100px] pointer-events-none animate-float-medium" />
+      {/* Premium Ambient Background Animations (Floating Teal/Dark Teal Gradient Orbs) */}
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-teal-500/10 blur-[100px] pointer-events-none animate-float-slow" />
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-teal-800/10 blur-[100px] pointer-events-none animate-float-medium" />
 
       {/* Main Login Card - Entrance Animation */}
       <div className="max-w-md w-full space-y-8 bg-white/90 backdrop-blur-md border border-slate-200/80 p-10 sm:p-12 rounded-3xl shadow-xl shadow-slate-200/50 relative z-10 animate-slide-up">
@@ -81,16 +85,16 @@ const Login = () => {
         {/* Header - Staggered Slide Up */}
         <div className="text-center space-y-3 animate-slide-up animation-delay-100">
           <div className="flex justify-center">
-            <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-555 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+            <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-teal-500 to-teal-800 flex items-center justify-center shadow-lg shadow-teal-500/20">
               <LogIn className="w-7 h-7 text-white" />
             </div>
           </div>
           <h2 className="text-center text-3xl font-extrabold text-slate-800 tracking-tight">
             Welcome Back
           </h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-505">
             Sign in to your student account on{' '}
-            <span className="text-emerald-600 font-bold">PlacementConnect</span>
+            <span className="bg-gradient-to-r from-teal-500 to-teal-800 bg-clip-text text-transparent font-extrabold">PlacementConnect</span>
           </p>
         </div>
 
@@ -121,7 +125,7 @@ const Login = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50/50 border border-slate-200 focus:bg-white rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-sm font-semibold"
+                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50/50 border border-slate-200 focus:bg-white rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all text-sm font-semibold"
                   placeholder="student@university.com"
                 />
               </div>
@@ -144,7 +148,7 @@ const Login = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50/50 border border-slate-200 focus:bg-white rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-sm font-semibold"
+                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50/50 border border-slate-200 focus:bg-white rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all text-sm font-semibold"
                   placeholder="••••••••"
                 />
               </div>
@@ -161,7 +165,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-emerald-600 hover:bg-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-md shadow-emerald-650/15 hover:shadow-lg hover:shadow-emerald-650/25 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+              className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-gradient-to-r from-teal-500 to-teal-800 hover:opacity-95 focus:outline-none focus:ring-4 focus:ring-teal-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-md shadow-teal-600/15 hover:shadow-lg hover:shadow-teal-605/25 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
             >
               {isLoading ? (
                 <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -176,7 +180,7 @@ const Login = () => {
         <div className="text-center mt-6 space-y-2 animate-slide-up animation-delay-300">
           <p className="text-sm text-slate-500 font-semibold">
             Don't have an account?{' '}
-            <Link to="/signup" className="text-emerald-650 hover:text-emerald-500 font-bold transition-colors">
+            <Link to="/signup" className="text-teal-650 hover:text-teal-700 font-bold transition-colors">
               Register here
             </Link>
           </p>

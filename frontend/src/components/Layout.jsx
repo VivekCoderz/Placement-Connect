@@ -4,9 +4,9 @@ import Navbar from './Navbar';
 const Layout = ({ children }) => {
   return (
     <div className="relative min-h-screen bg-slate-50 flex flex-col overflow-x-hidden">
-      {/* Background Decorative Glows - Soft Light Green Accent Blurs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[50%] rounded-full bg-emerald-500/5 blur-[140px] pointer-events-none z-0" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[50%] rounded-full bg-teal-500/5 blur-[140px] pointer-events-none z-0" />
+      {/* Background Decorative Glows - Soft Light Teal Accent Blurs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[50%] rounded-full bg-teal-500/5 blur-[140px] pointer-events-none z-0" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[50%] rounded-full bg-teal-800/5 blur-[140px] pointer-events-none z-0" />
       
       {/* Navigation */}
       <Navbar />

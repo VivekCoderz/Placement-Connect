@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-800 font-sans antialiased min-h-screen selection:bg-emerald-500 selection:text-white;
+    @apply bg-slate-50 text-slate-800 font-sans antialiased min-h-screen selection:bg-teal-500 selection:text-white;
   }
 }
 
@@ -28,13 +28,13 @@
 }
 
 .glass-card-hover:hover {
-  border-color: rgba(16, 185, 129, 0.4);
+  border-color: rgba(20, 184, 166, 0.4);
   transform: translateY(-4px); /* Spacious lift */
-  box-shadow: 0 20px 35px -10px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 20px 35px -10px rgba(20, 184, 166, 0.15);
 }
 
-.text-gradient-green {
-  @apply bg-gradient-to-r from-emerald-600 via-teal-500 to-green-600 bg-clip-text text-transparent;
+.text-gradient-teal {
+  @apply bg-gradient-to-r from-teal-500 to-teal-800 bg-clip-text text-transparent;
 }
 
 /* Floating Animations for Login Background */
