@@ -6,48 +6,49 @@
   --font-sans: "Inter", "Outfit", system-ui, sans-serif;
 
   --color-bg-dark: #F8FAFC;
-  --color-sidebar-dark: #5B4FCF;
-  --color-navbar-dark: #6D5BD0;
+  --color-sidebar-dark: #0B3D91;
+  --color-navbar-dark: #0B3D91;
   --color-card-dark: #FFFFFF;
   --color-card-hover: #F8FAFC;
-  --color-primary-green: #22C55E;
-  --color-primary-hover: #16A34A;
-  --color-accent-blue: #7C6AE6;
+  --color-primary-green: #0B3D91;
+  --color-primary-hover: #082F70;
+  --color-accent-blue: #F5A623;
+  --color-accent-hover: #E0921B;
   --color-text-heading: #111827;
   --color-text-body: #4B5563;
   --color-text-muted: #94A3B8;
   --color-border-dark: #E5E7EB;
 
-  --color-teal-50: #f0fdf4;
-  --color-teal-100: #dcfce7;
-  --color-teal-200: #bbf7d0;
-  --color-teal-300: #86efac;
-  --color-teal-400: #4ade80;
-  --color-teal-500: #22C55E;
-  --color-teal-600: #16A34A;
-  --color-teal-700: #15803d;
-  --color-teal-800: #166534;
-  --color-teal-900: #14532d;
-  --color-teal-950: #052e16;
+  --color-navy-50: #f0f5ff;
+  --color-navy-100: #dbebff;
+  --color-navy-200: #bedcff;
+  --color-navy-300: #93c5fd;
+  --color-navy-400: #60a5fa;
+  --color-navy-500: #0B3D91;
+  --color-navy-600: #082F70;
+  --color-navy-700: #1d4ed8;
+  --color-navy-800: #1e40af;
+  --color-navy-900: #1e3a8a;
+  --color-navy-950: #172554;
 
-  --color-emerald-50: #f0fdf4;
-  --color-emerald-100: #dcfce7;
-  --color-emerald-200: #bbf7d0;
-  --color-emerald-300: #86efac;
-  --color-emerald-400: #4ade80;
-  --color-emerald-500: #22C55E;
-  --color-emerald-600: #16A34A;
-  --color-emerald-700: #15803d;
-  --color-emerald-800: #166534;
-  --color-emerald-900: #14532d;
-  --color-emerald-950: #052e16;
+  --color-saffron-50: #fffbeb;
+  --color-saffron-100: #fef3c7;
+  --color-saffron-200: #fde68a;
+  --color-saffron-300: #fcd34d;
+  --color-saffron-400: #fbbf24;
+  --color-saffron-500: #F5A623;
+  --color-saffron-600: #E0921B;
+  --color-saffron-700: #b45309;
+  --color-saffron-800: #92400e;
+  --color-saffron-900: #78350f;
+  --color-saffron-950: #451a03;
 }
 
 @layer base {
   body {
     background-color: #F8FAFC;
     color: #4B5563;
-    @apply font-sans antialiased min-h-screen selection:bg-[#22C55E] selection:text-white;
+    @apply font-sans antialiased min-h-screen selection:bg-[#F5A623] selection:text-white;
   }
 }
 
