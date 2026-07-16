@@ -149,52 +149,54 @@
   background: #CBD5E1;
 }
 
-/* Indian Tricolor Independence Theme overrides when html.dark is active (Dim Midnight Style) */
+/* Premium Glassmorphic Midnight Dark Mode overrides when html.dark is active */
 html.dark body {
-  background-color: #101827 !important; /* Soft Midnight Blue */
+  background: radial-gradient(circle at top left, #0D0F1D, #070913) !important;
   color: #CBD5E1 !important; /* Light Slate text */
 }
 
 html.dark .bg-\[\#F8FAFC\] {
-  background-color: #101827 !important;
+  background: radial-gradient(circle at top left, #0D0F1D, #070913) !important;
 }
 
-/* Background glows - Tricolor style on soft dark backdrop */
+/* Background glows - Premium Deep Indigo and Bright Magenta accents */
 html.dark .absolute.top-\[-10\%\] {
-  background-color: rgba(255, 153, 51, 0.15) !important; /* Saffron Glow */
-  filter: blur(140px);
+  background-color: rgba(109, 94, 247, 0.18) !important; /* Premium Violet Glow */
+  filter: blur(130px);
 }
 html.dark .absolute.bottom-\[-10\%\] {
-  background-color: rgba(19, 136, 8, 0.15) !important; /* India Green Glow */
-  filter: blur(140px);
+  background-color: rgba(236, 72, 153, 0.12) !important; /* Premium Magenta Glow */
+  filter: blur(130px);
 }
 
-/* Cards & Panels: Slate-800 with Saffron Top Border and soft shadow */
+/* Cards & Panels: Premium Glassmorphism with Brand Indigo Accent top border */
 html.dark .bg-white,
 html.dark .glass-panel,
 html.dark .glass-card {
-  background-color: #1E293B !important; /* Slate-800 */
-  border: 1px solid rgba(255, 153, 51, 0.15) !important;
-  border-top: 3.5px solid #FF9933 !important; /* Saffron band */
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3) !important;
+  background-color: rgba(15, 23, 42, 0.75) !important; /* Transparent Slate */
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(109, 94, 247, 0.15) !important;
+  border-top: 3.5px solid #6D5EF7 !important; /* Premium Violet Band */
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 
 html.dark .glass-card-hover:hover {
-  background-color: #243048 !important;
-  border-color: rgba(255, 153, 51, 0.35) !important;
+  background-color: rgba(109, 94, 247, 0.06) !important;
+  border-color: rgba(109, 94, 247, 0.3) !important;
   transform: translateY(-2px);
+  box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(109, 94, 247, 0.1) !important;
 }
 
 html.dark .border-\[\#E5E7EB\] {
-  border-color: #334155 !important; /* Slate-700 */
+  border-color: rgba(109, 94, 247, 0.15) !important;
 }
 
 html.dark .border-slate-100 {
-  border-color: #334155 !important;
+  border-color: rgba(109, 94, 247, 0.12) !important;
 }
 
 html.dark .text-\[\#111827\] {
-  color: #F8FAFC !important; /* Off-white headings */
+  color: #F8FAFC !important; /* Bright Slate headings */
 }
 
 html.dark .text-\[\#4B5563\] {
@@ -209,30 +211,29 @@ html.dark .text-\[\#94A3B8\] {
 html.dark input, 
 html.dark select, 
 html.dark textarea {
-  background-color: #101827 !important;
-  border: 1px solid #334155 !important;
+  background-color: rgba(7, 9, 19, 0.6) !important;
+  border: 1px solid rgba(109, 94, 247, 0.2) !important;
   color: #F8FAFC !important;
 }
 
 html.dark input:focus, 
 html.dark select:focus, 
 html.dark textarea:focus {
-  border-color: #138808 !important; /* India Green focus border */
-  background-color: #1E293B !important;
-  box-shadow: 0 0 0 4px rgba(19, 136, 8, 0.15) !important;
+  border-color: #6D5EF7 !important; /* Indigo focus border */
+  background-color: rgba(15, 23, 42, 0.8) !important;
+  box-shadow: 0 0 0 4px rgba(109, 94, 247, 0.25) !important;
 }
 
 html.dark input::placeholder {
-  color: #64748B !important;
+  color: #475569 !important;
 }
 
-/* Navbar: Navy Blue (Ashoka Chakra) with Saffron/White/Green bottom border */
+/* Navbar: Premium Glassmorphic Deep Slate with Indigo border */
 html.dark nav {
-  background-color: #0B3D91 !important;
-  border-bottom: 3.5px solid transparent !important;
-  background-image: linear-gradient(#0B3D91, #0B3D91), linear-gradient(to right, #FF9933 0%, #FFFFFF 50%, #138808 100%) !important;
-  background-origin: border-box !important;
-  background-clip: padding-box, border-box !important;
+  background-color: rgba(15, 23, 42, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(109, 94, 247, 0.2) !important;
+  background-image: none !important;
 }
 
 html.dark nav .bg-white\/10 {
@@ -241,42 +242,42 @@ html.dark nav .bg-white\/10 {
 
 /* Footer overrides */
 html.dark footer {
-  background-color: #101827 !important;
-  border-top: 1px solid #334155 !important;
+  background-color: #070913 !important;
+  border-top: 1px solid rgba(109, 94, 247, 0.15) !important;
   color: #94A3B8 !important;
 }
 
 /* Table overrides */
 html.dark thead {
-  background-color: #334155 !important; /* Slate-700 table header */
+  background-color: rgba(109, 94, 247, 0.1) !important;
   color: #F8FAFC !important;
 }
 
 html.dark tr {
-  border-color: #334155 !important;
+  border-color: rgba(109, 94, 247, 0.1) !important;
 }
 
-/* Button Colors */
+/* Button Colors mapped to brand and status colors */
 html.dark .bg-\[\#22C55E\] {
-  background-color: #138808 !important; /* India Green */
+  background-color: #10B981 !important; /* Emerald green */
 }
 
 html.dark .bg-\[\#F5A623\] {
-  background-color: #FF9933 !important; /* Saffron */
+  background-color: #F59E0B !important; /* Premium Amber */
 }
 
 html.dark .text-\[\#F5A623\] {
-  color: #FF9933 !important;
+  color: #F59E0B !important;
 }
 
 html.dark .text-\[\#22C55E\] {
-  color: #138808 !important;
+  color: #10B981 !important;
 }
 
 html.dark .bg-\[\#22C55E\]\/10 {
-  background-color: rgba(19, 136, 8, 0.15) !important;
-  color: #138808 !important;
-  border-color: rgba(19, 136, 8, 0.25) !important;
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  color: #10B981 !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
 }
 
 /* Generic slate classes overrides to map light theme classes */
@@ -297,27 +298,27 @@ html.dark .text-slate-400 {
 }
 
 html.dark .bg-slate-50 {
-  background-color: #1E293B !important; /* Slate-800 */
+  background-color: rgba(15, 23, 42, 0.5) !important; /* Slate-800 transparency */
 }
 
 html.dark .hover\:bg-slate-50\/80:hover {
-  background-color: #334155 !important; /* Slate-700 hover */
+  background-color: rgba(109, 94, 247, 0.08) !important;
 }
 
 html.dark .hover\:bg-slate-50:hover {
-  background-color: #334155 !important;
+  background-color: rgba(109, 94, 247, 0.08) !important;
 }
 
 /* Scrollbar overrides for dark theme */
 html.dark ::-webkit-scrollbar-track {
-  background: #101827 !important;
+  background: #070913 !important;
 }
 
 html.dark ::-webkit-scrollbar-thumb {
-  background: #334155 !important;
-  border-color: #334155 !important;
+  background: rgba(109, 94, 247, 0.3) !important;
+  border-color: transparent !important;
 }
 
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #FF9933 !important;
+  background: #6D5EF7 !important;
 }

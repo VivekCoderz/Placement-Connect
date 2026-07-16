@@ -8,7 +8,7 @@ import {
   XCircle, Power, ArrowRight, FileSpreadsheet, Plus, Download, Mail, ShieldAlert,
   Clock, MapPin, Eye, Trash2, Edit3, CheckSquare, PlusCircle, Calendar, Sparkles, 
   Send, Upload, ChevronRight, ChevronLeft, Lock, UserCheck, MessageSquare, Info,
-  LogOut, Star, User, Sliders, Server, Shield
+  LogOut, Star, User, Sliders, Server, Shield, Sun, Moon
 } from 'lucide-react';
 import api from '../utils/api';
 import { clearUser } from '../redux/authSlice';
@@ -42,6 +42,24 @@ const AdminDashboard = () => {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 4000);
   };
+
+  // Theme & Dark Mode Setup
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('theme') === 'dark';
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  // Notifications filtering state
+  const [notifFilter, setNotifFilter] = useState('All');
 
   // Modals States
   const [activeModal, setActiveModal] = useState(null); // 'createDrive' | 'addStudent' | 'announcement' | 'report' | 'csvUpload' | 'interview' | 'confirmDelete' | 'viewStudent'
@@ -378,7 +396,8 @@ const AdminDashboard = () => {
       addToast('success', 'Real database data loaded successfully.');
     } catch (err) {
       console.log('Error pulling backend data:', err);
-      addToast('danger', 'Error loading real database data. Please verify database seeding.');
+      const errMsg = err.response?.data?.message || err.message || 'Error loading real database data. Please verify database seeding.';
+      addToast('danger', errMsg);
     } finally {
       setIsLoading(false);
     }
@@ -408,12 +427,11 @@ const AdminDashboard = () => {
     try {
       await api.post('/api/admin/companies/approve', { companyId: recId });
       addToast('success', 'Recruiter credentials verified & approved.');
+      loadBackendData();
     } catch (err) {
-      // Fallback
-      setRecruiters(prev => prev.map(r => r.id === recId ? { ...r, approvalStatus: 'Approved' } : r));
-      setCompanies(prev => prev.map(c => c.id === recId ? { ...c, approved: true } : c));
-      setStats(prev => ({ ...prev, verifiedRecruiters: prev.verifiedRecruiters + 1 }));
-      addToast('success', 'Recruiter verified in local state.');
+      console.error(err);
+      const errMsg = err.response?.data?.message || err.message || 'Failed to approve recruiter.';
+      addToast('danger', errMsg);
     } finally {
       setActionLoading(null);
     }
@@ -424,10 +442,11 @@ const AdminDashboard = () => {
     try {
       await api.post('/api/admin/companies/reject', { companyId: recId });
       addToast('warning', 'Recruiter status updated to rejected.');
+      loadBackendData();
     } catch (err) {
-      setRecruiters(prev => prev.map(r => r.id === recId ? { ...r, approvalStatus: 'Rejected' } : r));
-      setCompanies(prev => prev.map(c => c.id === recId ? { ...c, approved: false } : c));
-      addToast('warning', 'Recruiter disapproved in local state.');
+      console.error(err);
+      const errMsg = err.response?.data?.message || err.message || 'Failed to reject recruiter.';
+      addToast('danger', errMsg);
     } finally {
       setActionLoading(null);
     }
@@ -444,15 +463,11 @@ const AdminDashboard = () => {
     try {
       await api.post(`/api/admin/jobs/${driveId}/toggle-status`);
       addToast('success', 'Drive status toggled.');
+      loadBackendData();
     } catch (err) {
-      setDrives(prev => prev.map(d => {
-        if (d.id === driveId) {
-          const newStatus = d.status === 'Open' ? 'Closed' : 'Open';
-          return { ...d, status: newStatus };
-        }
-        return d;
-      }));
-      addToast('success', 'Drive status updated.');
+      console.error(err);
+      const errMsg = err.response?.data?.message || err.message || 'Failed to toggle drive status.';
+      addToast('danger', errMsg);
     } finally {
       setActionLoading(null);
     }
@@ -469,15 +484,11 @@ const AdminDashboard = () => {
     try {
       await api.post(`/api/admin/users/${studentId}/toggle-active`);
       addToast('success', 'Student account status updated.');
+      loadBackendData();
     } catch (err) {
-      setStudents(prev => prev.map(s => {
-        if (s.id === studentId) {
-          const newStatus = s.resumeStatus === 'Suspended' ? 'Pending' : 'Suspended';
-          return { ...s, resumeStatus: newStatus };
-        }
-        return s;
-      }));
-      addToast('success', 'Account status toggled.');
+      console.error(err);
+      const errMsg = err.response?.data?.message || err.message || 'Failed to update student status.';
+      addToast('danger', errMsg);
     } finally {
       setActionLoading(null);
     }
@@ -486,6 +497,30 @@ const AdminDashboard = () => {
   const handleDeleteStudent = (studentId) => {
     setDeleteTarget({ type: 'student', id: studentId });
     setActiveModal('confirmDelete');
+  };
+
+  const handleMarkAllNotificationsAsRead = async () => {
+    try {
+      await api.put('/api/notifications/read-all');
+      setNotificationsList(prev => prev.map(n => ({ ...n, read: true })));
+      addToast('success', 'All notifications marked as read.');
+    } catch (err) {
+      console.error(err);
+      const errMsg = err.response?.data?.message || err.message || 'Failed to mark notifications as read.';
+      addToast('danger', errMsg);
+    }
+  };
+
+  const handleMarkNotificationAsRead = async (id) => {
+    try {
+      await api.put(`/api/notifications/${id}/read`);
+      setNotificationsList(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+      addToast('success', 'Notification marked as read.');
+    } catch (err) {
+      console.error(err);
+      const errMsg = err.response?.data?.message || err.message || 'Failed to update notification.';
+      addToast('danger', errMsg);
+    }
   };
 
   // Resume Verification actions
@@ -684,6 +719,13 @@ const AdminDashboard = () => {
            d.role.toLowerCase().includes(query);
   });
 
+  const filteredNotifications = notificationsList.filter(n => {
+    if (notifFilter === 'All') return true;
+    if (notifFilter === 'Unread') return !n.read;
+    if (notifFilter === 'Read') return n.read;
+    return n.type === notifFilter;
+  });
+
   // Calculate stats for Analytics page
   const branchesList = ['CSE', 'ECE', 'ME', 'CE', 'EE', 'MBA'];
   const branchPlacements = branchesList.map(branchName => {
@@ -761,17 +803,13 @@ const AdminDashboard = () => {
     { id: 'jobs', label: 'Job Postings', icon: Briefcase },
     { id: 'applications', label: 'Applications', icon: FileText },
     { id: 'shortlists', label: 'Shortlists', icon: FileSpreadsheet },
-    { id: 'interviews', label: 'Interview Schedule', icon: CalendarDays },
-    { id: 'resumes', label: 'Resume Verification', icon: FileCheck2 },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'announcements', label: 'Announcements', icon: Megaphone },
-    { id: 'notifications', label: 'Notifications', icon: Bell, count: notificationsList.filter(n => !n.read).length },
-    { id: 'reports', label: 'Reports', icon: Sliders },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex text-[#334155] font-sans antialiased w-full">
+    <div className={`min-h-screen bg-[#F8FAFC] flex text-[#334155] font-sans antialiased w-full ${isDarkMode ? 'dark' : ''}`}>
       
       {/* Toast Alert Drawer */}
       <div className="fixed top-6 right-6 z-55 flex flex-col gap-3 max-w-sm pointer-events-none">
@@ -904,55 +942,20 @@ const AdminDashboard = () => {
             </div>
 
             {/* Notifications Bell */}
-            <div className="relative">
-              <button 
-                onClick={() => {
-                  setShowNotifPanel(!showNotifPanel);
-                  setShowMsgPanel(false);
-                  setShowProfileDropdown(false);
-                }}
-                className="p-2 hover:bg-slate-50 rounded-xl border border-slate-100 transition-colors relative"
-              >
-                <Bell className="w-4 h-4 text-slate-500" />
-                {notificationsList.some(n => !n.read) && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#EF4444] rounded-full" />
-                )}
-              </button>
-
-              {/* Notifications Panel */}
-              {showNotifPanel && (
-                <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-[18px] shadow-lg py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="px-4 pb-2 border-b border-slate-100 flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-slate-800">Notifications</h3>
-                    <button 
-                      onClick={() => {
-                        setNotificationsList(prev => prev.map(n => ({ ...n, read: true })));
-                        addToast('info', 'All notifications marked as read');
-                      }}
-                      className="text-[10px] text-[#6D5EF7] font-semibold hover:underline"
-                    >
-                      Mark all read
-                    </button>
-                  </div>
-                  <div className="max-h-64 overflow-y-auto px-2 mt-2 space-y-1">
-                    {notificationsList.map(n => (
-                      <div key={n.id} className={`p-2.5 rounded-xl text-xs flex gap-2.5 transition-colors hover:bg-slate-50 ${!n.read ? 'bg-[#6D5EF7]/5 font-medium' : ''}`}>
-                        <div className="mt-0.5">
-                          {n.type === 'recruiter' && <Building2 className="w-3.5 h-3.5 text-indigo-500" />}
-                          {n.type === 'resume' && <FileCheck2 className="w-3.5 h-3.5 text-emerald-500" />}
-                          {n.type === 'application' && <Award className="w-3.5 h-3.5 text-amber-500" />}
-                          {n.type === 'system' && <Server className="w-3.5 h-3.5 text-slate-400" />}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-slate-700 leading-tight">{n.text}</p>
-                          <span className="text-[9px] text-slate-400 block mt-1">{n.time}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+            <button 
+              onClick={() => {
+                setActiveTab('notifications');
+                setShowMsgPanel(false);
+                setShowProfileDropdown(false);
+              }}
+              className="p-2 hover:bg-slate-50 rounded-xl border border-slate-100 transition-colors relative"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4 text-slate-500" />
+              {notificationsList.some(n => !n.read) && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#EF4444] rounded-full" />
               )}
-            </div>
+            </button>
 
             {/* Messages Panel */}
             <div className="relative">
@@ -1000,6 +1003,19 @@ const AdminDashboard = () => {
               )}
             </div>
 
+            {/* Dark Mode Toggle */}
+            <button 
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="p-2 hover:bg-slate-50 rounded-xl border border-slate-100 transition-colors"
+              title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDarkMode ? (
+                <Sun className="w-4 h-4 text-amber-500" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-500" />
+              )}
+            </button>
+
             {/* Quick Settings Icon */}
             <button 
               onClick={() => setActiveTab('settings')}
@@ -1033,9 +1049,6 @@ const AdminDashboard = () => {
                   <button onClick={() => { setActiveTab('settings'); setShowProfileDropdown(false); }} className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-600">
                     <User className="w-3.5 h-3.5" /> Profile Settings
                   </button>
-                  <button onClick={() => { setActiveTab('reports'); setShowProfileDropdown(false); }} className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-600">
-                    <FileText className="w-3.5 h-3.5" /> Placement Reports
-                  </button>
                   <button onClick={handleLogout} className="w-full text-left px-4 py-2 hover:bg-slate-50 border-t border-slate-100 text-rose-500 flex items-center gap-2 font-semibold">
                     <LogOut className="w-3.5 h-3.5" /> Log Out
                   </button>
@@ -1048,6 +1061,19 @@ const AdminDashboard = () => {
 
         {/* ---------------- MAIN CONTENT AREA ---------------- */}
         <main className="flex-grow p-6 sm:p-8 max-w-7xl w-full mx-auto space-y-6 overflow-y-auto">
+
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+              <div className="relative">
+                <div className="w-12 h-12 rounded-full border-4 border-[#6D5EF7]/20 border-t-[#6D5EF7] animate-spin" />
+                <div className="w-12 h-12 rounded-full border-4 border-emerald-500/10 border-b-emerald-500 animate-spin absolute inset-0 rotate-180" />
+              </div>
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 animate-pulse">
+                Fetching real-time database records...
+              </p>
+            </div>
+          ) : (
+            <>
 
           {/* =======================================================
               TAB: DASHBOARD OVERVIEW
@@ -1191,7 +1217,7 @@ const AdminDashboard = () => {
                 <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-[#6D5EF7]" /> Quick Operations
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-7 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                   <button onClick={() => setActiveModal('createDrive')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/5 text-slate-700 hover:text-[#6D5EF7] transition-all duration-200 cursor-pointer">
                     <Target className="w-5 h-5 mb-2 shrink-0" />
                     <span className="text-[11px] font-bold text-center">New Drive</span>
@@ -1208,17 +1234,9 @@ const AdminDashboard = () => {
                     <Megaphone className="w-5 h-5 mb-2 shrink-0" />
                     <span className="text-[11px] font-bold text-center">Broadcast</span>
                   </button>
-                  <button onClick={() => setActiveModal('report')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/5 text-slate-700 hover:text-[#6D5EF7] transition-all duration-200 cursor-pointer">
-                    <Sliders className="w-5 h-5 mb-2 shrink-0" />
-                    <span className="text-[11px] font-bold text-center">Export PDF</span>
-                  </button>
                   <button onClick={() => setActiveModal('csvUpload')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/5 text-slate-700 hover:text-[#6D5EF7] transition-all duration-200 cursor-pointer">
                     <FileSpreadsheet className="w-5 h-5 mb-2 shrink-0" />
                     <span className="text-[11px] font-bold text-center">Upload CSV</span>
-                  </button>
-                  <button onClick={() => setActiveModal('interview')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/5 text-slate-700 hover:text-[#6D5EF7] transition-all duration-200 cursor-pointer">
-                    <CalendarDays className="w-5 h-5 mb-2 shrink-0" />
-                    <span className="text-[11px] font-bold text-center">Schedule Interview</span>
                   </button>
                 </div>
               </div>
@@ -2111,267 +2129,6 @@ const AdminDashboard = () => {
           )}
 
           {/* =======================================================
-              TAB: INTERVIEW SCHEDULE
-              ======================================================= */}
-          {activeTab === 'interviews' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Placement Interview Grid Calendar (July 2026)</p>
-                <button
-                  onClick={() => setActiveModal('interview')}
-                  className="bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" /> Schedule New Panel
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* 1. Calendar grid mockup */}
-                <div className="lg:col-span-2 bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-50 pb-2">
-                    <span className="text-xs font-black text-slate-700 uppercase tracking-wider">July 2026</span>
-                    <div className="flex gap-1">
-                      <button className="p-1 hover:bg-slate-50 rounded border border-slate-200 text-slate-500 cursor-pointer">
-                        <ChevronLeft className="w-3.5 h-3.5" />
-                      </button>
-                      <button className="p-1 hover:bg-slate-50 rounded border border-slate-200 text-slate-500 cursor-pointer">
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Calendar monthly dates grid */}
-                  <div className="grid grid-cols-7 gap-1 text-center text-xs">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                      <span key={d} className="font-bold text-slate-400 py-1">{d}</span>
-                    ))}
-                    
-                    {/* Empty grids for early week padding (July 2026 starts on Wednesday) */}
-                    <span className="py-2 text-slate-300">28</span>
-                    <span className="py-2 text-slate-300">29</span>
-                    <span className="py-2 text-slate-300">30</span>
-                    
-                    {/* Actual month dates */}
-                    {Array.from({ length: 31 }).map((_, idx) => {
-                      const dayNumber = idx + 1;
-                      const isToday = dayNumber === 16;
-                      const hasEvent = [15, 16, 18, 19, 21].includes(dayNumber);
-                      return (
-                        <div 
-                          key={idx} 
-                          onClick={() => addToast('info', `Vetting schedules for July ${dayNumber}, 2026`)}
-                          className={`py-2 rounded-lg cursor-pointer transition-colors relative flex flex-col items-center justify-center h-11 hover:bg-slate-50 border ${
-                            isToday ? 'border-[#6D5EF7] bg-indigo-50/20 font-black text-slate-800' : 'border-transparent text-slate-650'
-                          }`}
-                        >
-                          <span>{dayNumber}</span>
-                          {hasEvent && (
-                            <span className="w-1.5 h-1.5 bg-[#6D5EF7] rounded-full absolute bottom-1" />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 2. Upcoming Interview list */}
-                <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
-                  <h4 className="text-xs font-black uppercase text-slate-705 tracking-wider pb-2 border-b border-slate-50">Pending Interview Panel logs</h4>
-                  
-                  <div className="space-y-4">
-                    {interviews.map(int => (
-                      <div key={int.id} className="p-3 bg-slate-50/50 hover:bg-slate-50 border border-slate-100 rounded-xl space-y-2">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h5 className="text-xs font-bold text-slate-800">{int.candidate}</h5>
-                            <p className="text-[10px] text-slate-450 mt-0.5">{int.company} • {int.mode}</p>
-                          </div>
-                          <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase ${
-                            int.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'
-                          }`}>
-                            {int.status}
-                          </span>
-                        </div>
-                        
-                        <div className="text-[10px] text-slate-550 space-y-1">
-                          <p className="flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {int.date} at {int.time}
-                          </p>
-                          <p className="flex items-center gap-1.5">
-                            <UserCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" /> Panel: {int.interviewer}
-                          </p>
-                          <p className="flex items-center gap-1.5">
-                            <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" /> Room: {int.roomNumber}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-
-            </div>
-          )}
-
-          {/* =======================================================
-              TAB: RESUME VERIFICATION
-              ======================================================= */}
-          {activeTab === 'resumes' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              
-              <div className="pb-2 border-b border-slate-100 flex items-center justify-between">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">AI resume auditing panel</p>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500 font-bold">Current Profile:</span>
-                  <div className="flex gap-1.5">
-                    {resumes.map(r => (
-                      <button
-                        key={r.id}
-                        onClick={() => setResumeVerificationTabId(r.id)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                          resumeVerificationTabId === r.id 
-                            ? 'bg-[#6D5EF7] text-white border-transparent' 
-                            : 'bg-white hover:bg-slate-50 text-slate-655 border-slate-200'
-                        }`}
-                      >
-                        {r.studentName}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {resumes.filter(r => r.id === resumeVerificationTabId).map(res => (
-                <div key={res.id} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  
-                  {/* Left: Document Resume Preview */}
-                  <div className="lg:col-span-2 bg-white border border-slate-200/80 rounded-[18px] p-6 shadow-sm space-y-6 relative">
-                    
-                    {/* Header */}
-                    <div className="flex justify-between items-start pb-4 border-b border-slate-100">
-                      <div>
-                        <h3 className="text-base font-bold text-slate-905">{res.studentName}</h3>
-                        <p className="text-xs font-semibold text-slate-400 mt-1">{res.branch} Department • Roll: {res.rollNumber}</p>
-                      </div>
-                      <button 
-                        onClick={() => addToast('success', 'PDF file compilation initiated.')}
-                        className="px-3 py-1.5 text-xs text-slate-600 font-bold border border-slate-200 rounded-xl hover:bg-slate-50 flex items-center gap-2 transition-colors cursor-pointer"
-                      >
-                        <Download className="w-3.5 h-3.5" /> Compile PDF
-                      </button>
-                    </div>
-
-                    {/* Resume Body Mock */}
-                    <div className="space-y-4 text-xs font-medium text-slate-600 max-h-[400px] overflow-y-auto pr-2">
-                      <div className="space-y-1.5">
-                        <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Education details</h4>
-                        <p className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">{res.education}</p>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Professional Experience</h4>
-                        <p className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">{res.experience}</p>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Projects Completed</h4>
-                        <p className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">{res.projects}</p>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Skills catalog</h4>
-                        <div className="flex flex-wrap gap-2 pt-1">
-                          {res.skills.map(s => (
-                            <span key={s} className="bg-slate-100 text-slate-700 rounded-lg px-2.5 py-1 text-xs font-semibold">{s}</span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  {/* Right: AI Score Verification status & feedback panel */}
-                  <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-5">
-                    
-                    <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider pb-2 border-b border-slate-50">AI Diagnostic details</h4>
-                    
-                    {/* Score circle bar */}
-                    <div className="flex flex-col items-center justify-center py-4 bg-slate-50/50 border border-slate-100 rounded-2xl">
-                      <div className="relative w-20 h-20 flex items-center justify-center">
-                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                          <path
-                            className="text-slate-200"
-                            strokeWidth="2.5"
-                            stroke="currentColor"
-                            fill="none"
-                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                          />
-                          <path
-                            className={`${res.score >= 80 ? 'text-emerald-500' : 'text-amber-505'}`}
-                            strokeDasharray={`${res.score}, 100`}
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                            stroke="currentColor"
-                            fill="none"
-                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                          />
-                        </svg>
-                        <div className="absolute text-center">
-                          <span className="text-lg font-black text-slate-800">{res.score}</span>
-                          <span className="text-[9px] text-slate-400 block -mt-1">/100</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-slate-500 font-bold mt-3">Compatibility Index: {res.aiStatus}</span>
-                    </div>
-
-                    {/* Parser remarks */}
-                    <div className="space-y-1 text-xs">
-                      <span className="block text-[10px] text-slate-400 font-black uppercase tracking-wider">Verification Insights</span>
-                      <p className="p-3 bg-indigo-50/40 text-slate-750 rounded-xl border border-indigo-100/50 leading-relaxed italic">
-                        {res.aiRemarks}
-                      </p>
-                    </div>
-
-                    {/* Action buttons */}
-                    <div className="space-y-3 pt-3 border-t border-slate-100">
-                      <div>
-                        <label className="block text-[10px] text-slate-400 font-black uppercase mb-1.5">Add Coordinator Feedback</label>
-                        <textarea
-                          placeholder="Type specific formatting corrections or project review remarks here..."
-                          className="w-full text-xs p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7] h-20 text-slate-700"
-                          value={feedbackText}
-                          onChange={(e) => setFeedbackText(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => { handleApproveResume(res.id); setFeedbackText(''); }}
-                          className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
-                        >
-                          <Check className="w-4 h-4" /> Verify Resume
-                        </button>
-                        <button 
-                          onClick={() => { handleRejectResume(res.id); setFeedbackText(''); }}
-                          className="flex-1 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
-                        >
-                          <X className="w-4 h-4" /> Reject Specs
-                        </button>
-                      </div>
-                    </div>
-
-                  </div>
-
-                </div>
-              ))}
-
-            </div>
-          )}
-
-          {/* =======================================================
               TAB: ANALYTICS
               ======================================================= */}
           {activeTab === 'analytics' && (
@@ -2414,6 +2171,7 @@ const AdminDashboard = () => {
                       <span className="w-2.5 h-2.5 bg-[#6D5EF7] rounded" /> Placed Count
                     </div>
                   </div>
+                </div>
                     {/* 2. Monthly Placements Spline Line Area Chart SVG */}
                 <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
                   <h4 className="text-xs font-black uppercase text-slate-750 tracking-wider">Placements Timeline (Jan - July)</h4>
@@ -2574,8 +2332,7 @@ const AdminDashboard = () => {
                         {drives.length ? [...drives].sort((a,b) => (parseFloat(b.ctc)||0) - (parseFloat(a.ctc)||0))[0]?.companyName : 'None'}
                       </span>
                     </div>
-                  </div>              </div>
-
+                  </div>              
                   <div className="bg-slate-50/50 border border-slate-100 p-2.5 rounded-xl text-[10px] text-slate-450 leading-relaxed font-bold uppercase text-center">
                     Current targets match 100% compliance projections.
                   </div>
@@ -2640,104 +2397,89 @@ const AdminDashboard = () => {
           {activeTab === 'notifications' && (
             <div className="space-y-6 animate-in fade-in duration-300">
               
-              <div className="pb-2 border-b border-slate-100">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Audit System Alerts & Event logs</p>
-              </div>
-
-              <div className="bg-white border border-slate-200/80 rounded-[18px] p-6 shadow-sm space-y-4">
-                {notificationsList.map(n => (
-                  <div key={n.id} className="flex gap-4 p-3 bg-slate-50/50 hover:bg-slate-55 rounded-xl text-xs border border-slate-100">
-                    <div className="mt-0.5">
-                      {n.type === 'recruiter' && <Building2 className="w-4 h-4 text-indigo-500" />}
-                      {n.type === 'resume' && <FileCheck2 className="w-4 h-4 text-emerald-500" />}
-                      {n.type === 'application' && <Award className="w-4 h-4 text-amber-500" />}
-                      {n.type === 'system' && <Server className="w-4 h-4 text-slate-500" />}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-slate-700">{n.text}</p>
-                      <span className="text-[10px] text-slate-450 block mt-1">{n.time}</span>
-                    </div>
-                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${n.read ? 'bg-slate-100 text-slate-400' : 'bg-[#6D5EF7]/10 text-[#6D5EF7]'}`}>
-                      {n.read ? 'Read' : 'New'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-            </div>
-          )}
-
-          {/* =======================================================
-              TAB: REPORTS GENERATION
-              ======================================================= */}
-          {activeTab === 'reports' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              
-              <div className="pb-2 border-b border-slate-100">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Compile placement statistics & data exports</p>
-              </div>
-
-              <div className="max-w-xl bg-white border border-slate-200/80 rounded-[18px] p-6 shadow-sm space-y-5">
-                <h3 className="text-xs font-black text-slate-805 uppercase tracking-wider">Configure Report Parameters</h3>
-                
-                <form onSubmit={handleReportSubmit} className="space-y-4">
-                  
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-650">Select Report Type</label>
-                    <select
-                      className="w-full text-xs p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7] text-slate-705"
-                      value={reportForm.type}
-                      onChange={(e) => setReportForm({ ...reportForm, type: e.target.value })}
-                    >
-                      <option value="Placement Statistics">Placement Statistics</option>
-                      <option value="Department Reports">Department Reports</option>
-                      <option value="Company Reports">Company Reports</option>
-                      <option value="Student Reports">Student Reports</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-650">Target Department</label>
-                    <select
-                      className="w-full text-xs p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7] text-slate-705"
-                      value={reportForm.department}
-                      onChange={(e) => setReportForm({ ...reportForm, department: e.target.value })}
-                    >
-                      <option value="All">All Departments Combined</option>
-                      <option value="CSE">CSE</option>
-                      <option value="ECE">ECE</option>
-                      <option value="ME">ME</option>
-                      <option value="CE">CE</option>
-                      <option value="EE">EE</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-650">File Format</label>
-                    <div className="flex gap-4 pt-1">
-                      {['PDF', 'Excel'].map(format => (
-                        <label key={format} className="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer">
-                          <input 
-                            type="radio" 
-                            name="reportFormat" 
-                            checked={reportForm.format === format}
-                            onChange={() => setReportForm({ ...reportForm, format })}
-                            className="accent-[#6D5EF7]"
-                          />
-                          <span>{format === 'PDF' ? 'PDF Document (.pdf)' : 'Excel Spreadsheet (.xlsx)'}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
+              <div className="pb-2 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Audit System Alerts & Event logs</p>
+                </div>
+                {notificationsList.some(n => !n.read) && (
                   <button 
-                    type="submit"
-                    className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                    onClick={handleMarkAllNotificationsAsRead}
+                    className="text-xs px-3 py-1.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white rounded-xl font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <Sliders className="w-4 h-4" /> Compile and Export Report
+                    <CheckSquare className="w-3.5 h-3.5" />
+                    <span>Mark All Read</span>
                   </button>
+                )}
+              </div>
 
-                </form>
+              {/* Notification Filters */}
+              <div className="flex flex-wrap items-center gap-2">
+                {['All', 'Unread', 'Read', 'recruiter', 'resume', 'application', 'system'].map((filterVal) => {
+                  const isActive = notifFilter === filterVal;
+                  let displayLabel = filterVal.charAt(0).toUpperCase() + filterVal.slice(1);
+                  if (filterVal === 'recruiter') displayLabel = 'Recruiter Alerts';
+                  if (filterVal === 'resume') displayLabel = 'Resume Submissions';
+                  if (filterVal === 'application') displayLabel = 'Application Changes';
+                  
+                  return (
+                    <button
+                      key={filterVal}
+                      onClick={() => setNotifFilter(filterVal)}
+                      className={`text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                        isActive 
+                          ? 'bg-[#6D5EF7] text-white border-[#6D5EF7]' 
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      {displayLabel}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Notifications List */}
+              <div className="bg-white border border-slate-200/80 rounded-[18px] p-6 shadow-sm space-y-4">
+                {filteredNotifications.length > 0 ? (
+                  filteredNotifications.map(n => {
+                    const isUnread = !n.read;
+                    return (
+                      <div 
+                        key={n.id} 
+                        onClick={() => isUnread && handleMarkNotificationAsRead(n.id)}
+                        className={`flex gap-4 p-4 rounded-xl text-xs border transition-all ${
+                          isUnread 
+                            ? 'bg-[#6D5EF7]/5 border-[#6D5EF7]/20 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/10 cursor-pointer shadow-sm' 
+                            : 'bg-slate-50/50 border-slate-100 text-slate-505'
+                        }`}
+                      >
+                        <div className="mt-0.5">
+                          {n.type === 'recruiter' && <Building2 className="w-4 h-4 text-indigo-500" />}
+                          {n.type === 'resume' && <FileCheck2 className="w-4 h-4 text-emerald-500" />}
+                          {n.type === 'application' && <Award className="w-4 h-4 text-amber-500" />}
+                          {n.type === 'system' && <Server className="w-4 h-4 text-slate-500" />}
+                        </div>
+                        <div className="flex-1">
+                          <p className={`text-slate-700 font-medium ${isUnread ? 'font-bold text-slate-900' : ''}`}>{n.text}</p>
+                          <span className="text-[10px] text-slate-450 block mt-1">{n.time}</span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {isUnread && (
+                            <span className="w-2 h-2 bg-[#6D5EF7] rounded-full" title="Unread" />
+                          )}
+                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${isUnread ? 'bg-[#6D5EF7]/10 text-[#6D5EF7]' : 'bg-slate-100 text-slate-400'}`}>
+                            {isUnread ? 'New' : 'Read'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-10 space-y-2">
+                    <Bell className="w-8 h-8 text-slate-300 mx-auto animate-bounce" />
+                    <p className="text-xs text-slate-400 font-bold">No notifications found</p>
+                    <p className="text-[11px] text-slate-400">There are no notifications matching the "{notifFilter}" filter.</p>
+                  </div>
+                )}
               </div>
 
             </div>
@@ -2930,6 +2672,8 @@ const AdminDashboard = () => {
               </div>
 
             </div>
+          )}
+          </>
           )}
 
         </main>
