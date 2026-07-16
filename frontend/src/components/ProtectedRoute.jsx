@@ -22,7 +22,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     if (user.role === 'company') return <Navigate to="/recruiter/dashboard" replace />;
     if (user.role === 'placementCell') return <Navigate to="/placement/dashboard" replace />;
     if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
-    return <Navigate to="/" replace />;
+    return <Navigate to="/jobs" replace />;
   }
 
   return children;

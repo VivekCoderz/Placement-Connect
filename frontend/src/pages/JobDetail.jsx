@@ -94,7 +94,7 @@ const JobDetail = () => {
           <AlertTriangle className="w-5 h-5 flex-shrink-0" />
           <p className="font-semibold">{error}</p>
         </div>
-        <Link to="/" className="inline-flex items-center text-xs font-bold text-emerald-600 hover:underline">
+        <Link to="/jobs" className="inline-flex items-center text-xs font-bold text-emerald-600 hover:underline">
           <ArrowLeft className="w-4 h-4 mr-1.5" /> Return to Listings
         </Link>
       </div>
@@ -116,7 +116,7 @@ const JobDetail = () => {
       {/* Back Button */}
       <div>
         <Link 
-          to="/" 
+          to="/jobs" 
           className="inline-flex items-center gap-2 text-xs font-semibold text-[#94A3B8] hover:text-[#4B5563] transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />

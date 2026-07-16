@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, LogOut, Briefcase, FileText, User, LayoutDashboard, GraduationCap } from 'lucide-react';
+import { Menu, X, LogOut, Briefcase, FileText, User, LayoutDashboard, GraduationCap, Sun, Moon } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { clearUser } from '../redux/authSlice';
 import api from '../utils/api';
@@ -12,6 +12,21 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
 
   const handleLogout = async () => {
     try {
@@ -42,7 +57,7 @@ const Navbar = () => {
         { name: 'Admin Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
       ]
     : [
-        { name: 'Job Drives', path: '/', icon: Briefcase },
+        { name: 'Job Drives', path: '/jobs', icon: Briefcase },
         { name: 'My Applications', path: '/applications', icon: FileText },
         { name: 'My Profile', path: '/profile', icon: User },
       ];
@@ -53,7 +68,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="flex items-center">
-            <Link to={user?.role === 'company' ? '/recruiter/dashboard' : user?.role === 'placementCell' ? '/placement/dashboard' : user?.role === 'admin' ? '/admin/dashboard' : '/'} className="flex items-center space-x-3">
+            <Link to={user?.role === 'company' ? '/recruiter/dashboard' : user?.role === 'placementCell' ? '/placement/dashboard' : user?.role === 'admin' ? '/admin/dashboard' : user?.role === 'student' ? '/jobs' : '/'} className="flex items-center space-x-3">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-[#F5A623] to-[#E0921B] flex items-center justify-center shadow-md">
                 <GraduationCap className="w-5 h-5 text-white" />
               </div>
@@ -91,6 +106,13 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-5">
             {user ? (
               <div className="flex items-center space-x-4">
+                <button
+                  onClick={toggleTheme}
+                  className="p-2.5 text-slate-200 hover:text-[#F5A623] hover:bg-[#082F70] rounded-xl transition-all duration-200"
+                  title="Toggle Theme"
+                >
+                  {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                </button>
                 <NotificationBell />
                 <div className="h-8 w-px bg-white/10" />
                 <div className="flex items-center space-x-3">
@@ -112,6 +134,13 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="flex items-center space-x-3">
+                <button
+                  onClick={toggleTheme}
+                  className="p-2.5 text-slate-200 hover:text-[#F5A623] hover:bg-[#082F70] rounded-xl transition-all duration-200 mr-1"
+                  title="Toggle Theme"
+                >
+                  {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                </button>
                 <Link
                   to="/login"
                   className="text-sm font-semibold text-slate-200 hover:text-white px-4 py-2.5 transition-colors"
@@ -130,6 +159,13 @@ const Navbar = () => {
 
           {/* Mobile hamburger button */}
           <div className="flex items-center space-x-3 md:hidden">
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 text-slate-100 hover:text-[#F5A623] hover:bg-[#082F70] rounded-xl transition-all duration-200"
+              title="Toggle Theme"
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             {user && <NotificationBell />}
             <button
               onClick={() => setIsOpen(!isOpen)}

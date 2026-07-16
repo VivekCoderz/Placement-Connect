@@ -77,7 +77,7 @@ const Applications = () => {
             You haven't applied to any job drives yet.
           </p>
           <Link
-            to="/"
+            to="/jobs"
             className="inline-flex items-center gap-1 bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-sm active:scale-[0.98]"
           >
             Explore Active Drives <ChevronRight className="w-4 h-4 text-white" />

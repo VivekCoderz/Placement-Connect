@@ -148,3 +148,176 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #CBD5E1;
 }
+
+/* Indian Tricolor Independence Theme overrides when html.dark is active (Dim Midnight Style) */
+html.dark body {
+  background-color: #101827 !important; /* Soft Midnight Blue */
+  color: #CBD5E1 !important; /* Light Slate text */
+}
+
+html.dark .bg-\[\#F8FAFC\] {
+  background-color: #101827 !important;
+}
+
+/* Background glows - Tricolor style on soft dark backdrop */
+html.dark .absolute.top-\[-10\%\] {
+  background-color: rgba(255, 153, 51, 0.15) !important; /* Saffron Glow */
+  filter: blur(140px);
+}
+html.dark .absolute.bottom-\[-10\%\] {
+  background-color: rgba(19, 136, 8, 0.15) !important; /* India Green Glow */
+  filter: blur(140px);
+}
+
+/* Cards & Panels: Slate-800 with Saffron Top Border and soft shadow */
+html.dark .bg-white,
+html.dark .glass-panel,
+html.dark .glass-card {
+  background-color: #1E293B !important; /* Slate-800 */
+  border: 1px solid rgba(255, 153, 51, 0.15) !important;
+  border-top: 3.5px solid #FF9933 !important; /* Saffron band */
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .glass-card-hover:hover {
+  background-color: #243048 !important;
+  border-color: rgba(255, 153, 51, 0.35) !important;
+  transform: translateY(-2px);
+}
+
+html.dark .border-\[\#E5E7EB\] {
+  border-color: #334155 !important; /* Slate-700 */
+}
+
+html.dark .border-slate-100 {
+  border-color: #334155 !important;
+}
+
+html.dark .text-\[\#111827\] {
+  color: #F8FAFC !important; /* Off-white headings */
+}
+
+html.dark .text-\[\#4B5563\] {
+  color: #CBD5E1 !important;
+}
+
+html.dark .text-\[\#94A3B8\] {
+  color: #94A3B8 !important;
+}
+
+/* Inputs, Selects, and Textareas */
+html.dark input, 
+html.dark select, 
+html.dark textarea {
+  background-color: #101827 !important;
+  border: 1px solid #334155 !important;
+  color: #F8FAFC !important;
+}
+
+html.dark input:focus, 
+html.dark select:focus, 
+html.dark textarea:focus {
+  border-color: #138808 !important; /* India Green focus border */
+  background-color: #1E293B !important;
+  box-shadow: 0 0 0 4px rgba(19, 136, 8, 0.15) !important;
+}
+
+html.dark input::placeholder {
+  color: #64748B !important;
+}
+
+/* Navbar: Navy Blue (Ashoka Chakra) with Saffron/White/Green bottom border */
+html.dark nav {
+  background-color: #0B3D91 !important;
+  border-bottom: 3.5px solid transparent !important;
+  background-image: linear-gradient(#0B3D91, #0B3D91), linear-gradient(to right, #FF9933 0%, #FFFFFF 50%, #138808 100%) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
+}
+
+html.dark nav .bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Footer overrides */
+html.dark footer {
+  background-color: #101827 !important;
+  border-top: 1px solid #334155 !important;
+  color: #94A3B8 !important;
+}
+
+/* Table overrides */
+html.dark thead {
+  background-color: #334155 !important; /* Slate-700 table header */
+  color: #F8FAFC !important;
+}
+
+html.dark tr {
+  border-color: #334155 !important;
+}
+
+/* Button Colors */
+html.dark .bg-\[\#22C55E\] {
+  background-color: #138808 !important; /* India Green */
+}
+
+html.dark .bg-\[\#F5A623\] {
+  background-color: #FF9933 !important; /* Saffron */
+}
+
+html.dark .text-\[\#F5A623\] {
+  color: #FF9933 !important;
+}
+
+html.dark .text-\[\#22C55E\] {
+  color: #138808 !important;
+}
+
+html.dark .bg-\[\#22C55E\]\/10 {
+  background-color: rgba(19, 136, 8, 0.15) !important;
+  color: #138808 !important;
+  border-color: rgba(19, 136, 8, 0.25) !important;
+}
+
+/* Generic slate classes overrides to map light theme classes */
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700 {
+  color: #F8FAFC !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-550,
+html.dark .text-slate-500 {
+  color: #CBD5E1 !important;
+}
+
+html.dark .text-slate-400 {
+  color: #94A3B8 !important;
+}
+
+html.dark .bg-slate-50 {
+  background-color: #1E293B !important; /* Slate-800 */
+}
+
+html.dark .hover\:bg-slate-50\/80:hover {
+  background-color: #334155 !important; /* Slate-700 hover */
+}
+
+html.dark .hover\:bg-slate-50:hover {
+  background-color: #334155 !important;
+}
+
+/* Scrollbar overrides for dark theme */
+html.dark ::-webkit-scrollbar-track {
+  background: #101827 !important;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #334155 !important;
+  border-color: #334155 !important;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #FF9933 !important;
+}

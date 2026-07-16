@@ -7,6 +7,7 @@ import Layout from './components/Layout';
 import api from './utils/api';
 
 // Pages
+import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
@@ -84,16 +85,17 @@ function App() {
             path="/admin/dashboard"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <Layout>
-                  <AdminDashboard />
-                </Layout>
+                <AdminDashboard />
               </ProtectedRoute>
             }
           />
 
+          {/* Public Landing Page */}
+          <Route path="/" element={<LandingPage />} />
+
           {/* Protected Student Portal Routes */}
           <Route
-            path="/"
+            path="/jobs"
             element={
               <ProtectedRoute allowedRoles={['student']}>
                 <Layout>
