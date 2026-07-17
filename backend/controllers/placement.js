@@ -6,7 +6,7 @@ const Shortlist = require("../models/shortlist");
 const Notification = require("../models/notification");
 const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
-const { sendEmail } = require("../utils/email");
+const { sendEmail, generateICS } = require("../utils/email");
 
 // Upload round-wise CSV shortlist and notify students
 module.exports.uploadShortlist = ErrorWrapper(async (req, res, next) => {
@@ -269,6 +269,134 @@ module.exports.notifyStudents = ErrorWrapper(async (req, res, next) => {
   return res.status(200).json({
     message: `Notification dispatched successfully to ${recipientCount} students.`,
     recipientCount
+  });
+});
+
+// Get all shortlist submissions
+module.exports.getShortlists = ErrorWrapper(async (req, res, next) => {
+  const shortlists = await Shortlist.find()
+    .populate({
+      path: "jobId",
+      populate: { path: "companyId", select: "name" },
+    })
+    .populate({
+      path: "studentIds",
+      select: "name email rollNumber branch year cgpa resumeUrl phone",
+    })
+    .sort({ createdAt: -1 });
+
+  return res.status(200).json({ shortlists });
+});
+
+// Schedule a shortlist and notify students
+module.exports.scheduleShortlist = ErrorWrapper(async (req, res, next) => {
+  const { id } = req.params;
+  const { scheduledAt, message } = req.body;
+
+  if (!scheduledAt) {
+    throw new ErrorHandler(400, "Schedule Date and Time is required");
+  }
+
+  const shortlist = await Shortlist.findById(id)
+    .populate({
+      path: "jobId",
+      populate: { path: "companyId", select: "name" },
+    })
+    .populate("studentIds");
+
+  if (!shortlist) {
+    throw new ErrorHandler(404, "Shortlist submission not found");
+  }
+
+  const job = shortlist.jobId;
+  const company = job.companyId;
+  const roundName = shortlist.roundName;
+  const start = new Date(scheduledAt);
+  const end = new Date(start.getTime() + 60 * 60 * 1000); // Default 1 hour duration
+
+  // Update shortlist status
+  shortlist.status = "Scheduled";
+  shortlist.scheduledAt = start;
+  if (message) shortlist.roundDetails = message;
+  await shortlist.save();
+
+  const notesText = message || shortlist.roundDetails || "No additional instructions provided.";
+
+  // Update applications & notify students
+  let processedCount = 0;
+  for (const student of shortlist.studentIds) {
+    const app = await Application.findOne({ studentId: student._id, jobId: job._id });
+    if (app) {
+      app.status = "Shortlisted";
+
+      const roundData = {
+        name: roundName,
+        result: "Pending",
+        scheduledAt: start,
+        notes: notesText,
+      };
+
+      const roundIdx = app.rounds.findIndex(r => r.name.toLowerCase() === roundName.toLowerCase());
+      if (roundIdx > -1) {
+        app.rounds[roundIdx].scheduledAt = start;
+        app.rounds[roundIdx].notes = notesText;
+      } else {
+        app.rounds.push(roundData);
+      }
+      await app.save();
+
+      // Create notification
+      const notif = new Notification({
+        userId: student.userId,
+        message: `Evaluation Scheduled: Your ${roundName} round for ${job.title} at ${company.name} is on ${start.toLocaleString()}. Check email/invite.`,
+        type: "interview_scheduled",
+      });
+      await notif.save();
+
+      // Generate ICS Calendar File
+      const icsContent = generateICS({
+        start,
+        end,
+        summary: `${roundName}: ${job.title} at ${company.name}`,
+        description: `You have an interview round scheduled for ${job.title} at ${company.name}. \nDetails/Venue: ${notesText}`,
+        location: "Online / Campus Placement Cell",
+        studentName: student.name,
+        studentEmail: student.email,
+      });
+
+      // Send email
+      await sendEmail({
+        to: student.email,
+        subject: `Schedule Update: ${roundName} Round for ${job.title} at ${company.name}`,
+        html: `
+          <h3>Dear ${student.name},</h3>
+          <p>We are pleased to inform you that the placement selection round for <strong>${job.title}</strong> at <strong>${company.name}</strong> has been scheduled.</p>
+          <div style="background:#f1f5f9; padding: 15px; border-left: 4px solid #10b981; margin: 15px 0;">
+            <p><strong>Round Name:</strong> ${roundName}</p>
+            <p><strong>Scheduled Time:</strong> ${start.toLocaleString()}</p>
+            <p><strong>Instructions/Venue:</strong> ${notesText}</p>
+          </div>
+          <p>Please check the attached calendar invite for direct details and log in to PlacementConnect to track status.</p>
+          <br/>
+          <p>Regards,</p>
+          <p>Training & Placement Cell, Geeta University</p>
+        `,
+        attachments: [
+          {
+            filename: "invite.ics",
+            content: icsContent,
+            contentType: "text/calendar",
+          },
+        ],
+      });
+
+      processedCount++;
+    }
+  }
+
+  return res.status(200).json({
+    message: `Successfully scheduled round and notified ${processedCount} shortlisted student(s).`,
+    processedCount,
   });
 });
 

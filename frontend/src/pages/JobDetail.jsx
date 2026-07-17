@@ -131,6 +131,13 @@ const JobDetail = () => {
         </div>
       )}
 
+      {error && (
+        <div className="bg-rose-50 border border-rose-100 text-rose-600 p-5 rounded-xl flex items-center gap-3 text-xs animate-in fade-in duration-300">
+          <AlertTriangle className="w-5 h-5 text-rose-500 flex-shrink-0" />
+          <p className="font-semibold">{error}</p>
+        </div>
+      )}
+
       {/* Main Drive Info Panel */}
       <div className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden shadow-sm">
         {/* Banner area */}
@@ -180,15 +187,27 @@ const JobDetail = () => {
             <div className="space-y-5">
               <h3 className="text-xs font-bold text-[#111827] uppercase tracking-wider">Interview & Evaluation Stages</h3>
               <div className="space-y-3">
-                {(job.rounds || ['Aptitude & Coding Test', 'Group Discussion (GD)', 'Technical Interview', 'HR Evaluation']).map((round, index) => (
-                  <div key={index} className="flex items-center gap-4 bg-[#F8FAFC] border border-[#E5E7EB] p-4 rounded-xl">
-                    <span className="h-6 w-6 rounded-lg bg-white border border-[#E5E7EB] flex items-center justify-center font-mono text-xs font-bold text-[#22C55E] shadow-sm">
-                      {index + 1}
-                    </span>
-                    <span className="text-xs font-bold text-[#4B5563]">{round}</span>
-                    <ChevronRight className="w-4 h-4 text-[#94A3B8] ml-auto" />
-                  </div>
-                ))}
+                {(job.rounds && job.rounds.length > 0 ? job.rounds : [
+                  { name: 'Aptitude & Coding Test', description: 'Written/online evaluation of problem-solving skills' },
+                  { name: 'Group Discussion (GD)', description: 'Communication and teamwork assessment' },
+                  { name: 'Technical Interview', description: 'In-depth assessment of coding, projects, and fundamentals' },
+                  { name: 'HR Evaluation', description: 'Cultural fitment and package negotiation round' }
+                ]).map((round, index) => {
+                  const name = typeof round === 'object' ? round.name : round;
+                  const desc = typeof round === 'object' ? round.description : null;
+                  return (
+                    <div key={index} className="flex items-center gap-4 bg-[#F8FAFC] border border-[#E5E7EB] p-4 rounded-xl">
+                      <span className="h-6 w-6 rounded-lg bg-white border border-[#E5E7EB] flex items-center justify-center font-mono text-xs font-bold text-[#22C55E] shadow-sm">
+                        {index + 1}
+                      </span>
+                      <div className="flex-grow font-semibold">
+                        <span className="text-xs font-bold text-[#4B5563]">{name}</span>
+                        {desc && <p className="text-[10px] text-[#94A3B8] mt-0.5 font-medium">{desc}</p>}
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-[#94A3B8] ml-auto flex-shrink-0" />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

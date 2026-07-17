@@ -10,11 +10,12 @@ import api from '../utils/api';
 const PlacementDashboard = () => {
   const user = useSelector((state) => state.auth.user);
 
-  const [activeTab, setActiveTab] = useState('overview'); // overview | monitor | analyser | notify | csv
+  const [activeTab, setActiveTab] = useState('overview'); // overview | monitor | analyser | notify | csv | recruiterShortlists
   const [drives, setDrives] = useState([]);
   const [applications, setApplications] = useState([]);
   const [students, setStudents] = useState([]);
   const [proposals, setProposals] = useState([]);
+  const [shortlists, setShortlists] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Filter states
@@ -62,6 +63,14 @@ const PlacementDashboard = () => {
         setProposals(list);
       } catch (err) {
         console.error('Failed to load proposals:', err);
+      }
+
+      // Fetch recruiter shortlists
+      try {
+        const shortlistsRes = await api.get('/api/placement/shortlists');
+        setShortlists(shortlistsRes.data.shortlists || []);
+      } catch (err) {
+        console.error('Failed to load shortlists:', err);
       }
 
       // 4. Extract students list from applications or make distinct list
@@ -218,6 +227,13 @@ const PlacementDashboard = () => {
     setActiveTab('notify');
   };
 
+  const formatDateTimeLocal = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    const pad = (n) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto space-y-8 font-sans px-4 sm:px-6 py-6 text-[#4B5563]">
       
@@ -301,6 +317,14 @@ const PlacementDashboard = () => {
           }`}
         >
           <Upload className="w-3.5 h-3.5" /> Shortlist CSV
+        </button>
+        <button
+          onClick={() => setActiveTab('recruiterShortlists')}
+          className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+            activeTab === 'recruiterShortlists' ? 'bg-[#22C55E] text-white shadow-sm' : 'text-[#94A3B8] hover:text-[#4B5563] hover:bg-[#F8FAFC]'
+          }`}
+        >
+          <Users className="w-3.5 h-3.5" /> Recruiter Shortlists
         </button>
       </div>
 
@@ -777,6 +801,135 @@ const PlacementDashboard = () => {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Recruiter Shortlists Scheduling View */}
+      {activeTab === 'recruiterShortlists' && (
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
+          <div className="border-b border-[#E5E7EB] pb-5 pb-5">
+            <h2 className="text-lg font-bold text-[#111827] tracking-tight">Recruiter Shortlist Handover & Scheduling</h2>
+            <p className="text-xs text-[#4B5563] font-medium mt-1">Review shortlists submitted by recruiters. Assign a date & time to schedule the next recruitment round and notify the selected students.</p>
+          </div>
+
+          {shortlists.length === 0 ? (
+            <div className="text-center py-16 bg-[#F8FAFC] rounded-2xl border border-dashed border-[#E5E7EB]">
+              <Users className="w-10 h-10 text-[#94A3B8] mx-auto mb-3" />
+              <p className="text-xs font-semibold text-[#4B5563]">No recruiter shortlists have been submitted yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-6 text-[#4B5563]">
+              {shortlists.map((sh) => {
+                const job = sh.jobId || {};
+                const companyName = job.companyId?.name || "Company";
+                const isScheduled = sh.status === 'Scheduled';
+
+                return (
+                  <div key={sh._id} className="p-6 rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] space-y-5">
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2.5 w-2.5 rounded-full ${isScheduled ? 'bg-[#22C55E]' : 'bg-amber-400 animate-pulse'}`} />
+                          <h4 className="font-bold text-[#111827] text-sm">{companyName} - {job.title}</h4>
+                        </div>
+                        <p className="text-xs text-[#4B5563] font-semibold mt-1">
+                          Target Round: <strong className="text-[#7C3AED] font-bold">{sh.roundName}</strong> | Candidates: <strong className="text-[#111827] font-bold">{sh.studentIds?.length || 0}</strong>
+                        </p>
+                        {sh.roundDetails && (
+                          <p className="text-[11px] text-[#4B5563] bg-white p-2.5 border border-[#E5E7EB] rounded-lg mt-2 italic font-semibold">
+                            Recruiter Notes: "{sh.roundDetails}"
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <span className={`text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider ${
+                          isScheduled 
+                            ? 'bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#22C55E]' 
+                            : 'bg-amber-50 border border-amber-200 text-amber-600'
+                        }`}>
+                          {sh.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Shortlisted Candidates list */}
+                    <div className="space-y-2">
+                      <p className="text-[9px] font-bold text-[#94A3B8] uppercase tracking-widest">Shortlisted Candidates</p>
+                      <div className="flex flex-wrap gap-2">
+                        {sh.studentIds?.map(student => (
+                          <div key={student._id} className="bg-white border border-[#E5E7EB] px-3 py-1 rounded-lg text-xs flex flex-col font-semibold">
+                            <span className="text-[#111827]">{student.name}</span>
+                            <span className="text-[9px] text-[#94A3B8] font-mono">{student.rollNumber} ({student.branch})</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Schedule Form */}
+                    {!isScheduled ? (
+                      <div className="pt-4 border-t border-[#E5E7EB] font-semibold">
+                        <form onSubmit={async (e) => {
+                          e.preventDefault();
+                          const dateVal = e.target.scheduledAt.value;
+                          const detailsVal = e.target.roundDetails.value;
+                          if (!dateVal) return alert("Please specify the scheduled date and time.");
+
+                          try {
+                            const res = await api.post(`/api/placement/shortlist/${sh._id}/schedule`, {
+                              scheduledAt: dateVal,
+                              message: detailsVal
+                            });
+                            if (res.status === 200) {
+                              alert("Evaluation round successfully scheduled and student notifications dispatched!");
+                              fetchDashboardData(); // Refresh list
+                            }
+                          } catch (err) {
+                            alert(err.response?.data?.message || err.message || "Failed to schedule shortlist round");
+                          }
+                        }} className="space-y-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Schedule Date & Time *</label>
+                              <input
+                                type="datetime-local"
+                                name="scheduledAt"
+                                defaultValue={sh.scheduledAt ? formatDateTimeLocal(sh.scheduledAt) : ""}
+                                required
+                                className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Update Instructions/Venue details</label>
+                              <input
+                                type="text"
+                                name="roundDetails"
+                                defaultValue={sh.roundDetails || ""}
+                                placeholder="e.g. Online at 10 AM, HackerRank link"
+                                className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                          <button
+                            type="submit"
+                            className="px-4 py-2.5 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1 active:scale-[0.98]"
+                          >
+                            <Calendar className="w-3.5 h-3.5" /> Schedule & Broadcast to Students
+                          </button>
+                        </form>
+                      </div>
+                    ) : (
+                      <div className="pt-3 border-t border-[#E5E7EB] text-xs font-bold text-[#22C55E] flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
+                        Scheduled for: {new Date(sh.scheduledAt).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>

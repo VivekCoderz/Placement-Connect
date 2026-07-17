@@ -47,6 +47,13 @@ const jobSchema = new mongoose.Schema(
       enum: ["active", "closed"],
       default: "active",
     },
+    rounds: [
+      {
+        number: { type: Number },
+        name: { type: String, required: true },
+        description: { type: String },
+      },
+    ],
   },
   { timestamps: true }
 );

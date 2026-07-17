@@ -19,6 +19,8 @@ router.post(
 // Get all Drives & Applications - accessible by placementCell and admin
 router.get("/drives", jwtVerify, authorizeRoles("placementCell", "admin"), placementController.getDrives);
 router.get("/applications", jwtVerify, authorizeRoles("placementCell", "admin"), placementController.getApplications);
+router.get("/shortlists", jwtVerify, authorizeRoles("placementCell", "admin"), placementController.getShortlists);
+router.post("/shortlist/:id/schedule", jwtVerify, authorizeRoles("placementCell", "admin"), placementController.scheduleShortlist);
 
 // Send round schedule notification to students - accessible by placementCell and admin
 router.post(

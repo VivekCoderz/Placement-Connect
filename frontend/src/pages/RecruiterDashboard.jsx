@@ -15,6 +15,7 @@ const RecruiterDashboard = () => {
   const [drives, setDrives] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
   const [applicants, setApplicants] = useState([]);
+  const [selectedApplicants, setSelectedApplicants] = useState([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
   const [isLoadingApplicants, setIsLoadingApplicants] = useState(false);
   const [submittingJob, setSubmittingJob] = useState(false);
@@ -42,6 +43,12 @@ const RecruiterDashboard = () => {
     }
   });
 
+  const [postRounds, setPostRounds] = useState([
+    { number: 1, name: 'Aptitude Test', description: 'Online coding and aptitude test' },
+    { number: 2, name: 'Technical Interview', description: 'In-depth coding and systems discussion' },
+    { number: 3, name: 'HR Round', description: 'Cultural fit and salary negotiation' }
+  ]);
+
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
 
@@ -60,6 +67,7 @@ const RecruiterDashboard = () => {
   // Fetch drives posted by recruiter
   const fetchMyDrives = async () => {
     setIsLoadingJobs(true);
+    setSelectedApplicants([]);
     try {
       const response = await api.get('/api/auth/me');
       const data = response.data;
@@ -85,6 +93,7 @@ const RecruiterDashboard = () => {
 
   const handleFetchApplicants = async (job, silent = false) => {
     setSelectedJob(job);
+    setSelectedApplicants([]);
     if (!silent) {
       setIsLoadingApplicants(true);
       setApplicants([]);
@@ -165,7 +174,8 @@ const RecruiterDashboard = () => {
           branches: eligibleBranches,
           years: eligibleYears
         },
-        deadline: deadline
+        deadline: deadline,
+        rounds: postRounds.map((r, idx) => ({ number: idx + 1, name: r.name, description: r.description }))
       };
 
       const response = await api.post('/api/company/jobs', payload);
@@ -180,6 +190,11 @@ const RecruiterDashboard = () => {
           branches: { CSE: true, ECE: true, EEE: false, IT: true, MECH: false, CIVIL: false },
           years: { '3': false, '4': true }
         });
+        setPostRounds([
+          { number: 1, name: 'Aptitude Test', description: 'Online coding and aptitude test' },
+          { number: 2, name: 'Technical Interview', description: 'In-depth coding and systems discussion' },
+          { number: 3, name: 'HR Round', description: 'Cultural fit and salary negotiation' }
+        ]);
         fetchMyDrives();
         setTimeout(() => {
           setFormSuccess('');
@@ -388,8 +403,8 @@ const RecruiterDashboard = () => {
 
                         <div className="flex justify-between items-center pt-3 border-t border-[#E5E7EB] mt-3 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">
                           <span>Min CGPA: {job.eligibility?.cgpa}</span>
-                          <span className="text-[#22C55E] flex items-center gap-1 group">
-                            Applicants <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                          <span className="text-[#22C55E] flex items-center gap-1.5 font-bold">
+                            {job.applicantCount || 0} Applicants <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
                           </span>
                         </div>
                       </div>
@@ -431,13 +446,52 @@ const RecruiterDashboard = () => {
                     <p className="text-xs font-semibold text-[#4B5563]">No students have applied to this drive yet.</p>
                   </div>
                 ) : (
-                  <div className="space-y-6">
-                    {applicants.map((app) => {
-                      const student = app.studentId || {};
-                      
-                      return (
-                        <div key={app._id} className="p-6 rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] hover:bg-[#F1F5F9] transition-all duration-300 space-y-5">
-                          {/* Student Info */}
+                  <div className="space-y-4">
+                    {/* Select All Checkbox */}
+                    <div className="flex items-center justify-between bg-[#F8FAFC] p-4 rounded-xl border border-[#E5E7EB] shadow-sm select-none animate-in fade-in duration-200">
+                      <label className="flex items-center gap-2.5 text-xs font-bold text-[#4B5563] cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={applicants.length > 0 && selectedApplicants.length === applicants.length}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedApplicants(applicants.map(a => a._id));
+                            } else {
+                              setSelectedApplicants([]);
+                            }
+                          }}
+                          className="rounded text-[#22C55E] focus:ring-[#22C55E]/10 w-4 h-4 border-[#E5E7EB] bg-white cursor-pointer"
+                        />
+                        <span>Select All Candidates ({applicants.length})</span>
+                      </label>
+                      {selectedApplicants.length > 0 && (
+                        <span className="text-xs font-bold text-[#7C3AED]">
+                          {selectedApplicants.length} selected
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="space-y-6">
+                      {applicants.map((app) => {
+                        const student = app.studentId || {};
+                        
+                        return (
+                          <div key={app._id} className="p-6 rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] hover:bg-[#F1F5F9] transition-all duration-300 flex items-start gap-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedApplicants.includes(app._id)}
+                              onChange={(e) => {
+                                const isChecked = e.target.checked;
+                                if (isChecked) {
+                                  setSelectedApplicants(prev => [...prev, app._id]);
+                                } else {
+                                  setSelectedApplicants(prev => prev.filter(id => id !== app._id));
+                                }
+                              }}
+                              className="rounded text-[#22C55E] focus:ring-[#22C55E]/10 w-4 h-4 border-[#E5E7EB] bg-white cursor-pointer mt-1"
+                            />
+                            <div className="flex-1 space-y-5">
+                              {/* Student Info */}
                           <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                             <div className="space-y-1">
                               <h4 className="font-bold text-[#111827] text-sm">{student.name}</h4>
@@ -546,12 +600,101 @@ const RecruiterDashboard = () => {
                             </div>
                           </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Handover shortlists section */}
+                {selectedApplicants.length > 0 && (
+                  <div className="bg-[#4C1D95]/5 border border-[#4C1D95]/10 p-6 rounded-xl space-y-4 shadow-sm mt-6 animate-in fade-in duration-200">
+                    <div className="flex items-center gap-2">
+                      <Send className="w-4 h-4 text-[#7C3AED]" />
+                      <h4 className="font-bold text-[#111827] text-sm">Send Shortlist & Schedule to Placement Cell</h4>
+                    </div>
+                    <p className="text-xs text-[#4B5563] font-semibold">
+                      You have selected <strong className="text-[#7C3AED] font-bold">{selectedApplicants.length} candidate(s)</strong>. Submit this batch shortlist to the Training & Placement Cell with your proposed round schedule.
+                    </p>
+                    
+                    <form onSubmit={async (e) => {
+                      e.preventDefault();
+                      const targetRound = e.target.roundName.value;
+                      const roundDetails = e.target.roundDetails.value;
+                      const scheduledAt = e.target.scheduledAt.value;
+                      
+                      if (!targetRound) return alert("Please select the evaluation round name.");
+                      if (!scheduledAt) return alert("Please specify the scheduled date & time.");
+
+                      const ids = selectedApplicants
+                        .map(appId => applicants.find(a => a._id === appId)?.studentId?._id)
+                        .filter(Boolean);
+
+                      try {
+                        const res = await api.post('/api/company/submit-shortlist', {
+                          jobId: selectedJob._id,
+                          roundName: targetRound,
+                          roundDetails,
+                          scheduledAt,
+                          studentIds: ids
+                        });
+                        if (res.status === 201) {
+                          alert(`Shortlist and schedule successfully submitted for ${ids.length} student(s)!`);
+                          setSelectedApplicants([]);
+                          e.target.reset();
+                          handleFetchApplicants(selectedJob, true); // Refresh silently
+                        }
+                      } catch (err) {
+                        alert(err.response?.data?.message || err.message || "Failed to submit shortlist");
+                      }
+                    }} className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Evaluation Round *</label>
+                          <select
+                            name="roundName"
+                            required
+                            className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                          >
+                            <option value="">-- Select Round --</option>
+                            {(selectedJob.rounds && selectedJob.rounds.length > 0 ? selectedJob.rounds.map(r => r.name) : [
+                              'Aptitude Test', 'Group Discussion (GD)', 'Technical Interview', 'HR Round'
+                            ]).map((rName, idx) => (
+                              <option key={idx} value={rName}>{rName}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Proposed Date & Time *</label>
+                          <input
+                            type="datetime-local"
+                            name="scheduledAt"
+                            required
+                            className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Venue/Details (Optional)</label>
+                          <input
+                            type="text"
+                            name="roundDetails"
+                            placeholder="e.g. Room 302, Block A or HackerRank link"
+                            className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] placeholder-slate-400 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <button
+                        type="submit"
+                        className="px-4 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 active:scale-[0.98]"
+                      >
+                        <Send className="w-3.5 h-3.5" /> Submit Batch Shortlist & Proposed Schedule
+                      </button>
+                    </form>
                   </div>
                 )}
               </div>
-            ) : (
+            )}
+          </div>
+        ) : (
               <div className="bg-[#F8FAFC] border border-dashed border-[#E5E7EB] rounded-2xl p-16 text-center">
                 <div className="h-12 w-12 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center mx-auto mb-4 text-[#94A3B8] shadow-sm">
                   <Briefcase className="w-6 h-6" />
@@ -704,6 +847,66 @@ const RecruiterDashboard = () => {
                     <span>4th Year Students (Full-Time Drives)</span>
                   </label>
                 </div>
+              </div>
+            </div>
+
+            {/* Custom Recruitment Rounds Section */}
+            <div className="space-y-4 pt-4 border-t border-[#E5E7EB]">
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Recruitment Rounds / Stages *</label>
+                <button
+                  type="button"
+                  onClick={() => setPostRounds(prev => [...prev, { number: prev.length + 1, name: '', description: '' }])}
+                  className="px-3 py-1 bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#22C55E] hover:bg-[#22C55E]/20 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add Stage
+                </button>
+              </div>
+
+              <div className="space-y-3.5 bg-[#F8FAFC] p-5 rounded-xl border border-[#E5E7EB]">
+                {postRounds.map((round, idx) => (
+                  <div key={idx} className="flex gap-4 items-start bg-white p-4 rounded-xl border border-[#E5E7EB] relative shadow-sm">
+                    <span className="h-6 w-6 rounded-lg bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#22C55E] flex items-center justify-center font-mono text-xs font-bold mt-2">
+                      {idx + 1}
+                    </span>
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <input
+                          type="text"
+                          required
+                          value={round.name}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setPostRounds(prev => prev.map((r, i) => i === idx ? { ...r, name: val } : r));
+                          }}
+                          className="block w-full py-1.5 px-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-lg text-xs font-semibold text-[#111827] focus:outline-none"
+                          placeholder="Round Name (e.g. Technical Interview)"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <input
+                          type="text"
+                          value={round.description}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setPostRounds(prev => prev.map((r, i) => i === idx ? { ...r, description: val } : r));
+                          }}
+                          className="block w-full py-1.5 px-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-lg text-xs font-semibold text-[#111827] focus:outline-none"
+                          placeholder="Short description (e.g. System Design, DSA)"
+                        />
+                      </div>
+                    </div>
+                    {postRounds.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setPostRounds(prev => prev.filter((_, i) => i !== idx))}
+                        className="p-1.5 bg-rose-50 text-rose-500 hover:bg-rose-100 hover:text-rose-600 border border-rose-200 rounded-lg text-xs mt-1 transition-colors"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 

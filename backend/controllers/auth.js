@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const Student = require("../models/student");
 const Company = require("../models/company");
+const Application = require("../models/application");
 const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
 const { sendEmail } = require("../utils/email");
@@ -323,9 +324,21 @@ module.exports.me = ErrorWrapper(async (req, res, next) => {
   if (user.role === "student") {
     details = await Student.findOne({ userId: user._id });
   } else if (user.role === "company") {
-    details = await Company.findOne({ recruiterId: user._id }).populate(
-      "jobPostings",
+    const rawDetails = await Company.findOne({ recruiterId: user._id }).populate(
+      "jobPostings"
     );
+    if (rawDetails) {
+      details = rawDetails.toObject();
+      if (details.jobPostings && details.jobPostings.length > 0) {
+        const jobPostingsWithCounts = [];
+        for (const job of details.jobPostings) {
+          const applicantCount = await Application.countDocuments({ jobId: job._id });
+          job.applicantCount = applicantCount;
+          jobPostingsWithCounts.push(job);
+        }
+        details.jobPostings = jobPostingsWithCounts;
+      }
+    }
   }
 
   return res.status(200).json({

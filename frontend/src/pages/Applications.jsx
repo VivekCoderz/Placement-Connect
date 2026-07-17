@@ -127,7 +127,7 @@ const Applications = () => {
 
                 {/* Stepper block */}
                 <div className="p-6 md:p-8 bg-white">
-                  <Stepper currentStatus={app.status} />
+                  <Stepper currentStatus={app.status} rounds={job.rounds} appRounds={app.rounds} />
                 </div>
 
                 {/* Simulator Drawer Panel */}

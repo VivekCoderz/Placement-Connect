@@ -1,8 +1,8 @@
 import React from 'react';
 import { Check, X, ClipboardCheck, Code, Users, UserCheck, CheckCircle2 } from 'lucide-react';
 
-const Stepper = ({ currentStatus }) => {
-  const steps = [
+const Stepper = ({ currentStatus, rounds, appRounds }) => {
+  let steps = [
     { label: 'Applied', key: 'Applied', desc: 'Application Received', icon: ClipboardCheck },
     { label: 'Aptitude', key: 'Aptitude', desc: 'Aptitude & Technical MCQ', icon: Code },
     { label: 'GD Round', key: 'GD', desc: 'Group Discussion', icon: Users },
@@ -10,16 +10,57 @@ const Stepper = ({ currentStatus }) => {
     { label: 'Decision', key: 'Decision', desc: 'Final Selection Status', icon: CheckCircle2 }
   ];
 
-  const statusIndices = {
-    'Applied': 0,
-    'Aptitude': 1,
-    'GD': 2,
-    'HR': 3,
-    'Selected': 4,
-    'Rejected': 4
-  };
+  let currentIndex = 0;
 
-  const currentIndex = statusIndices[currentStatus] ?? 0;
+  if (rounds && Array.isArray(rounds) && rounds.length > 0) {
+    steps = [
+      { label: 'Applied', key: 'Applied', desc: 'Application Received', icon: ClipboardCheck },
+      ...rounds.map((r, idx) => {
+        let icon = Code;
+        const nameLower = r.name.toLowerCase();
+        if (nameLower.includes('gd') || nameLower.includes('group') || nameLower.includes('discussion')) {
+          icon = Users;
+        } else if (nameLower.includes('hr') || nameLower.includes('personal') || nameLower.includes('interview')) {
+          icon = UserCheck;
+        }
+        return {
+          label: r.name,
+          key: `round-${idx}`,
+          desc: r.description || `Round ${idx + 1} Evaluation`,
+          icon
+        };
+      }),
+      { label: 'Decision', key: 'Decision', desc: 'Final Selection Status', icon: CheckCircle2 }
+    ];
+
+    if (currentStatus === 'Applied') {
+      currentIndex = 0;
+    } else if (currentStatus === 'Selected' || currentStatus === 'Rejected') {
+      currentIndex = steps.length - 1;
+    } else if (currentStatus === 'Shortlisted') {
+      currentIndex = 1; // Default to first round
+      if (appRounds && Array.isArray(appRounds) && appRounds.length > 0) {
+        const latestRound = appRounds[appRounds.length - 1];
+        if (latestRound && latestRound.name) {
+          const matchIdx = rounds.findIndex(r => r.name.toLowerCase() === latestRound.name.toLowerCase());
+          if (matchIdx > -1) {
+            currentIndex = matchIdx + 1;
+          }
+        }
+      }
+    }
+  } else {
+    const statusIndices = {
+      'Applied': 0,
+      'Aptitude': 1,
+      'GD': 2,
+      'HR': 3,
+      'Selected': 4,
+      'Rejected': 4
+    };
+    currentIndex = statusIndices[currentStatus] ?? 0;
+  }
+
   const isRejected = currentStatus === 'Rejected';
   const isSelected = currentStatus === 'Selected';
 
@@ -30,9 +71,9 @@ const Stepper = ({ currentStatus }) => {
         {steps.map((step, index) => {
           const StepIcon = step.icon;
           
-          let isCompleted = index < currentIndex || (index === 4 && isSelected);
+          let isCompleted = index < currentIndex || (index === steps.length - 1 && isSelected);
           let isActive = index === currentIndex && !isCompleted;
-          let isFailed = index === 4 && isRejected;
+          let isFailed = index === steps.length - 1 && isRejected;
 
           const showLine = index < steps.length - 1;
           const lineCompleted = index < currentIndex;
@@ -74,7 +115,7 @@ const Stepper = ({ currentStatus }) => {
                         : 'text-[#4B5563]'
                     }`}
                   >
-                    {index === 4 ? (isSelected ? 'Selected' : isRejected ? 'Rejected' : 'Decision') : step.label}
+                    {index === steps.length - 1 ? (isSelected ? 'Selected' : isRejected ? 'Rejected' : 'Decision') : step.label}
                   </p>
                   <p className="text-[10px] text-[#94A3B8] mt-1.5 leading-tight max-w-[120px] mx-auto font-medium">
                     {step.desc}
@@ -101,9 +142,9 @@ const Stepper = ({ currentStatus }) => {
       <div className="md:hidden flex flex-col space-y-8 relative pl-6 border-l-2 border-[#E5E7EB] ml-5 py-2">
         {steps.map((step, index) => {
           const StepIcon = step.icon;
-          let isCompleted = index < currentIndex || (index === 4 && isSelected);
+          let isCompleted = index < currentIndex || (index === steps.length - 1 && isSelected);
           let isActive = index === currentIndex && !isCompleted;
-          let isFailed = index === 4 && isRejected;
+          let isFailed = index === steps.length - 1 && isRejected;
 
           return (
             <div key={step.key} className="relative flex items-start gap-5">
@@ -153,7 +194,7 @@ const Stepper = ({ currentStatus }) => {
                         : 'text-[#4B5563]'
                     }`}
                   >
-                    {index === 4 ? (isSelected ? 'Selected' : isRejected ? 'Rejected' : 'Decision') : step.label}
+                    {index === steps.length - 1 ? (isSelected ? 'Selected' : isRejected ? 'Rejected' : 'Decision') : step.label}
                   </h4>
                 </div>
                 <p className="text-xs text-[#4B5563] mt-1.5 leading-relaxed">{step.desc}</p>
@@ -163,7 +204,7 @@ const Stepper = ({ currentStatus }) => {
                     Current Stage
                   </span>
                 )}
-                {isCompleted && index === 4 && (
+                {isCompleted && index === steps.length - 1 && (
                   <span className="inline-flex items-center gap-1 mt-3 text-[10px] bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 px-2.5 py-0.5 rounded-full font-bold">
                     Offer Secured 🎉
                   </span>

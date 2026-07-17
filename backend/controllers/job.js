@@ -92,6 +92,11 @@ module.exports.applyJob = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(404, "Student profile not found");
   }
 
+  // Check if student has uploaded a resume
+  if (!student.resumeUrl) {
+    throw new ErrorHandler(400, "Please upload your resume in your profile before applying to placement drives.");
+  }
+
   const job = await Job.findById(req.params.id).populate("companyId");
   if (!job) {
     throw new ErrorHandler(404, "Job drive not found");

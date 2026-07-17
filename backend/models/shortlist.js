@@ -17,6 +17,17 @@ const shortlistSchema = new mongoose.Schema(
         ref: "Student",
       },
     ],
+    status: {
+      type: String,
+      enum: ["Pending", "Scheduled"],
+      default: "Pending",
+    },
+    roundDetails: {
+      type: String,
+    },
+    scheduledAt: {
+      type: Date,
+    },
     uploadedAt: {
       type: Date,
       default: Date.now,
