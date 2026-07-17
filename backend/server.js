@@ -15,10 +15,12 @@ const checkOrigin = (origin, callback) => {
     "http://localhost:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://placement-connect-gules.vercel.app"
+    "https://placementconnect.vercel.app",
   ];
   if (process.env.FRONTEND_URL) {
-    const envOrigins = process.env.FRONTEND_URL.split(",").map(url => url.trim());
+    const envOrigins = process.env.FRONTEND_URL.split(",").map((url) =>
+      url.trim(),
+    );
     originsList.push(...envOrigins);
   }
 
@@ -28,12 +30,18 @@ const checkOrigin = (origin, callback) => {
   }
 
   // Check if origin is localhost on any port dynamically
-  if (/^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) {
+  if (
+    /^http:\/\/localhost(:\d+)?$/.test(origin) ||
+    /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)
+  ) {
     return callback(null, true);
   }
 
   // Check if origin matches vercel preview/staging deploys or custom staging hosts
-  if (origin.includes("placement-connect") || origin.includes("geeta-university")) {
+  if (
+    origin.includes("placement-connect") ||
+    origin.includes("geeta-university")
+  ) {
     return callback(null, true);
   }
 
@@ -44,7 +52,7 @@ app.use(
   cors({
     origin: checkOrigin,
     credentials: true,
-  })
+  }),
 );
 
 app.use(express.json());
@@ -91,7 +99,7 @@ const io = new Server(server, {
   cors: {
     origin: checkOrigin,
     credentials: true,
-  }
+  },
 });
 
 io.on("connection", (socket) => {
@@ -124,4 +132,3 @@ connectDB().then(() => {
     console.log(`Server is running on port ${PORT}`);
   });
 });
-
