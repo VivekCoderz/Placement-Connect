@@ -3,9 +3,66 @@ import { useSelector } from 'react-redux';
 import { 
   Building2, Briefcase, Users, Calendar, DollarSign, Award, Plus, Check, Eye, FileText, ArrowRight, Clock, MapPin, 
   Globe, Phone, User, AlertCircle, RefreshCw, CheckCircle2, XCircle, ChevronRight, Download, Send, Search, BarChart3,
-  Upload, Filter, TrendingUp, GraduationCap, BellRing
+  Upload, Filter, TrendingUp, GraduationCap, BellRing, Sparkles, Info
 } from 'lucide-react';
 import api from '../utils/api';
+
+// Helper component for Company analytics row expansion in Placement Dashboard
+const CompanyTableRow = ({ co }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  return (
+    <React.Fragment>
+      <tr className="border-b border-[#E5E7EB] hover:bg-slate-50/50">
+        <td className="py-3 pl-2 font-bold text-slate-800">{co.companyName}</td>
+        <td className="py-3 text-slate-500 text-xs">{co.industry}</td>
+        <td className="py-3 text-center font-bold text-slate-700 text-xs">{co.totalDrives}</td>
+        <td className="py-3 text-center font-bold text-slate-700 text-xs">{co.uniqueAppliedStudents}</td>
+        <td className="py-3 text-center font-bold text-[#5B4FCF] text-xs">{co.uniquePlacedStudents}</td>
+        <td className="py-3 text-right font-black text-emerald-600 text-xs">
+          {co.uniquePlacedStudents > 0 ? `${co.lowestPackage} - ${co.highestPackage}` : 'N/A'}
+        </td>
+        <td className="py-3 pr-2 text-right">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-[10px] font-bold px-2 py-1 rounded bg-[#5B4FCF]/10 text-[#5B4FCF] hover:bg-[#5B4FCF]/20 transition-all cursor-pointer"
+          >
+            {isExpanded ? 'Hide Placements' : 'View Placements'}
+          </button>
+        </td>
+      </tr>
+      {isExpanded && (
+        <tr>
+          <td colSpan="7" className="bg-slate-50/60 p-4 border-b border-[#E5E7EB] rounded-lg">
+            <div className="space-y-3">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Placed Students list:</span>
+                <span className="text-[10px] bg-emerald-50 border border-emerald-250 text-emerald-600 px-2 py-0.5 rounded font-black">{co.placedStudentsList.length} placed</span>
+              </div>
+              {co.placedStudentsList.length === 0 ? (
+                <p className="text-[11px] text-slate-400 font-medium">No students placed yet under this recruiter.</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  {co.placedStudentsList.map((stud, sIdx) => (
+                    <div key={sIdx} className="bg-white border border-slate-200/60 p-3 rounded-xl flex justify-between items-center shadow-sm">
+                      <div>
+                        <h6 className="font-bold text-slate-800 text-xs">{stud.studentName}</h6>
+                        <p className="text-[10px] text-slate-405 font-mono mt-0.5">{stud.rollNumber} · {stud.branch}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[9px] bg-emerald-50 border border-emerald-200 text-emerald-600 px-2 py-0.5 rounded font-black">{stud.package} LPA</span>
+                        <p className="text-[9px] text-slate-500 font-semibold mt-0.5">{stud.jobTitle}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </React.Fragment>
+  );
+};
 
 const PlacementDashboard = () => {
   const user = useSelector((state) => state.auth.user);
@@ -17,6 +74,10 @@ const PlacementDashboard = () => {
   const [proposals, setProposals] = useState([]);
   const [shortlists, setShortlists] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [analyserMode, setAnalyserMode] = useState('stats'); // stats | talent
+  const [detailedStats, setDetailedStats] = useState(null);
+  const [analyticsSubTab, setAnalyticsSubTab] = useState('overview'); // overview | companyStats | skills
+  const [analyticsSearchQuery, setAnalyticsSearchQuery] = useState('');
 
   // Filter states
   const [monitorSearch, setMonitorSearch] = useState('');
@@ -282,6 +343,16 @@ const PlacementDashboard = () => {
         }
       });
       setStudents(extractedStudents);
+
+      // Fetch Detailed Analytics Stats
+      try {
+        const detailedRes = await api.get('/api/analytics/detailed-stats');
+        if (detailedRes.data) {
+          setDetailedStats(detailedRes.data);
+        }
+      } catch (err) {
+        console.error('Failed to load detailed stats:', err);
+      }
     } catch (err) {
       console.error('Failed to load placement cell data:', err);
     } finally {
@@ -719,98 +790,494 @@ const PlacementDashboard = () => {
         </div>
       )}
 
-      {/* 3. STUDENT ANALYSER */}
+      {/* 3. STUDENT & PLACEMENT ANALYSER */}
       {activeTab === 'analyser' && (
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
-          <div className="border-b border-[#E5E7EB] pb-5 space-y-4">
+        <div className="space-y-6 animate-in fade-in duration-300">
+          
+          {/* Main toggle header */}
+          <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm">
             <div>
-              <h3 className="text-base font-bold text-[#111827] tracking-tight">Student Talent Analyser</h3>
-              <p className="text-xs text-[#4B5563] font-medium mt-1">Filter, examine, and track selection metrics for campus registered students.</p>
+              <h3 className="text-base font-bold text-[#111827] tracking-tight">Talent & Placement Analyser</h3>
+              <p className="text-xs text-[#4B5563] font-medium mt-1">Examine placement campaign statistics, compensation rankings, and candidate talent directories.</p>
             </div>
-
-            {/* Filters Bar */}
-            <div className="flex flex-wrap gap-4 items-center">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-[#94A3B8] tracking-wider">Branch:</span>
-                <select
-                  value={analyserBranch}
-                  onChange={(e) => setAnalyserBranch(e.target.value)}
-                  className="py-1.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#4B5563] focus:outline-none"
-                >
-                  <option value="All" className="bg-white text-[#4B5563]">All Branches</option>
-                  {branchesList.map(b => <option key={b} value={b} className="bg-white text-[#4B5563]">{b}</option>)}
-                </select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-[#94A3B8] tracking-wider">Min CGPA:</span>
-                <select
-                  value={analyserCgpa}
-                  onChange={(e) => setAnalyserCgpa(e.target.value)}
-                  className="py-1.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#4B5563] focus:outline-none"
-                >
-                  <option value="0" className="bg-white text-[#4B5563]">All CGPA</option>
-                  <option value="6.0" className="bg-white text-[#4B5563]">&gt;= 6.0 CGPA</option>
-                  <option value="7.0" className="bg-white text-[#4B5563]">&gt;= 7.0 CGPA</option>
-                  <option value="8.0" className="bg-white text-[#4B5563]">&gt;= 8.0 CGPA</option>
-                  <option value="9.0" className="bg-white text-[#4B5563]">&gt;= 9.0 CGPA</option>
-                </select>
-              </div>
-
-              <div className="relative flex-grow sm:flex-grow-0 sm:w-64 ml-auto">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#94A3B8]">
-                  <Search className="w-4 h-4" />
-                </div>
-                <input
-                  type="text"
-                  value={analyserSearch}
-                  onChange={(e) => setAnalyserSearch(e.target.value)}
-                  className="pl-9 block w-full py-1.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] font-medium text-[#111827]"
-                  placeholder="Search student name..."
-                />
-              </div>
+            
+            <div className="flex bg-[#F3F4F6] p-1 rounded-xl self-start sm:self-center">
+              <button
+                onClick={() => setAnalyserMode('stats')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyserMode === 'stats' ? 'bg-[#5B4FCF] text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                Placement Analytics
+              </button>
+              <button
+                onClick={() => setAnalyserMode('talent')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyserMode === 'talent' ? 'bg-[#5B4FCF] text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                Student Talent Search
+              </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {students
-              .filter(s => analyserBranch === 'All' || s.branch?.toUpperCase() === analyserBranch.toUpperCase())
-              .filter(s => parseFloat(s.cgpa) >= parseFloat(analyserCgpa))
-              .filter(s => s.name?.toLowerCase().includes(analyserSearch.toLowerCase()))
-              .map(student => (
-                <div key={student._id} className="p-5 bg-[#F8FAFC] rounded-xl border border-[#E5E7EB] space-y-4 hover:bg-[#F1F5F9] transition-all duration-300">
-                  <div className="flex justify-between items-start gap-2">
-                    <div>
-                      <h4 className="font-bold text-[#111827] text-sm leading-tight">{student.name}</h4>
-                      <p className="text-[10px] text-[#94A3B8] font-mono mt-0.5">{student.rollNumber}</p>
+          {analyserMode === 'talent' ? (
+            /* Original Student Talent Directory */
+            <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 md:p-8 space-y-6 shadow-sm">
+              <div className="border-b border-[#E5E7EB] pb-5 space-y-4">
+                <div className="flex flex-wrap gap-4 items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-[#94A3B8] tracking-wider uppercase">Branch:</span>
+                    <select
+                      value={analyserBranch}
+                      onChange={(e) => setAnalyserBranch(e.target.value)}
+                      className="py-1.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#4B5563] focus:outline-none"
+                    >
+                      <option value="All" className="bg-white text-[#4B5563]">All Branches</option>
+                      {branchesList.map(b => <option key={b} value={b} className="bg-white text-[#4B5563]">{b}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-[#94A3B8] tracking-wider uppercase">Min CGPA:</span>
+                    <select
+                      value={analyserCgpa}
+                      onChange={(e) => setAnalyserCgpa(e.target.value)}
+                      className="py-1.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#4B5563] focus:outline-none"
+                    >
+                      <option value="0" className="bg-white text-[#4B5563]">All CGPA</option>
+                      <option value="6.0" className="bg-white text-[#4B5563]">&gt;= 6.0 CGPA</option>
+                      <option value="7.0" className="bg-white text-[#4B5563]">&gt;= 7.0 CGPA</option>
+                      <option value="8.0" className="bg-white text-[#4B5563]">&gt;= 8.0 CGPA</option>
+                      <option value="9.0" className="bg-white text-[#4B5563]">&gt;= 9.0 CGPA</option>
+                    </select>
+                  </div>
+
+                  <div className="relative flex-grow sm:flex-grow-0 sm:w-64 ml-auto">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#94A3B8]">
+                      <Search className="w-4 h-4" />
                     </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#22C55E] rounded-md">
-                      CGPA: {student.cgpa}
-                    </span>
+                    <input
+                      type="text"
+                      value={analyserSearch}
+                      onChange={(e) => setAnalyserSearch(e.target.value)}
+                      className="pl-9 block w-full py-1.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] font-medium text-[#111827]"
+                      placeholder="Search student name..."
+                    />
                   </div>
+                </div>
+              </div>
 
-                  <div className="space-y-1.5 text-[11px] font-semibold text-[#4B5563] border-t border-[#E5E7EB] pt-3">
-                    <p>Branch: <strong className="text-[#111827]">{student.branch}</strong></p>
-                    <p>Study Year: <strong className="text-[#111827]">{student.year} Year</strong></p>
-                    <p>Email: <strong className="text-[#111827] font-mono">{student.email}</strong></p>
-                    <p>Applied Drives: <strong className="text-[#111827]">{student.appliedJobsCount} drives</strong></p>
-                  </div>
-
-                  {student.skills && student.skills.length > 0 && (
-                    <div className="flex flex-wrap gap-1 pt-1.5">
-                      {student.skills.slice(0,3).map((s, idx) => (
-                        <span key={idx} className="bg-white border border-[#E5E7EB] text-[#4B5563] text-[9px] px-2 py-0.5 rounded font-semibold">
-                          {s}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {students
+                  .filter(s => analyserBranch === 'All' || s.branch?.toUpperCase() === analyserBranch.toUpperCase() || (analyserBranch === 'CSE' && s.branch?.toLowerCase().includes('computer science')))
+                  .filter(s => parseFloat(s.cgpa) >= parseFloat(analyserCgpa))
+                  .filter(s => s.name?.toLowerCase().includes(analyserSearch.toLowerCase()))
+                  .map(student => (
+                    <div key={student._id} className="p-5 bg-[#F8FAFC] rounded-xl border border-[#E5E7EB] space-y-4 hover:bg-[#F1F5F9] transition-all duration-300 shadow-sm">
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <h4 className="font-bold text-[#111827] text-sm leading-tight">{student.name}</h4>
+                          <p className="text-[10px] text-[#94A3B8] font-mono mt-0.5">{student.rollNumber}</p>
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#22C55E] rounded-md">
+                          CGPA: {student.cgpa}
                         </span>
-                      ))}
-                      {student.skills.length > 3 && (
-                        <span className="text-[9px] text-[#94A3B8] font-semibold self-center ml-1">+{student.skills.length - 3} more</span>
+                      </div>
+
+                      <div className="space-y-1.5 text-[11px] font-semibold text-[#4B5563] border-t border-[#E5E7EB] pt-3">
+                        <p>Branch: <strong className="text-[#111827]">{student.branch}</strong></p>
+                        <p>Study Year: <strong className="text-[#111827]">{student.year} Year</strong></p>
+                        <p>Email: <strong className="text-[#111827] font-mono">{student.email}</strong></p>
+                        <p>Applied Drives: <strong className="text-[#111827]">{student.appliedJobsCount} drives</strong></p>
+                      </div>
+
+                      {student.skills && student.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-1.5">
+                          {student.skills.slice(0,3).map((s, idx) => (
+                            <span key={idx} className="bg-white border border-[#E5E7EB] text-[#4B5563] text-[9px] px-2 py-0.5 rounded font-semibold">
+                              {s}
+                            </span>
+                          ))}
+                          {student.skills.length > 3 && (
+                            <span className="text-[9px] text-[#94A3B8] font-semibold self-center ml-1">+{student.skills.length - 3} more</span>
+                          )}
+                        </div>
                       )}
                     </div>
-                  )}
+                  ))}
+              </div>
+            </div>
+          ) : (
+            /* Placement Analytics Dashboard Mode */
+            <div className="space-y-6">
+              
+              {!detailedStats ? (
+                <div className="bg-white border border-[#E5E7EB] rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-4 shadow-sm">
+                  <RefreshCw className="w-8 h-8 text-[#5B4FCF] animate-spin" />
+                  <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Loading campus placement analytics...</p>
                 </div>
-              ))}
-          </div>
+              ) : (
+                <>
+                  {/* Subtabs toggles inside Stats */}
+                  <div className="flex bg-[#F3F4F6] p-1 rounded-xl self-start w-fit">
+                    <button
+                      onClick={() => setAnalyticsSubTab('overview')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyticsSubTab === 'overview' ? 'bg-white text-[#5B4FCF] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                    >
+                      Overview & Charts
+                    </button>
+                    <button
+                      onClick={() => setAnalyticsSubTab('companyStats')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyticsSubTab === 'companyStats' ? 'bg-white text-[#5B4FCF] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                    >
+                      Company & Drives
+                    </button>
+                    <button
+                      onClick={() => setAnalyticsSubTab('skills')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyticsSubTab === 'skills' ? 'bg-white text-[#5B4FCF] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                    >
+                      Compensation & Skills
+                    </button>
+                  </div>
+
+                  {/* Overview KPIs */}
+                  {analyticsSubTab === 'overview' && (
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Placed Ratio</span>
+                        <div className="mt-2 flex items-baseline gap-2">
+                          <span className="text-2xl font-black text-[#5B4FCF]">{detailedStats.overview.placementRate}%</span>
+                          <span className="text-[10px] font-bold text-emerald-600">({detailedStats.overview.placedStudents}/{detailedStats.overview.totalStudents})</span>
+                        </div>
+                      </div>
+                      <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Approved Companies</span>
+                        <div className="mt-2 flex items-baseline gap-2">
+                          <span className="text-2xl font-black text-slate-850">{detailedStats.overview.totalCompanies}</span>
+                          <span className="text-[10px] font-semibold text-slate-400">Recruiters</span>
+                        </div>
+                      </div>
+                      <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+                        <span className="text-[10px] text-slate-405 font-bold uppercase tracking-wider">Average CTC Package</span>
+                        <div className="mt-2 flex items-baseline gap-2">
+                          <span className="text-2xl font-black text-emerald-600">{detailedStats.overview.averagePackage} LPA</span>
+                          <span className="text-[10px] font-semibold text-slate-400">Average Salary</span>
+                        </div>
+                      </div>
+                      <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+                        <span className="text-[10px] text-slate-405 font-bold uppercase tracking-wider">Highest Salary Offer</span>
+                        <div className="mt-2 flex items-baseline gap-2">
+                          <span className="text-2xl font-black text-[#5B4FCF]">{detailedStats.overview.highestPackage} LPA</span>
+                          <span className="text-[10px] font-bold text-[#5B4FCF]">{detailedStats.packageBreakdown.highestPlaced[0]?.companyName || 'Google'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Subtab Content: Overview & Charts */}
+                  {analyticsSubTab === 'overview' && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        {/* 1. Branch Placement rate chart */}
+                        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 shadow-sm space-y-4">
+                          <h4 className="text-xs font-black uppercase text-slate-750 tracking-wider">Branch-wise Placements Rate %</h4>
+                          <div className="pt-2 relative h-48 w-full flex items-end justify-between px-2 border-b border-[#E5E7EB] pb-2">
+                            {detailedStats.branchStats.map(bp => (
+                              <div key={bp.branch} className="flex flex-col items-center gap-2 w-12 group">
+                                <div className="w-full flex items-end gap-1 h-36">
+                                  <div 
+                                    className="bg-[#5B4FCF]/10 w-4 rounded-t-sm" 
+                                    style={{ height: '100%' }}
+                                    title={`Total: ${bp.totalStudents}`}
+                                  />
+                                  <div 
+                                    className="bg-[#5B4FCF] w-4 rounded-t-sm transition-all duration-500" 
+                                    style={{ height: `${bp.placementRate}%` }}
+                                    title={`Placed: ${bp.placedStudents} (${bp.placementRate}%)`}
+                                  />
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-500">{bp.branch.split(' ')[0]}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex gap-4 items-center justify-center text-[10px] text-slate-405 font-bold uppercase pt-2">
+                            <div className="flex items-center gap-1">
+                              <span className="w-2.5 h-2.5 bg-[#5B4FCF]/10 rounded" /> Registered Students
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="w-2.5 h-2.5 bg-[#5B4FCF] rounded" /> Placement Rate %
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 2. CTC Ranges Distribution custom chart */}
+                        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 shadow-sm space-y-4">
+                          <h4 className="text-xs font-black uppercase text-slate-750 tracking-wider">Salary Distribution Range (LPA)</h4>
+                          <div className="space-y-3.5 pt-2">
+                            {detailedStats.packageBreakdown.ranges.map((rg, idx) => {
+                              const maxVal = Math.max(...detailedStats.packageBreakdown.ranges.map(r => r.count), 1);
+                              const pctWidth = Math.round((rg.count / maxVal) * 100);
+                              return (
+                                <div key={idx}>
+                                  <div className="flex justify-between text-xs mb-1">
+                                    <span className="font-bold text-slate-600">{rg.range}</span>
+                                    <span className="font-black text-slate-800 text-xs">{rg.count} students</span>
+                                  </div>
+                                  <div className="w-full bg-[#F3F4F6] h-2.5 rounded-full overflow-hidden">
+                                    <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${pctWidth}%` }} />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                      </div>
+
+                      {/* Drive timeline summary */}
+                      <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 shadow-sm space-y-4">
+                        <h4 className="text-xs font-black uppercase text-slate-750 tracking-wider">Campaign Pipeline Progress</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                          <div className="p-4 bg-indigo-50/20 border border-indigo-100 rounded-xl">
+                            <span className="text-[10px] text-slate-450 uppercase font-black">Campaign Drives</span>
+                            <div className="text-2xl font-black text-indigo-600 mt-1">{detailedStats.overview.totalDrives} Drives</div>
+                            <p className="text-[9px] text-slate-455 font-bold mt-1 uppercase">Total Job openings posted</p>
+                          </div>
+                          <div className="p-4 bg-emerald-50/20 border border-emerald-100 rounded-xl">
+                            <span className="text-[10px] text-slate-455 uppercase font-black">Success Quotient</span>
+                            <div className="text-2xl font-black text-emerald-600 mt-1">{(detailedStats.overview.placedStudents / Math.max(detailedStats.overview.totalCompanies, 1)).toFixed(1)} ratio</div>
+                            <p className="text-[9px] text-slate-455 font-bold mt-1 uppercase">Averages placed student per recruiter</p>
+                          </div>
+                          <div className="p-4 bg-amber-50/20 border border-amber-100 rounded-xl">
+                            <span className="text-[10px] text-slate-455 uppercase font-black">Average Applications Submitted</span>
+                            <div className="text-2xl font-black text-amber-600 mt-1">{(detailedStats.overview.totalApplications / Math.max(detailedStats.overview.totalStudents, 1)).toFixed(1)} applies</div>
+                            <p className="text-[9px] text-slate-455 font-bold mt-1 uppercase">Average job bids per student profile</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Subtab Content: Company & Drives */}
+                  {analyticsSubTab === 'companyStats' && (
+                    <div className="space-y-6">
+                      
+                      {/* Search company input */}
+                      <div className="flex gap-4 items-center bg-white border border-[#E5E7EB] p-4 rounded-2xl shadow-sm">
+                        <div className="relative flex-1">
+                          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                          <input
+                            type="text"
+                            placeholder="Filter by Company or Role/Job title..."
+                            value={analyticsSearchQuery}
+                            onChange={(e) => setAnalyticsSearchQuery(e.target.value)}
+                            className="w-full pl-9 block py-1.5 px-3 bg-slate-50 border border-[#E5E7EB] rounded-xl text-xs placeholder-slate-405 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] font-medium text-[#111827]"
+                          />
+                        </div>
+                        {analyticsSearchQuery && (
+                          <button
+                            onClick={() => setAnalyticsSearchQuery('')}
+                            className="text-xs text-slate-400 hover:text-slate-600 font-bold"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Company Stats Table */}
+                      <div className="bg-white border border-[#E5E7EB] rounded-2xl shadow-sm overflow-hidden space-y-4 p-5">
+                        <h4 className="text-xs font-black uppercase text-slate-750 tracking-wider">Recruiter Company Placement Sheet</h4>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                              <tr className="border-b border-slate-100 text-slate-405 font-bold uppercase text-[9px] tracking-wider">
+                                <th className="pb-3 pl-2">Company Name</th>
+                                <th className="pb-3">Industry</th>
+                                <th className="pb-3 text-center">Drives</th>
+                                <th className="pb-3 text-center">Unique Applied</th>
+                                <th className="pb-3 text-center">Unique Placed</th>
+                                <th className="pb-3 text-right">Package Range (LPA)</th>
+                                <th className="pb-3 pr-2 text-right">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {detailedStats.companyStats
+                                .filter(co => co.companyName.toLowerCase().includes(analyticsSearchQuery.toLowerCase()))
+                                .map((co) => (
+                                  <CompanyTableRow key={co.companyId} co={co} />
+                                ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* Drive Stats Table */}
+                      <div className="bg-white border border-[#E5E7EB] rounded-2xl shadow-sm overflow-hidden space-y-4 p-5">
+                        <h4 className="text-xs font-black uppercase text-slate-750 tracking-wider">Placement Drive (Job-wise) Analysis</h4>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                              <tr className="border-b border-slate-100 text-slate-405 font-bold uppercase text-[9px] tracking-wider">
+                                <th className="pb-3 pl-2">Drive/Job Title</th>
+                                <th className="pb-3">Company</th>
+                                <th className="pb-3 text-center">Package (LPA)</th>
+                                <th className="pb-3 text-center">Applied</th>
+                                <th className="pb-3 text-center">Shortlisted</th>
+                                <th className="pb-3 text-center">Placed</th>
+                                <th className="pb-3 text-center">Rejected</th>
+                                <th className="pb-3 pr-2 text-right">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {detailedStats.driveStats
+                                .filter(dr => dr.jobTitle.toLowerCase().includes(analyticsSearchQuery.toLowerCase()) || dr.companyName.toLowerCase().includes(analyticsSearchQuery.toLowerCase()))
+                                .map((dr) => (
+                                  <tr key={dr.jobId} className="border-b border-slate-50 hover:bg-slate-50/50">
+                                    <td className="py-3 pl-2 font-bold text-slate-800">{dr.jobTitle}</td>
+                                    <td className="py-3 font-semibold text-slate-500">{dr.companyName}</td>
+                                    <td className="py-3 text-center font-black text-emerald-600">{dr.package} LPA</td>
+                                    <td className="py-3 text-center font-bold text-slate-750">{dr.uniqueApplied}</td>
+                                    <td className="py-3 text-center font-bold text-amber-500">{dr.uniqueShortlisted}</td>
+                                    <td className="py-3 text-center font-bold text-emerald-600">{dr.uniqueSelected}</td>
+                                    <td className="py-3 text-center font-semibold text-rose-500">{dr.uniqueRejected}</td>
+                                    <td className="py-3 pr-2 text-right">
+                                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${dr.status === 'active' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-50 text-slate-450 border border-slate-200'}`}>
+                                        {dr.status === 'active' ? 'Active' : 'Closed'}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* Subtab Content: Compensation & Skills */}
+                  {analyticsSubTab === 'skills' && (
+                    <div className="space-y-6">
+                      
+                      {/* Dream and Starter Packages */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        {/* Highest Placements */}
+                        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 shadow-sm space-y-4">
+                          <h4 className="text-xs font-black uppercase text-[#5B4FCF] tracking-wider flex items-center gap-1.5">
+                            <Sparkles className="w-4 h-4 text-[#5B4FCF]" /> Dream Packages (Highest Placements)
+                          </h4>
+                          <div className="space-y-3">
+                            {detailedStats.packageBreakdown.highestPlaced.length === 0 ? (
+                              <p className="text-xs text-slate-400 font-medium py-4 text-center">No successful selections recorded yet.</p>
+                            ) : (
+                              detailedStats.packageBreakdown.highestPlaced.map((hp, idx) => (
+                                <div key={idx} className="bg-indigo-50/20 border border-indigo-100 p-4 rounded-2xl flex justify-between items-center shadow-sm text-xs">
+                                  <div>
+                                    <h5 className="font-bold text-slate-805 text-sm">{hp.studentName}</h5>
+                                    <p className="text-[10px] text-slate-450 font-mono mt-0.5">{hp.rollNumber} · {hp.branch}</p>
+                                    <div className="text-[10px] text-slate-500 font-bold mt-1.5 uppercase flex items-center gap-1">
+                                      <Building2 className="w-3.5 h-3.5 text-[#5B4FCF]" /> {hp.companyName} ({hp.jobTitle})
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="text-xl font-black text-indigo-600">{hp.package}</span>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase block">LPA CTC</span>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Lowest Placements */}
+                        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 shadow-sm space-y-4">
+                          <h4 className="text-xs font-black uppercase text-rose-500 tracking-wider flex items-center gap-1.5">
+                            <Info className="w-4 h-4 text-rose-450" /> Starter Packages (Lowest Placements)
+                          </h4>
+                          <div className="space-y-3">
+                            {detailedStats.packageBreakdown.lowestPlaced.length === 0 ? (
+                              <p className="text-xs text-slate-400 font-medium py-4 text-center">No successful selections recorded yet.</p>
+                            ) : (
+                              detailedStats.packageBreakdown.lowestPlaced.map((lp, idx) => (
+                                <div key={idx} className="bg-rose-50/10 border border-rose-100 p-4 rounded-2xl flex justify-between items-center shadow-sm text-xs">
+                                  <div>
+                                    <h5 className="font-bold text-slate-805 text-sm">{lp.studentName}</h5>
+                                    <p className="text-[10px] text-slate-450 font-mono mt-0.5">{lp.rollNumber} · {lp.branch}</p>
+                                    <div className="text-[10px] text-slate-500 font-bold mt-1.5 uppercase flex items-center gap-1">
+                                      <Building2 className="w-3.5 h-3.5 text-rose-400" /> {lp.companyName} ({lp.jobTitle})
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="text-xl font-black text-rose-500">{lp.package}</span>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase block">LPA CTC</span>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+
+                      </div>
+
+                      {/* Skill Package Rankings */}
+                      <div className="bg-white border border-[#E5E7EB] rounded-2xl shadow-sm overflow-hidden space-y-4 p-5">
+                        <h4 className="text-xs font-black uppercase text-slate-750 tracking-wider">Technology Skill Package Index</h4>
+                        <p className="text-[11px] text-slate-500 font-semibold -mt-2">Aggregated salary packages offered to placed students grouped by their technical skills profile.</p>
+                        
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                              <tr className="border-b border-slate-100 text-slate-405 font-bold uppercase text-[9px] tracking-wider">
+                                <th className="pb-3 pl-2">Skill / Tech Stack</th>
+                                <th className="pb-3 text-center">Placed Students Count</th>
+                                <th className="pb-3 text-center">Lowest Package (LPA)</th>
+                                <th className="pb-3 text-center">Average Package (LPA)</th>
+                                <th className="pb-3 text-center">Highest Package (LPA)</th>
+                                <th className="pb-3 pr-2 text-right">Compensation index</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {detailedStats.skillStats.length === 0 ? (
+                                <tr>
+                                  <td colSpan="6" className="text-center py-6 text-slate-400 font-bold">No placements with skills registered yet.</td>
+                                </tr>
+                              ) : (
+                                detailedStats.skillStats.map((sk) => {
+                                  const maxAvgPkg = Math.max(...detailedStats.skillStats.map(s => s.averagePackage), 1);
+                                  const barPct = Math.min(Math.round((sk.averagePackage / maxAvgPkg) * 100), 100);
+                                  return (
+                                    <tr key={sk.skill} className="border-b border-slate-50 hover:bg-slate-50/50">
+                                      <td className="py-3 pl-2 font-bold text-slate-800">
+                                        <span className="px-2.5 py-1 bg-[#5B4FCF]/5 text-[#5B4FCF] border border-[#5B4FCF]/10 rounded-lg text-[11px]">
+                                          {sk.skill}
+                                        </span>
+                                      </td>
+                                      <td className="py-3 text-center font-bold text-slate-700">{sk.placedCount} placed</td>
+                                      <td className="py-3 text-center font-semibold text-rose-500">{sk.lowestPackage} LPA</td>
+                                      <td className="py-3 text-center font-black text-[#5B4FCF]">{sk.averagePackage} LPA</td>
+                                      <td className="py-3 text-center font-bold text-emerald-600">{sk.highestPackage} LPA</td>
+                                      <td className="py-3 pr-2 text-right w-44">
+                                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden inline-block align-middle mr-2">
+                                          <div className="bg-[#5B4FCF] h-full rounded-full transition-all duration-500" style={{ width: `${barPct}%` }} />
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
+
+                </>
+              )}
+
+            </div>
+          )}
+
         </div>
       )}
 
