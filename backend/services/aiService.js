@@ -1,4 +1,27 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const pdfParse = require("pdf-parse");
+
+/**
+ * Helper to download and parse raw text from PDF resume URL
+ */
+async function extractTextFromPdf(url) {
+  if (!url) return "";
+  try {
+    console.log(`Downloading and parsing PDF resume from URL: ${url}`);
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.warn(`Failed to download PDF resume, status: ${response.status}`);
+      return "";
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const pdfData = await pdfParse(buffer);
+    return pdfData.text || "";
+  } catch (err) {
+    console.error("Failed to parse PDF resume:", err);
+    return "";
+  }
+}
 
 /**
  * Perform AI Resume screening by comparing student profile with Job description.
@@ -11,26 +34,32 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
  */
 async function analyzeResume(student, job) {
   const apiKey = process.env.GEMINI_API_KEY;
+  let resumeText = "";
+  
+  if (student.resumeUrl) {
+    resumeText = await extractTextFromPdf(student.resumeUrl);
+  } else {
+    console.log("No resume url found on candidate profile. Using structured database fields only.");
+  }
   
   if (apiKey) {
     try {
-      return await analyzeWithGemini(student, job, apiKey);
+      return await analyzeWithGemini(student, job, resumeText, apiKey);
     } catch (err) {
       console.error("Gemini API resume analysis failed, falling back to rules engine:", err);
-      return analyzeWithRules(student, job);
+      return analyzeWithRules(student, job, resumeText);
     }
   } else {
     console.log("No GEMINI_API_KEY found in environment. Using high-fidelity Rules Engine fallback.");
-    return analyzeWithRules(student, job);
+    return analyzeWithRules(student, job, resumeText);
   }
 }
 
 /**
  * Call Gemini Generative AI to screen the candidate profile against the JD
  */
-async function analyzeWithGemini(student, job, apiKey) {
+async function analyzeWithGemini(student, job, resumeText, apiKey) {
   const genAI = new GoogleGenerativeAI(apiKey);
-  // Using gemini-1.5-flash which is standard and fast
   const model = genAI.getGenerativeModel({ 
     model: "gemini-1.5-flash",
     generationConfig: { responseMimeType: "application/json" }
@@ -38,7 +67,9 @@ async function analyzeWithGemini(student, job, apiKey) {
 
   const prompt = `
     You are an expert ATS (Applicant Tracking System) parser and technical recruiter.
-    Analyze the following Student profile against the Job Description.
+    Analyze the following Student profile and their raw Resume Text against the Job Description.
+    Ensure you read the raw Resume Text to check for required and preferred skills, matching experience, projects, and certifications.
+    Do not reject a candidate if the required skills or experience are present in the Resume Text, even if they are missing in the structured profile.
 
     === JOB DESCRIPTION ===
     Title: ${job.title}
@@ -56,15 +87,10 @@ async function analyzeWithGemini(student, job, apiKey) {
     CGPA: ${student.cgpa}
     Branch: ${student.branch}
     Graduation Year: ${student.year}
-    Skills: ${JSON.stringify(student.skills || [])}
-    Projects: ${JSON.stringify(
-      (student.projects || []).map(p => ({
-        title: p.title,
-        description: p.description,
-        techStack: p.techStack
-      }))
-    )}
-    Certifications: ${JSON.stringify((student.certifications || []).map(c => c.title))}
+    Structured Skills: ${JSON.stringify(student.skills || [])}
+
+    === STUDENT RAW RESUME TEXT ===
+    ${resumeText || "No raw resume text provided."}
 
     Provide your response strictly as a JSON object with the following fields:
     {
@@ -101,7 +127,7 @@ async function analyzeWithGemini(student, job, apiKey) {
 /**
  * Standard rule-based keyword matching algorithm as a fallback
  */
-function analyzeWithRules(student, job) {
+function analyzeWithRules(student, job, resumeText) {
   const reqSkills = (job.requiredSkills || []).map(s => s.toLowerCase());
   const prefSkills = (job.preferredSkills || []).map(s => s.toLowerCase());
   const studentSkills = (student.skills || []).map(s => s.toLowerCase());
@@ -116,18 +142,27 @@ function analyzeWithRules(student, job) {
     });
   }
 
-  const allStudentSkills = Array.from(new Set([...studentSkills, ...projectTech]));
+  // Combine database student skills and projects tech stack
+  const dbStudentSkills = Array.from(new Set([...studentSkills, ...projectTech]));
+  
+  const normalizedResumeText = (resumeText || "").toLowerCase();
 
   // Calculate skill matches
   const skillsMatch = [];
   const missingSkills = [];
   
   reqSkills.forEach(req => {
-    // Exact or partial match
-    const found = allStudentSkills.some(s => s.includes(req) || req.includes(s));
+    // 1. Check in structured DB skills
+    let found = dbStudentSkills.some(s => s.includes(req) || req.includes(s));
+    
+    // 2. Check in raw resume text if not found in DB skills
+    if (!found && normalizedResumeText) {
+      found = normalizedResumeText.includes(req);
+    }
+
     if (found) {
-      // Find the display name of the matched skill
-      const displaySkill = student.skills.find(s => s.toLowerCase() === req) || req;
+      // Find the display name
+      const displaySkill = student.skills?.find(s => s.toLowerCase() === req) || req;
       skillsMatch.push(displaySkill);
     } else {
       missingSkills.push(req);
@@ -136,9 +171,13 @@ function analyzeWithRules(student, job) {
 
   const matchedPref = [];
   prefSkills.forEach(pref => {
-    const found = allStudentSkills.some(s => s.includes(pref) || pref.includes(s));
+    let found = dbStudentSkills.some(s => s.includes(pref) || pref.includes(s));
+    if (!found && normalizedResumeText) {
+      found = normalizedResumeText.includes(pref);
+    }
+
     if (found) {
-      const displaySkill = student.skills.find(s => s.toLowerCase() === pref) || pref;
+      const displaySkill = student.skills?.find(s => s.toLowerCase() === pref) || pref;
       matchedPref.push(displaySkill);
     }
   });
@@ -146,9 +185,9 @@ function analyzeWithRules(student, job) {
   // Score calculation
   let skillPoints = 0;
   if (reqSkills.length > 0) {
-    skillPoints += (skillsMatch.length / reqSkills.length) * 50;
+    skillPoints += (skillsMatch.length / reqSkills.length) * 55; // increased skill weight
   } else {
-    skillPoints += 30; // base points
+    skillPoints += 35; // base points
   }
 
   if (prefSkills.length > 0) {
@@ -165,7 +204,12 @@ function analyzeWithRules(student, job) {
   }
 
   // Project points
-  let projectPoints = Math.min(15, (student.projects?.length || 0) * 5);
+  let projectPoints = 0;
+  if (student.projects?.length > 0) {
+    projectPoints = Math.min(10, student.projects.length * 5);
+  } else if (normalizedResumeText.includes("project")) {
+    projectPoints = 10;
+  }
 
   const atsScore = Math.min(100, Math.round(skillPoints + cgpaPoints + projectPoints));
   const threshold = job.atsThreshold || 60;
@@ -185,14 +229,14 @@ function analyzeWithRules(student, job) {
   
   if (student.cgpa >= 8.5) strengths.push("Excellent academic CGPA record");
   if (skillsMatch.length > 2) strengths.push("Strong alignment with required skills");
-  if (student.projects?.length >= 2) strengths.push("Demonstrated hands-on experience via multiple projects");
-  if (student.certifications?.length > 0) strengths.push("Proactive learning shown by professional certifications");
+  if (student.projects?.length >= 2 || normalizedResumeText.includes("project")) {
+    strengths.push("Demonstrated hands-on experience via project implementations");
+  }
   
   if (strengths.length === 0) strengths.push("Basic academic eligibility met");
 
   if (missingSkills.length > 0) weaknesses.push(`Missing key required technical stack: ${missingSkills.slice(0, 2).join(", ")}`);
   if (student.cgpa < minCgpa) weaknesses.push("Academic CGPA is below the desired target");
-  if (!student.projects || student.projects.length === 0) weaknesses.push("Lack of practical projects on resume");
 
   if (weaknesses.length === 0) weaknesses.push("No major skill gaps identified");
 
