@@ -191,42 +191,42 @@ const Applications = () => {
                       </div>
                     </div>
 
-                    {app.aiAnalysis && app.aiAnalysis.rejectionReason && (
-                      <div className="bg-white border border-rose-100 p-4 rounded-xl space-y-3 shadow-sm text-xs font-semibold">
-                        <div className="flex items-center gap-1.5 text-indigo-700 font-bold">
-                          <Sparkles className="w-4 h-4 text-indigo-650" />
-                          <span>AI Resume Screening Feedback:</span>
+                    {app.aiAnalysis && (
+                      <div className="bg-white border border-rose-100 p-5 rounded-2xl space-y-4 shadow-sm text-xs font-semibold text-[#4B5563]">
+                        {/* ATS Score details */}
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                          <span className="text-slate-500 font-bold text-[10px] uppercase tracking-wider">AI Assessment Status</span>
+                          <span className="bg-rose-50 text-rose-600 border border-rose-100 px-2.5 py-0.5 rounded-full text-[10px] font-bold">
+                            ATS Score: {app.aiAnalysis.atsScore}%
+                          </span>
                         </div>
-                        <p className="text-[#4B5563] leading-relaxed italic">"{app.aiAnalysis.rejectionReason}"</p>
-                        
-                        {app.aiAnalysis.strengths && app.aiAnalysis.strengths.length > 0 && (
-                          <div className="pt-2 border-t border-slate-100">
-                            <span className="text-[#22C55E] font-bold text-[10px] uppercase tracking-wider">Your Key Strengths:</span>
-                            <ul className="list-disc pl-4 mt-1 space-y-0.5 text-slate-500 font-semibold">
-                              {app.aiAnalysis.strengths.map((str, idx) => <li key={idx}>{str}</li>)}
+
+                        {/* Rejection Reasons */}
+                        {app.aiAnalysis.rejectionReason && (
+                          <div className="space-y-1.5">
+                            <span className="text-rose-600 font-bold text-[10px] uppercase tracking-wider block">Reason:</span>
+                            <ul className="list-disc pl-4 space-y-1 text-slate-500 leading-relaxed font-semibold">
+                              {app.aiAnalysis.rejectionReason
+                                .split(/[;\n•]+/)
+                                .map(p => p.trim())
+                                .filter(p => p.length > 0 && !p.toLowerCase().startsWith('reason:'))
+                                .map((bp, idx) => (
+                                  <li key={idx}>{bp}</li>
+                                ))
+                              }
                             </ul>
                           </div>
                         )}
 
-                        {app.aiAnalysis.missingSkills && app.aiAnalysis.missingSkills.length > 0 && (
-                          <div className="pt-2 border-t border-slate-100">
-                            <span className="text-rose-500 font-bold text-[10px] uppercase tracking-wider">Identified Gaps / Skills to Improve:</span>
-                            <ul className="list-disc pl-4 mt-1 space-y-0.5 text-slate-500 font-semibold">
-                              {app.aiAnalysis.missingSkills.map((gap, idx) => <li key={idx}>{gap}</li>)}
-                            </ul>
-                          </div>
-                        )}
-
+                        {/* Suggestions / Recommended preparation */}
                         {app.aiAnalysis.recommendedLearning && app.aiAnalysis.recommendedLearning.length > 0 && (
-                          <div className="pt-2 border-t border-slate-100">
-                            <span className="text-amber-600 font-bold text-[10px] uppercase tracking-wider">Recommended Preparation / Courses:</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
+                          <div className="pt-3 border-t border-slate-100 space-y-1.5">
+                            <span className="text-indigo-600 font-bold text-[10px] uppercase tracking-wider block">Suggestions:</span>
+                            <ul className="list-disc pl-4 space-y-1 text-slate-500 leading-relaxed font-semibold">
                               {app.aiAnalysis.recommendedLearning.map((topic, idx) => (
-                                <span key={idx} className="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded text-[9px] font-bold">
-                                  {topic}
-                                </span>
+                                <li key={idx}>{topic}</li>
                               ))}
-                            </div>
+                            </ul>
                           </div>
                         )}
                       </div>
@@ -237,9 +237,9 @@ const Applications = () => {
                       const failedRound = app.rounds.find(r => r.result === 'Failed' || r.result === 'Rejected');
                       if (failedRound && failedRound.notes) {
                         return (
-                          <div className="bg-white border border-rose-100 p-4 rounded-xl space-y-1 shadow-sm text-xs font-semibold">
-                            <span className="text-rose-600 font-bold text-[10px] uppercase tracking-wider">Feedback from Recruiter ({failedRound.name}):</span>
-                            <p className="text-[#4B5563] leading-relaxed italic mt-1">"{failedRound.notes}"</p>
+                          <div className="bg-white border border-rose-100 p-4 rounded-xl space-y-1 shadow-sm text-xs font-semibold text-[#4B5563]">
+                            <span className="text-rose-650 font-bold text-[10px] uppercase tracking-wider">Feedback from Recruiter ({failedRound.name}):</span>
+                            <p className="text-slate-500 leading-relaxed italic mt-1">"{failedRound.notes}"</p>
                           </div>
                         );
                       }

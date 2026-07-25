@@ -1132,6 +1132,64 @@ const RecruiterDashboard = () => {
                                     </div>
                                   )}
 
+                                  {/* AI MATCH METRICS PREVIEW */}
+                                  {app.aiAnalysis && (
+                                    <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs space-y-2 font-semibold text-slate-700">
+                                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-slate-200/60 pb-2">
+                                        <div className="flex items-center gap-1">
+                                          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">ATS Score:</span>
+                                          <span className="text-slate-800 font-bold">{app.aiAnalysis.atsScore}%</span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Resume Match %:</span>
+                                          <span className="text-slate-800 font-bold">{app.aiAnalysis.matchPercentage}%</span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Skill Match %:</span>
+                                          <span className="text-slate-800 font-bold">
+                                            {(() => {
+                                              const matched = app.aiAnalysis.skillsMatch?.length || 0;
+                                              const missing = app.aiAnalysis.missingSkills?.length || 0;
+                                              return (matched + missing) > 0 ? Math.round((matched / (matched + missing)) * 100) : 0;
+                                            })()}%
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex flex-wrap items-start justify-between gap-2 pt-1">
+                                        <div className="space-y-1 max-w-md">
+                                          <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">AI Decision:</span>
+                                          <span className={`inline-flex items-center gap-1 text-[11px] font-bold ${
+                                            app.aiAnalysis.status === 'Shortlisted' ? 'text-emerald-700' : 'text-rose-650'
+                                          }`}>
+                                            {app.aiAnalysis.status === 'Shortlisted' ? '✅ Shortlisted' : '❌ Rejected'}
+                                          </span>
+                                          
+                                          {app.aiAnalysis.status === 'Rejected' && app.aiAnalysis.missingSkills?.length > 0 && (
+                                            <div className="text-[10px] text-rose-600 space-y-0.5 mt-1 font-bold">
+                                              <p className="uppercase tracking-wider text-[9px] text-rose-700 font-extrabold">Missing Gaps:</p>
+                                              <ul className="list-disc pl-4 font-semibold text-rose-650 space-y-0.5">
+                                                {app.aiAnalysis.missingSkills.map((sk, idx) => (
+                                                  <li key={idx}>Missing {sk}</li>
+                                                ))}
+                                                {app.aiAnalysis.atsScore < (selectedJob?.atsThreshold || 60) && (
+                                                  <li>Low ATS Score (below {selectedJob?.atsThreshold || 60}%)</li>
+                                                )}
+                                              </ul>
+                                            </div>
+                                          )}
+                                        </div>
+
+                                        <div className="text-right max-w-xs space-y-1">
+                                          <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">AI Summary:</span>
+                                          <p className="text-[10px] text-slate-500 leading-normal font-medium italic">
+                                            "{app.aiAnalysis.aiSummary || 'Profile analyzed successfully.'}"
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
                                   {/* Actions & Resume link */}
                                   <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-[#E5E7EB]">
                                     {student.resumeUrl ? (
@@ -1173,14 +1231,6 @@ const RecruiterDashboard = () => {
                                         <Sparkles className="w-3 h-3 text-purple-650" /> Override AI
                                       </button>
 
-                                      <button
-                                        onClick={() => handleUpdateStatus(app._id, 'Shortlisted')}
-                                        disabled={actionLoadingId !== null}
-                                        className="px-3 py-1.5 text-xs bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 rounded-lg transition-all active:scale-95 disabled:opacity-50"
-                                      >
-                                        {actionLoadingId === `${app._id}-Shortlisted` ? 'Saving...' : 'Shortlist'}
-                                      </button>
-                                      
                                       {app.offerLetterStatus && app.offerLetterStatus !== 'None' ? (
                                         <span className={`px-2.5 py-1.5 text-[10px] rounded-lg font-bold border uppercase ${
                                           app.offerLetterStatus === 'Approved' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
@@ -1190,22 +1240,16 @@ const RecruiterDashboard = () => {
                                           Offer: {app.offerLetterStatus}
                                         </span>
                                       ) : (
-                                        <button
-                                          onClick={() => handleOpenOfferModal(app)}
-                                          disabled={actionLoadingId !== null}
-                                          className="px-3 py-1.5 text-xs bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold rounded-lg transition-all active:scale-95 cursor-pointer"
-                                        >
-                                          Issue Offer
-                                        </button>
+                                        app.status !== 'Rejected' && app.status !== 'Applied' && app.status !== 'AI Screening' && (
+                                          <button
+                                            onClick={() => handleOpenOfferModal(app)}
+                                            disabled={actionLoadingId !== null}
+                                            className="px-3 py-1.5 text-xs bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold rounded-lg transition-all active:scale-95 cursor-pointer"
+                                          >
+                                            Issue Offer
+                                          </button>
+                                        )
                                       )}
-                                      
-                                      <button
-                                        onClick={() => handleUpdateStatus(app._id, 'Rejected')}
-                                        disabled={actionLoadingId !== null}
-                                        className="px-3 py-1.5 text-xs bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 rounded-lg transition-all active:scale-95 disabled:opacity-50"
-                                      >
-                                        {actionLoadingId === `${app._id}-Rejected` ? 'Saving...' : 'Reject'}
-                                      </button>
                                     </div>
                                   </div>
 

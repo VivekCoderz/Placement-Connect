@@ -157,6 +157,7 @@ async function processCandidateResult({ jobId, roundId, studentId, result, score
     if (appRoundIdx > -1) {
       app.rounds[appRoundIdx].result = "Failed";
       app.rounds[appRoundIdx].notes = remarks || `Failed in ${round.name} round.`;
+      app.rounds = app.rounds.slice(0, appRoundIdx + 1);
     }
   } else if (result === "Waiting") {
     // Waitlisted candidate

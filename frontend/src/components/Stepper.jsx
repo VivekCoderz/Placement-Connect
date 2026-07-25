@@ -1,21 +1,17 @@
 import React from 'react';
-import { Check, X, ClipboardCheck, Code, Users, UserCheck, CheckCircle2 } from 'lucide-react';
+import { Check, X, ClipboardCheck, Code, Users, UserCheck, CheckCircle2, FileText } from 'lucide-react';
 
 const Stepper = ({ currentStatus, rounds, appRounds }) => {
   let steps = [
     { label: 'Applied', key: 'Applied', desc: 'Application Received', icon: ClipboardCheck },
-    { label: 'Aptitude', key: 'Aptitude', desc: 'Aptitude & Technical MCQ', icon: Code },
-    { label: 'GD Round', key: 'GD', desc: 'Group Discussion', icon: Users },
-    { label: 'HR Round', key: 'HR', desc: 'Personal & HR Assessment', icon: UserCheck },
+    { label: 'Resume Screening', key: 'ResumeScreening', desc: 'AI Resume screening', icon: FileText },
     { label: 'Decision', key: 'Decision', desc: 'Final Selection Status', icon: CheckCircle2 }
   ];
-
-  let currentIndex = 0;
-  let stageFailureIndex = -1;
 
   if (rounds && Array.isArray(rounds) && rounds.length > 0) {
     steps = [
       { label: 'Applied', key: 'Applied', desc: 'Application Received', icon: ClipboardCheck },
+      { label: 'Resume Screening', key: 'ResumeScreening', desc: 'AI Resume screening', icon: FileText },
       ...rounds.map((r, idx) => {
         let icon = Code;
         const nameLower = r.name.toLowerCase();
@@ -33,76 +29,92 @@ const Stepper = ({ currentStatus, rounds, appRounds }) => {
       }),
       { label: 'Decision', key: 'Decision', desc: 'Final Selection Status', icon: CheckCircle2 }
     ];
-
-    // Check if any specific round has failed
-    const failedRound = appRounds ? appRounds.find(r => r.result === 'Failed') : null;
-    if (failedRound) {
-      const matchIdx = rounds.findIndex(r => r.name.toLowerCase() === failedRound.name.toLowerCase());
-      if (matchIdx > -1) {
-        stageFailureIndex = matchIdx + 1; // offset by 1
-      }
-    }
-
-    if (currentStatus === 'Applied') {
-      currentIndex = 0;
-    } else if (currentStatus === 'Selected') {
-      currentIndex = steps.length - 1;
-    } else if (currentStatus === 'Rejected') {
-      if (stageFailureIndex > -1) {
-        currentIndex = stageFailureIndex;
-      } else {
-        currentIndex = steps.length - 1;
-      }
-    } else if (currentStatus === 'Shortlisted' || currentStatus.startsWith('Round') || currentStatus.startsWith('round')) {
-      currentIndex = 1; // Default to first round
-      if (currentStatus.startsWith('Round') || currentStatus.startsWith('round')) {
-        const matchNum = parseInt(currentStatus.replace(/round/i, '')) || 1;
-        currentIndex = matchNum;
-      } else if (appRounds && Array.isArray(appRounds) && appRounds.length > 0) {
-        const latestRound = appRounds[appRounds.length - 1];
-        if (latestRound && latestRound.name) {
-          const matchIdx = rounds.findIndex(r => r.name.toLowerCase() === latestRound.name.toLowerCase());
-          if (matchIdx > -1) {
-            currentIndex = matchIdx + 1;
-          }
-        }
-      }
-    }
-  } else {
-    const statusIndices = {
-      'Applied': 0,
-      'Aptitude': 1,
-      'GD': 2,
-      'HR': 3,
-      'Selected': 4,
-      'Rejected': 4,
-      'Round1': 1,
-      'Round2': 2,
-      'Round3': 3,
-      'Round4': 4
-    };
-
-    // Check if any round failed in fallback steps
-    const failedRound = appRounds ? appRounds.find(r => r.result === 'Failed') : null;
-    if (failedRound) {
-      const nameLower = failedRound.name.toLowerCase();
-      if (nameLower.includes('aptitude')) stageFailureIndex = 1;
-      else if (nameLower.includes('gd') || nameLower.includes('group')) stageFailureIndex = 2;
-      else if (nameLower.includes('hr') || nameLower.includes('personal')) stageFailureIndex = 3;
-    }
-
-    if (currentStatus === 'Rejected' && stageFailureIndex > -1) {
-      currentIndex = stageFailureIndex;
-    } else if (currentStatus.startsWith('Round') || currentStatus.startsWith('round')) {
-      const matchNum = parseInt(currentStatus.replace(/round/i, '')) || 1;
-      currentIndex = matchNum;
-    } else {
-      currentIndex = statusIndices[currentStatus] ?? 0;
-    }
   }
 
-  const isRejected = currentStatus === 'Rejected';
+  const getStepStatus = (index) => {
+    // 1. Applied stage
+    if (index === 0) {
+      return 'Completed';
+    }
+
+    // Determine if any previous stage failed
+    let anyPriorFailed = false;
+    for (let prevIdx = 1; prevIdx < index; prevIdx++) {
+      const prevStatus = getStepStatus(prevIdx);
+      if (prevStatus === 'Failed') {
+        anyPriorFailed = true;
+      }
+    }
+
+    if (anyPriorFailed) {
+      return 'Disabled';
+    }
+
+    // 2. Resume Screening stage
+    if (index === 1) {
+      const match = appRounds?.find(r => r.name.toLowerCase() === "resume screening" || r.name.toLowerCase() === "ai screening");
+      if (match) {
+        if (match.result === 'Passed' || match.result === 'Selected') return 'Completed';
+        if (match.result === 'Failed' || match.result === 'Rejected') return 'Failed';
+        return 'Active';
+      }
+      
+      if (currentStatus === 'Applied' || currentStatus === 'AI Screening') {
+        return 'Active';
+      }
+      if (currentStatus === 'Rejected') {
+        const anyInterviewFailed = appRounds?.some(r => r.result === 'Failed' || r.result === 'Rejected');
+        if (!anyInterviewFailed) return 'Failed';
+        return 'Completed';
+      }
+      return 'Completed';
+    }
+
+    const isDecisionStep = index === steps.length - 1;
+
+    // 3. Dynamic Interview Rounds
+    if (!isDecisionStep) {
+      const roundIdx = index - 2;
+      const roundConfig = (rounds && rounds[roundIdx]) ? rounds[roundIdx] : null;
+      const roundName = roundConfig ? roundConfig.name : (
+        roundIdx === 0 ? 'Aptitude' : roundIdx === 1 ? 'GD' : 'HR'
+      );
+
+      const match = appRounds?.find(r => r.name.toLowerCase() === roundName.toLowerCase());
+      if (match) {
+        if (match.result === 'Passed' || match.result === 'Selected') return 'Completed';
+        if (match.result === 'Failed' || match.result === 'Rejected' || match.result === 'Absent') return 'Failed';
+        return 'Active';
+      }
+
+      const prevStepStatus = getStepStatus(index - 1);
+      if (prevStepStatus === 'Completed') {
+        return 'Active';
+      }
+      return 'Disabled';
+    }
+
+    // 4. Final Decision stage
+    if (currentStatus === 'Selected') {
+      return 'Completed';
+    }
+    if (currentStatus === 'Rejected') {
+      const prevStepStatus = getStepStatus(index - 1);
+      if (prevStepStatus === 'Completed') {
+        return 'Failed';
+      }
+      return 'Disabled';
+    }
+
+    const lastRoundStatus = getStepStatus(index - 1);
+    if (lastRoundStatus === 'Completed') {
+      return 'Active';
+    }
+    return 'Disabled';
+  };
+
   const isSelected = currentStatus === 'Selected';
+  const isRejected = currentStatus === 'Rejected';
 
   return (
     <div className="w-full py-8">
@@ -110,13 +122,14 @@ const Stepper = ({ currentStatus, rounds, appRounds }) => {
       <div className="hidden md:flex items-center w-full">
         {steps.map((step, index) => {
           const StepIcon = step.icon;
-          
-          let isCompleted = index < currentIndex || (index === steps.length - 1 && isSelected);
-          let isActive = index === currentIndex && !isCompleted && !isRejected;
-          let isFailed = (index === steps.length - 1 && isRejected && stageFailureIndex === -1) || (index === stageFailureIndex);
+          const stepStatus = getStepStatus(index);
+          const isCompleted = stepStatus === 'Completed';
+          const isActive = stepStatus === 'Active';
+          const isFailed = stepStatus === 'Failed';
+          const isDisabled = stepStatus === 'Disabled';
 
           const showLine = index < steps.length - 1;
-          const lineCompleted = index < currentIndex;
+          const lineCompleted = isCompleted;
 
           return (
             <React.Fragment key={step.key}>
@@ -155,7 +168,7 @@ const Stepper = ({ currentStatus, rounds, appRounds }) => {
                         : 'text-[#4B5563]'
                     }`}
                   >
-                    {index === steps.length - 1 ? (isSelected ? 'Selected' : isRejected ? 'Rejected' : 'Decision') : (index === stageFailureIndex ? `Rejected at ${step.label}` : step.label)}
+                    {index === steps.length - 1 ? (isSelected ? 'Selected' : isRejected ? 'Rejected' : 'Decision') : step.label}
                   </p>
                   <p className="text-[10px] text-[#94A3B8] mt-1.5 leading-tight max-w-[120px] mx-auto font-medium">
                     {step.desc}
@@ -182,9 +195,10 @@ const Stepper = ({ currentStatus, rounds, appRounds }) => {
       <div className="md:hidden flex flex-col space-y-8 relative pl-6 border-l-2 border-[#E5E7EB] ml-5 py-2">
         {steps.map((step, index) => {
           const StepIcon = step.icon;
-          let isCompleted = index < currentIndex || (index === steps.length - 1 && isSelected);
-          let isActive = index === currentIndex && !isCompleted && !isRejected;
-          let isFailed = (index === steps.length - 1 && isRejected && stageFailureIndex === -1) || (index === stageFailureIndex);
+          const stepStatus = getStepStatus(index);
+          const isCompleted = stepStatus === 'Completed';
+          const isActive = stepStatus === 'Active';
+          const isFailed = stepStatus === 'Failed';
 
           return (
             <div key={step.key} className="relative flex items-start gap-5">
@@ -234,7 +248,7 @@ const Stepper = ({ currentStatus, rounds, appRounds }) => {
                         : 'text-[#4B5563]'
                     }`}
                   >
-                    {index === steps.length - 1 ? (isSelected ? 'Selected' : isRejected ? 'Rejected' : 'Decision') : (index === stageFailureIndex ? `Rejected at ${step.label}` : step.label)}
+                    {index === steps.length - 1 ? (isSelected ? 'Selected' : isRejected ? 'Rejected' : 'Decision') : step.label}
                   </h4>
                 </div>
                 <p className="text-xs text-[#4B5563] mt-1.5 leading-relaxed">{step.desc}</p>
@@ -251,7 +265,7 @@ const Stepper = ({ currentStatus, rounds, appRounds }) => {
                 )}
                 {isFailed && (
                   <span className="inline-flex items-center gap-1 mt-3 text-[10px] bg-rose-50 text-rose-600 border border-rose-200 px-2.5 py-0.5 rounded-full font-bold">
-                    {index === stageFailureIndex ? `Eliminated here` : 'Rejected'}
+                    Eliminated here
                   </span>
                 )}
               </div>

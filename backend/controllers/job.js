@@ -206,6 +206,15 @@ module.exports.applyJob = ErrorWrapper(async (req, res, next) => {
 
   if (analysisResult.status === "Shortlisted") {
     finalStatus = "Shortlisted";
+    
+    // Add Resume Screening to roundsList
+    roundsList.push({
+      name: "Resume Screening",
+      result: "Passed",
+      scheduledAt: new Date(),
+      notes: "Passed automatic AI resume screening."
+    });
+
     // Find the first interview round if any
     const firstRound = await Round.findOne({ jobId: job._id }).sort({ sequence: 1 });
     

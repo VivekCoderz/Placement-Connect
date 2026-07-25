@@ -622,6 +622,20 @@ module.exports.overrideDecision = ErrorWrapper(async (req, res, next) => {
       app.rounds[appliedRoundIdx].result = "Passed";
     }
 
+    // Handle Resume Screening round
+    const screeningRoundIdx = roundsList.findIndex(r => r.name.toLowerCase() === "resume screening" || r.name.toLowerCase() === "ai screening");
+    if (screeningRoundIdx > -1) {
+      roundsList[screeningRoundIdx].result = "Passed";
+      roundsList[screeningRoundIdx].notes = reason || "Approved by recruiter manual override";
+    } else {
+      roundsList.push({
+        name: "Resume Screening",
+        result: "Passed",
+        scheduledAt: new Date(),
+        notes: reason || "Approved by recruiter manual override"
+      });
+    }
+
     // Set up first round
     const firstRound = await Round.findOne({ jobId: job._id }).sort({ sequence: 1 });
     let currentRoundId = null;
@@ -629,7 +643,7 @@ module.exports.overrideDecision = ErrorWrapper(async (req, res, next) => {
       currentRoundId = firstRound._id;
       progressStatus = `Round 1: ${firstRound.name}`;
       
-      const rIdx = app.rounds.findIndex(r => r.name.toLowerCase() === firstRound.name.toLowerCase());
+      const rIdx = roundsList.findIndex(r => r.name.toLowerCase() === firstRound.name.toLowerCase());
       if (rIdx === -1) {
         roundsList.push({
           name: firstRound.name,
@@ -640,6 +654,8 @@ module.exports.overrideDecision = ErrorWrapper(async (req, res, next) => {
           notes: firstRound.instructions || "",
           venue: firstRound.mode === "Physical" ? (firstRound.meetingLink || "TPO Office") : ""
         });
+      } else {
+        roundsList[rIdx].result = "Pending";
       }
     } else {
       progressStatus = "Shortlisted";
@@ -660,11 +676,28 @@ module.exports.overrideDecision = ErrorWrapper(async (req, res, next) => {
       remarks: reason || "Manually overridden to Rejected"
     });
 
-    const appliedRoundIdx = app.rounds.findIndex(r => r.name.toLowerCase() === "applied");
+    // Reset rounds to only keep Applied and Resume Screening
+    roundsList = roundsList.filter(r => r.name.toLowerCase() === "applied" || r.name.toLowerCase() === "resume screening" || r.name.toLowerCase() === "ai screening");
+    
+    const appliedRoundIdx = roundsList.findIndex(r => r.name.toLowerCase() === "applied");
     if (appliedRoundIdx > -1) {
-      app.rounds[appliedRoundIdx].result = "Failed";
-      app.rounds[appliedRoundIdx].notes = reason || "Rejected by manual override";
+      roundsList[appliedRoundIdx].result = "Passed";
     }
+
+    const screeningRoundIdx = roundsList.findIndex(r => r.name.toLowerCase() === "resume screening" || r.name.toLowerCase() === "ai screening");
+    if (screeningRoundIdx > -1) {
+      roundsList[screeningRoundIdx].result = "Failed";
+      roundsList[screeningRoundIdx].notes = reason || "Rejected by recruiter manual override";
+    } else {
+      roundsList.push({
+        name: "Resume Screening",
+        result: "Failed",
+        scheduledAt: new Date(),
+        notes: reason || "Rejected by recruiter manual override"
+      });
+    }
+
+    app.rounds = roundsList;
   }
 
   await progress.save();
