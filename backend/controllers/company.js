@@ -202,3 +202,29 @@ module.exports.submitShortlist = ErrorWrapper(async (req, res, next) => {
   });
 });
 
+// Get Company's Offer Letter template
+module.exports.getOfferTemplate = ErrorWrapper(async (req, res, next) => {
+  const company = req.company;
+  if (!company) {
+    throw new ErrorHandler(404, "Recruiter company details not found");
+  }
+  return res.status(200).json({
+    offerLetterTemplate: company.offerLetterTemplate || ""
+  });
+});
+
+// Update Company's Offer Letter template
+module.exports.updateOfferTemplate = ErrorWrapper(async (req, res, next) => {
+  const { offerLetterTemplate } = req.body;
+  const company = req.company;
+  if (!company) {
+    throw new ErrorHandler(404, "Recruiter company details not found");
+  }
+  company.offerLetterTemplate = offerLetterTemplate;
+  await company.save();
+  return res.status(200).json({
+    message: "Offer letter template updated successfully",
+    offerLetterTemplate: company.offerLetterTemplate
+  });
+});
+

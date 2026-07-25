@@ -45,6 +45,178 @@ const PlacementDashboard = () => {
   const [csvSuccess, setCsvSuccess] = useState('');
   const [csvError, setCsvError] = useState('');
 
+  // Offer Letter Review state
+  const [selectedAppForReview, setSelectedAppForReview] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  // Reports state
+  const [reportFilterStatus, setReportFilterStatus] = useState('Selected'); // Selected | Rejected | All
+  const [reportFilterBranch, setReportFilterBranch] = useState('All');
+  const [reportFilterCompany, setReportFilterCompany] = useState('All');
+  const [reportSearchQuery, setReportSearchQuery] = useState('');
+
+  const handleApproveOffer = async (appId) => {
+    setSubmittingReview(true);
+    try {
+      const response = await api.put(`/api/applications/${appId}/approve-offer`);
+      if (response.status === 200) {
+        alert("Offer letter approved and sent to student!");
+        // Update applications list
+        setApplications(prev => prev.map(a => a._id === appId ? { ...a, offerLetterStatus: 'Approved', status: 'Selected' } : a));
+        setSelectedAppForReview(null);
+      }
+    } catch (err) {
+      console.error("Failed to approve offer letter:", err);
+      alert(err.response?.data?.message || "Failed to approve offer letter.");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleRejectOffer = async (appId) => {
+    if (!rejectReason.trim()) {
+      alert("Please provide a reason for rejection.");
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      const response = await api.put(`/api/applications/${appId}/reject-offer`, { reason: rejectReason });
+      if (response.status === 200) {
+        alert("Offer letter rejected.");
+        // Update applications list
+        setApplications(prev => prev.map(a => a._id === appId ? { ...a, offerLetterStatus: 'Rejected' } : a));
+        setSelectedAppForReview(null);
+        setRejectReason('');
+      }
+    } catch (err) {
+      console.error("Failed to reject offer letter:", err);
+      alert(err.response?.data?.message || "Failed to reject offer letter.");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleExportCSV = (data, status) => {
+    const headers = ["Student Name", "Roll Number", "Email", "Branch", "Year", "CGPA", "Company", "Job Title", "CTC (LPA)", "Application Status", "Offer Letter Status"];
+    const rows = data.map(item => [
+      item.studentId?.name || '',
+      item.studentId?.rollNumber || '',
+      item.studentId?.email || '',
+      item.studentId?.branch || '',
+      item.studentId?.year || '',
+      item.studentId?.cgpa || '',
+      item.jobId?.companyId?.name || '',
+      item.jobId?.title || '',
+      item.jobId?.package || '',
+      item.status || '',
+      item.offerLetterStatus || 'None'
+    ]);
+    
+    const csvContent = [headers, ...rows].map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${status}_Students_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportPDF = (data, status) => {
+    const printWindow = window.open('', '_blank');
+    const dateStr = new Date().toLocaleDateString();
+    
+    let tableRowsHtml = data.map((item, idx) => `
+      <tr style="border-bottom: 1px solid #E2E8F0;">
+        <td style="padding: 10px; text-align: left;">${idx + 1}</td>
+        <td style="padding: 10px; text-align: left;"><strong>${item.studentId?.name || 'N/A'}</strong></td>
+        <td style="padding: 10px; text-align: left;">${item.studentId?.rollNumber || 'N/A'}</td>
+        <td style="padding: 10px; text-align: left;">${item.studentId?.branch || 'N/A'}</td>
+        <td style="padding: 10px; text-align: left;">${item.studentId?.cgpa || 'N/A'}</td>
+        <td style="padding: 10px; text-align: left;">${item.jobId?.companyId?.name || 'N/A'}</td>
+        <td style="padding: 10px; text-align: left;">${item.jobId?.title || 'N/A'}</td>
+        <td style="padding: 10px; text-align: left;">${item.jobId?.package || 'N/A'} LPA</td>
+        <td style="padding: 10px; text-align: left;"><span style="background: ${item.status === 'Selected' ? '#DEF7EC' : item.status === 'Rejected' ? '#FDE8E8' : '#EBF5FF'}; color: ${item.status === 'Selected' ? '#03543F' : item.status === 'Rejected' ? '#9B1C1C' : '#1E429F'}; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 10px;">${item.status}</span></td>
+      </tr>
+    `).join('');
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${status} Students Report</title>
+          <style>
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748; margin: 40px; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #6D5EF7; padding-bottom: 20px; margin-bottom: 30px; }
+            .logo-section h1 { margin: 0; font-size: 24px; color: #1A202C; }
+            .logo-section p { margin: 5px 0 0 0; font-size: 12px; color: #718096; font-weight: bold; }
+            .report-info { text-align: right; font-size: 12px; color: #718096; }
+            .report-title { text-align: center; margin-bottom: 30px; }
+            .report-title h2 { margin: 0; font-size: 20px; color: #2D3748; text-transform: uppercase; letter-spacing: 1px; }
+            .report-title p { margin: 5px 0 0 0; font-size: 12px; color: #718096; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 11px; }
+            th { background-color: #F7FAFC; color: #4A5568; font-weight: bold; padding: 12px 10px; border-bottom: 2px solid #E2E8F0; text-align: left; text-transform: uppercase; }
+            td { padding: 12px 10px; border-bottom: 1px solid #E2E8F0; color: #4A5568; }
+            .footer { margin-top: 50px; display: flex; justify-content: space-between; font-size: 11px; color: #A0AEC0; border-top: 1px solid #E2E8F0; padding-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo-section">
+              <h1>GEETA UNIVERSITY</h1>
+              <p>Training & Placement Cell</p>
+            </div>
+            <div class="report-info">
+              <p>Date Generated: ${dateStr}</p>
+              <p>Generated By: Placement Officer</p>
+            </div>
+          </div>
+          
+          <div class="report-title">
+            <h2>Placement Campaign Report — ${status} Candidates</h2>
+            <p>Summarized list of students processed under campus placement drives</p>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 5%">S.No</th>
+                <th style="width: 20%">Student Name</th>
+                <th style="width: 15%">Roll Number</th>
+                <th style="width: 10%">Branch</th>
+                <th style="width: 8%">CGPA</th>
+                <th style="width: 15%">Company</th>
+                <th style="width: 15%">Job Title</th>
+                <th style="width: 8%">CTC</th>
+                <th style="width: 10%">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRowsHtml || '<tr><td colspan="9" style="text-align:center;">No students matching criteria</td></tr>'}
+            </tbody>
+          </table>
+          
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} Geeta University PlacementConnect. Confidential Report.</p>
+            <p>Authorized Signature: _______________________</p>
+          </div>
+          
+          <script>
+            window.onload = function() {
+              window.print();
+              window.onafterprint = function() {
+                window.close();
+              };
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
@@ -277,7 +449,7 @@ const PlacementDashboard = () => {
       </div>
 
       {/* Main Tabs */}
-      <div className="flex flex-wrap bg-white border border-[#E5E7EB] p-1 rounded-xl max-w-3xl gap-1 shadow-sm">
+      <div className="flex flex-wrap bg-white border border-[#E5E7EB] p-1 rounded-xl max-w-5xl gap-1 shadow-sm">
         <button
           onClick={() => setActiveTab('overview')}
           className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
@@ -325,6 +497,22 @@ const PlacementDashboard = () => {
           }`}
         >
           <Users className="w-3.5 h-3.5" /> Recruiter Shortlists
+        </button>
+        <button
+          onClick={() => setActiveTab('offerLetters')}
+          className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+            activeTab === 'offerLetters' ? 'bg-[#22C55E] text-white shadow-sm' : 'text-[#94A3B8] hover:text-[#4B5563] hover:bg-[#F8FAFC]'
+          }`}
+        >
+          <FileText className="w-3.5 h-3.5" /> Offer Letters
+        </button>
+        <button
+          onClick={() => setActiveTab('reports')}
+          className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+            activeTab === 'reports' ? 'bg-[#22C55E] text-white shadow-sm' : 'text-[#94A3B8] hover:text-[#4B5563] hover:bg-[#F8FAFC]'
+          }`}
+        >
+          <TrendingUp className="w-3.5 h-3.5" /> Reports
         </button>
       </div>
 
@@ -938,6 +1126,328 @@ const PlacementDashboard = () => {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* OFFER LETTERS APPROVAL TAB */}
+      {activeTab === 'offerLetters' && (() => {
+        const pendingOffers = applications.filter(a => a.offerLetterStatus === 'Pending Approval');
+        return (
+          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
+            <div className="border-b border-[#E5E7EB] pb-4">
+              <h2 className="text-base font-bold text-[#111827] tracking-tight">Review & Approve Offer Letters</h2>
+              <p className="text-xs text-[#4B5563] font-medium mt-1">Process pending offer letters submitted by company recruiters. Approved offers are immediately issued to student dashboards.</p>
+            </div>
+
+            {pendingOffers.length === 0 ? (
+              <div className="py-16 text-center text-[#4B5563] text-sm font-semibold">
+                🎉 All offer letters processed! No pending reviews at this time.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-xs text-left text-slate-500">
+                  <thead className="text-[10px] text-slate-700 uppercase bg-[#F8FAFC] border-b border-[#E5E7EB]">
+                    <tr>
+                      <th className="px-6 py-3.5 font-bold">Student Details</th>
+                      <th className="px-6 py-3.5 font-bold">Drive Info</th>
+                      <th className="px-6 py-3.5 font-bold">Package</th>
+                      <th className="px-6 py-3.5 font-bold">Submitted Date</th>
+                      <th className="px-6 py-3.5 font-bold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingOffers.map((app) => (
+                      <tr key={app._id} className="bg-white border-b border-[#F1F5F9] hover:bg-slate-50/50">
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-[#111827]">{app.studentId?.name}</div>
+                          <div className="text-[10px] text-slate-400 font-mono mt-0.5">{app.studentId?.rollNumber} · {app.studentId?.branch}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-slate-700">{app.jobId?.title}</div>
+                          <div className="text-[10px] text-slate-400 mt-0.5">{app.jobId?.companyId?.name}</div>
+                        </td>
+                        <td className="px-6 py-4 font-semibold text-[#111827]">{app.jobId?.package} LPA</td>
+                        <td className="px-6 py-4 text-slate-400 font-medium">{new Date(app.updatedAt).toLocaleDateString()}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={() => {
+                              setSelectedAppForReview(app);
+                              setRejectReason('');
+                            }}
+                            className="px-3.5 py-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold rounded-lg transition-all shadow-sm cursor-pointer active:scale-95"
+                          >
+                            Review Offer
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* REPORTS GENERATOR TAB */}
+      {activeTab === 'reports' && (() => {
+        // Collect branches & companies for filters
+        const branchesList = ['All', ...new Set(applications.map(a => a.studentId?.branch).filter(Boolean))];
+        const companiesList = drives.map(d => d.companyId).filter((v, i, a) => v && a.findIndex(t => t._id === v._id) === i);
+        
+        const filteredReportApps = applications.filter(app => {
+          const matchesStatus = reportFilterStatus === 'All' || app.status === reportFilterStatus;
+          const matchesBranch = reportFilterBranch === 'All' || (app.studentId?.branch?.toLowerCase() === reportFilterBranch.toLowerCase());
+          
+          let compId = app.jobId?.companyId?._id || app.jobId?.companyId;
+          const matchesCompany = reportFilterCompany === 'All' || (compId === reportFilterCompany);
+          
+          const searchLower = reportSearchQuery.toLowerCase();
+          const matchesSearch = !reportSearchQuery || 
+            app.studentId?.name?.toLowerCase().includes(searchLower) || 
+            app.studentId?.rollNumber?.toLowerCase().includes(searchLower) ||
+            app.jobId?.title?.toLowerCase().includes(searchLower);
+            
+          return matchesStatus && matchesBranch && matchesCompany && matchesSearch;
+        });
+
+        return (
+          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
+            <div className="border-b border-[#E5E7EB] pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-base font-bold text-[#111827] tracking-tight">Placement Campaign Report Compiler</h2>
+                <p className="text-xs text-[#4B5563] font-medium mt-1">Filter, search, and export lists of selected, rejected, or shortlisted students to PDF documents and Excel-friendly sheets.</p>
+              </div>
+              
+              {/* Exporters */}
+              <div className="flex gap-2 font-semibold">
+                <button
+                  onClick={() => handleExportCSV(filteredReportApps, reportFilterStatus)}
+                  className="px-4 py-2 border border-slate-200 hover:border-slate-300 text-xs text-slate-700 bg-white rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                >
+                  <Download className="w-4 h-4 text-emerald-600" /> Export Excel (CSV)
+                </button>
+                <button
+                  onClick={() => handleExportPDF(filteredReportApps, reportFilterStatus)}
+                  className="px-4 py-2 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                >
+                  <FileText className="w-4 h-4 text-white" /> Compile PDF Report
+                </button>
+              </div>
+            </div>
+
+            {/* Filters panel */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 border border-[#E5E7EB] rounded-2xl">
+              <div className="space-y-1 text-[#4B5563] font-semibold">
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Placement Status</label>
+                <select
+                  value={reportFilterStatus}
+                  onChange={(e) => setReportFilterStatus(e.target.value)}
+                  className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                >
+                  <option value="All">All Applications</option>
+                  <option value="Selected">Selected</option>
+                  <option value="Rejected">Rejected</option>
+                  <option value="Shortlisted">Shortlisted</option>
+                  <option value="Applied">Applied</option>
+                </select>
+              </div>
+
+              <div className="space-y-1 text-[#4B5563] font-semibold">
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Academic Branch</label>
+                <select
+                  value={reportFilterBranch}
+                  onChange={(e) => setReportFilterBranch(e.target.value)}
+                  className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                >
+                  {branchesList.map(branch => (
+                    <option key={branch} value={branch}>{branch === 'All' ? 'All Branches' : branch}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1 text-[#4B5563] font-semibold">
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Recruiting Company</label>
+                <select
+                  value={reportFilterCompany}
+                  onChange={(e) => setReportFilterCompany(e.target.value)}
+                  className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                >
+                  <option value="All">All Companies</option>
+                  {companiesList.map(comp => (
+                    <option key={comp._id} value={comp._id}>{comp.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1 text-[#4B5563] font-semibold">
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Search Candidate/Job</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={reportSearchQuery}
+                    onChange={(e) => setReportSearchQuery(e.target.value)}
+                    placeholder="Search by name, roll..."
+                    className="block w-full py-2 pl-8 pr-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                  />
+                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Results Table */}
+            <div className="space-y-3">
+              <div className="text-xs font-bold text-slate-500 flex justify-between">
+                <span>Filter matches: {filteredReportApps.length} students</span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-xs text-left text-slate-500">
+                  <thead className="text-[10px] text-slate-700 uppercase bg-[#F8FAFC] border-b border-[#E5E7EB]">
+                    <tr>
+                      <th className="px-6 py-3.5 font-bold">Student Name</th>
+                      <th className="px-6 py-3.5 font-bold">Roll Number</th>
+                      <th className="px-6 py-3.5 font-bold">Branch</th>
+                      <th className="px-6 py-3.5 font-bold">CGPA</th>
+                      <th className="px-6 py-3.5 font-bold">Company</th>
+                      <th className="px-6 py-3.5 font-bold">CTC Package</th>
+                      <th className="px-6 py-3.5 font-bold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredReportApps.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="px-6 py-8 text-center text-slate-400 font-semibold">No student records matches the selected criteria.</td>
+                      </tr>
+                    ) : (
+                      filteredReportApps.map((app) => (
+                        <tr key={app._id} className="bg-white border-b border-[#F1F5F9] hover:bg-slate-50/50">
+                          <td className="px-6 py-4 font-bold text-[#111827]">{app.studentId?.name}</td>
+                          <td className="px-6 py-4 font-mono font-semibold">{app.studentId?.rollNumber}</td>
+                          <td className="px-6 py-4 font-semibold">{app.studentId?.branch}</td>
+                          <td className="px-6 py-4 font-mono font-semibold">{app.studentId?.cgpa}</td>
+                          <td className="px-6 py-4">{app.jobId?.companyId?.name}</td>
+                          <td className="px-6 py-4 font-bold text-[#111827]">{app.jobId?.package} LPA</td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider ${
+                              app.status === 'Selected' ? 'bg-emerald-100 text-emerald-700' :
+                              app.status === 'Rejected' ? 'bg-rose-100 text-rose-700' :
+                              app.status === 'Shortlisted' ? 'bg-blue-100 text-blue-700' :
+                              'bg-slate-100 text-slate-600'
+                            }`}>
+                              {app.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* PLACEMENT REVIEW OFFER LETTER MODAL */}
+      {selectedAppForReview && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative bg-white rounded-2xl w-full max-w-4xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 text-[#4B5563]">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-[#111827] tracking-tight">Review & Approve Offer Letter</h3>
+                <p className="text-[11px] text-[#4B5563] font-medium mt-0.5">
+                  Inspect the offer letter generated for <strong>{selectedAppForReview.studentId?.name}</strong> by <strong>{selectedAppForReview.jobId?.companyId?.name}</strong>.
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedAppForReview(null)}
+                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <XCircle className="w-5 h-5 text-rose-500" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 max-h-[60vh] overflow-y-auto">
+              {/* Left 2 Columns: Rendered preview */}
+              <div className="lg:col-span-2 space-y-3">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Offer Document Preview</label>
+                <div className="p-8 bg-slate-50 border border-slate-200 rounded-xl overflow-y-auto min-h-[350px]">
+                  {selectedAppForReview.offerLetterUrl ? (
+                    <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-sm text-center space-y-4">
+                      <FileText className="w-16 h-16 text-[#7C3AED] mx-auto" />
+                      <h4 className="text-sm font-bold text-slate-800">A custom PDF offer letter has been uploaded.</h4>
+                      <p className="text-xs text-slate-500">You can view or download this PDF file directly using the link below.</p>
+                      <a
+                        href={selectedAppForReview.offerLetterUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer active:scale-95"
+                      >
+                        <Eye className="w-4 h-4" /> Open Uploaded PDF Offer Letter
+                      </a>
+                    </div>
+                  ) : (
+                    <div 
+                      className="prose prose-sm max-w-none text-slate-700 font-sans text-xs bg-white p-8 rounded-lg border border-slate-100 shadow-sm"
+                      dangerouslySetInnerHTML={{ __html: selectedAppForReview.offerLetterContent }} 
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column: Rejection reasoning and review logs */}
+              <div className="space-y-4 flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="p-4 bg-purple-50 rounded-xl border border-purple-100 space-y-1.5">
+                    <h4 className="text-xs font-bold text-[#7C3AED] uppercase tracking-wider">Recruiter Details</h4>
+                    <p className="text-[10px] font-medium">Drive: <strong>{selectedAppForReview.jobId?.title}</strong></p>
+                    <p className="text-[10px] font-medium">CTC Offer: <strong>{selectedAppForReview.jobId?.package} LPA</strong></p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Rejection Reason</label>
+                    <textarea
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      placeholder="Specify the issues (e.g. wrong CTC, invalid format) if you choose to reject..."
+                      rows="5"
+                      className="w-full p-3 bg-[#F8FAFC] border border-slate-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED]"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 font-semibold">
+                  <button
+                    onClick={() => handleRejectOffer(selectedAppForReview._id)}
+                    disabled={submittingReview}
+                    className="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-[0.98] disabled:opacity-50"
+                  >
+                    <XCircle className="w-4 h-4" /> Reject & Return to Recruiter
+                  </button>
+                  <button
+                    onClick={() => handleApproveOffer(selectedAppForReview._id)}
+                    disabled={submittingReview}
+                    className="w-full py-2.5 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1 cursor-pointer transition-all shadow-md active:scale-[0.98] disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-white" /> Approve & Issue Offer
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end font-semibold">
+              <button
+                onClick={() => setSelectedAppForReview(null)}
+                className="px-4 py-2 border border-slate-200 hover:bg-white text-xs text-slate-700 rounded-xl transition-colors"
+              >
+                Close Reviewer
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -631,11 +631,117 @@ const AdminDashboard = () => {
   const handleReportSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
+    
     setTimeout(() => {
       setIsLoading(false);
       setActiveModal(null);
-      addToast('success', `${reportForm.type} (${reportForm.format}) generated successfully. Check downloads.`);
-    }, 1500);
+      
+      let dataToExport = [...applications];
+      let title = reportForm.type;
+      
+      if (reportForm.format === 'Excel') {
+        const headers = ["Student Name", "Company", "Job Title", "Date Applied", "Stage", "Status"];
+        const rows = dataToExport.map(item => [
+          item.student,
+          item.company,
+          item.role,
+          item.appliedDate,
+          item.stage,
+          item.status
+        ]);
+        const csvContent = [headers, ...rows].map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(",")).join("\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `${title.replace(/\s+/g, '_')}_Report.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        addToast('success', `Excel report generated successfully.`);
+      } else {
+        // PDF compilation
+        const printWindow = window.open('', '_blank');
+        const dateStr = new Date().toLocaleDateString();
+        let tableRowsHtml = dataToExport.map((item, idx) => `
+          <tr style="border-bottom: 1px solid #E2E8F0;">
+            <td style="padding: 10px;">${idx + 1}</td>
+            <td style="padding: 10px;"><strong>${item.student}</strong></td>
+            <td style="padding: 10px;">${item.company}</td>
+            <td style="padding: 10px;">${item.role}</td>
+            <td style="padding: 10px;">${item.appliedDate}</td>
+            <td style="padding: 10px;">${item.stage}</td>
+            <td style="padding: 10px;"><span style="background: ${item.status === 'Selected' ? '#DEF7EC' : item.status === 'Rejected' ? '#FDE8E8' : '#EBF5FF'}; color: ${item.status === 'Selected' ? '#03543F' : item.status === 'Rejected' ? '#9B1C1C' : '#1E429F'}; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 10px;">${item.status}</span></td>
+          </tr>
+        `).join('');
+
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>${title}</title>
+              <style>
+                body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748; margin: 40px; }
+                .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #6D5EF7; padding-bottom: 20px; margin-bottom: 30px; }
+                .logo-section h1 { margin: 0; font-size: 24px; color: #1A202C; }
+                .logo-section p { margin: 5px 0 0 0; font-size: 12px; color: #718096; font-weight: bold; }
+                .report-info { text-align: right; font-size: 12px; color: #718096; }
+                .report-title { text-align: center; margin-bottom: 30px; }
+                .report-title h2 { margin: 0; font-size: 20px; color: #2D3748; text-transform: uppercase; letter-spacing: 1px; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 11px; }
+                th { background-color: #F7FAFC; color: #4A5568; font-weight: bold; padding: 12px 10px; border-bottom: 2px solid #E2E8F0; text-align: left; text-transform: uppercase; }
+                td { padding: 12px 10px; border-bottom: 1px solid #E2E8F0; color: #4A5568; }
+                .footer { margin-top: 50px; display: flex; justify-content: space-between; font-size: 11px; color: #A0AEC0; border-top: 1px solid #E2E8F0; padding-top: 20px; }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <div class="logo-section">
+                  <h1>GEETA UNIVERSITY</h1>
+                  <p>Training & Placement Cell — Admin Panel</p>
+                </div>
+                <div class="report-info">
+                  <p>Date: ${dateStr}</p>
+                </div>
+              </div>
+              <div class="report-title">
+                <h2>${title}</h2>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>S.No</th>
+                    <th>Student Name</th>
+                    <th>Company</th>
+                    <th>Job Title</th>
+                    <th>Date Applied</th>
+                    <th>Stage</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tableRowsHtml || '<tr><td colspan="7" style="text-align:center;">No records available</td></tr>'}
+                </tbody>
+              </table>
+              <div class="footer">
+                <p>© ${new Date().getFullYear()} Geeta University. Confidential.</p>
+                <p>Authorized Signature: _______________________</p>
+              </div>
+              <script>
+                window.onload = function() {
+                  window.print();
+                  window.onafterprint = function() {
+                    window.close();
+                  };
+                }
+              </script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        addToast('success', `PDF report generated successfully.`);
+      }
+    }, 1000);
   };
 
   const handleCsvUploadSubmit = (e) => {

@@ -203,3 +203,125 @@ module.exports.updateStatus = ErrorWrapper(async (req, res, next) => {
     application: app,
   });
 });
+
+module.exports.issueOffer = ErrorWrapper(async (req, res, next) => {
+  const { id } = req.params;
+  const { offerLetterContent } = req.body;
+
+  const app = await Application.findById(id).populate("studentId").populate("jobId");
+  if (!app) {
+    throw new ErrorHandler(404, "Application not found");
+  }
+
+  if (req.file) {
+    app.offerLetterUrl = req.file.path; // Cloudinary PDF URL
+    app.offerLetterContent = ""; // Clear template text if custom PDF is uploaded
+  } else {
+    if (!offerLetterContent) {
+      throw new ErrorHandler(400, "Offer letter content or PDF upload is required");
+    }
+    app.offerLetterContent = offerLetterContent;
+    app.offerLetterUrl = ""; // Clear PDF link if template text is used
+  }
+
+  app.offerLetterStatus = "Pending Approval";
+  await app.save();
+
+  // Notify placement cell
+  const User = require("../models/User");
+  const placementCellUsers = await User.find({ role: "placementCell" });
+  for (const cellUser of placementCellUsers) {
+    const notif = new Notification({
+      userId: cellUser._id,
+      message: `Recruiter submitted an offer letter for ${app.studentId.name} (${app.jobId.title}) pending placement cell approval.`,
+      type: "general"
+    });
+    await notif.save();
+  }
+
+  return res.status(200).json({
+    message: "Offer letter submitted for Placement Cell approval successfully",
+    application: app
+  });
+});
+
+module.exports.approveOffer = ErrorWrapper(async (req, res, next) => {
+  const { id } = req.params;
+  const app = await Application.findById(id)
+    .populate("studentId")
+    .populate({
+      path: "jobId",
+      populate: { path: "companyId", select: "name" },
+    });
+
+  if (!app) {
+    throw new ErrorHandler(404, "Application not found");
+  }
+
+  app.offerLetterStatus = "Approved";
+  app.status = "Selected"; // Overall application status becomes Selected
+  await app.save();
+
+  const student = app.studentId;
+  if (student) {
+    student.isPlaced = true;
+    await student.save();
+  }
+
+  // Notify student
+  const notif = new Notification({
+    userId: student.userId,
+    message: `Congratulations! Your offer letter for ${app.jobId.title} at ${app.jobId.companyId.name} has been approved and issued.`,
+    type: "application_status",
+  });
+  await notif.save();
+
+  // Send email
+  sendEmail({
+    to: student.email,
+    subject: `Congratulations! Approved Offer Letter: ${app.jobId.title} at ${app.jobId.companyId.name}`,
+    html: `
+      <h3>Dear ${student.name},</h3>
+      <p>We are pleased to inform you that your offer letter for <strong>${app.jobId.title}</strong> at <strong>${app.jobId.companyId.name}</strong> has been approved by the Placement Cell and issued!</p>
+      <p>Log in to PlacementConnect to view and print your offer letter.</p>
+      <br/>
+      <p>Regards,</p>
+      <p>Placement Cell, Geeta University</p>
+    `,
+  }).catch(err => console.error("Email send error:", err));
+
+  return res.status(200).json({
+    message: "Offer letter approved successfully",
+    application: app
+  });
+});
+
+module.exports.rejectOffer = ErrorWrapper(async (req, res, next) => {
+  const { id } = req.params;
+  const { reason } = req.body;
+  const app = await Application.findById(id).populate("studentId").populate("jobId");
+
+  if (!app) {
+    throw new ErrorHandler(404, "Application not found");
+  }
+
+  app.offerLetterStatus = "Rejected";
+  await app.save();
+
+  // Notify recruiter / company user
+  const Company = require("../models/company");
+  const company = await Company.findById(app.jobId.companyId);
+  if (company) {
+    const notif = new Notification({
+      userId: company.recruiterId,
+      message: `Placement Cell rejected the offer letter for ${app.studentId.name} (${app.jobId.title}). Reason: ${reason || "Not specified"}.`,
+      type: "general"
+    });
+    await notif.save();
+  }
+
+  return res.status(200).json({
+    message: "Offer letter rejected successfully",
+    application: app
+  });
+});

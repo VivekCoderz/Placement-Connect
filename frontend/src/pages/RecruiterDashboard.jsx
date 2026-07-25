@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
   Building2, Briefcase, Users, Calendar, DollarSign, Award, Plus, Check, Eye, FileText, ArrowRight, Clock, MapPin, 
-  Globe, Phone, User, AlertCircle, RefreshCw, CheckCircle2, XCircle, ChevronRight, Download, Send, Lock
+  Globe, Phone, User, AlertCircle, RefreshCw, CheckCircle2, XCircle, ChevronRight, Download, Send, Lock, Upload
 } from 'lucide-react';
 import { setUser } from '../redux/authSlice';
 import api from '../utils/api';
@@ -63,6 +63,144 @@ const RecruiterDashboard = () => {
   const [submittingPropose, setSubmittingPropose] = useState(false);
   const [proposeSuccess, setProposeSuccess] = useState('');
   const [proposeError, setProposeError] = useState('');
+
+  const [offerTemplate, setOfferTemplate] = useState('');
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateSuccess, setTemplateSuccess] = useState('');
+  const [templateError, setTemplateError] = useState('');
+
+  const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
+  const [selectedAppForOffer, setSelectedAppForOffer] = useState(null);
+  const [generatedOfferContent, setGeneratedOfferContent] = useState('');
+  const [submittingOffer, setSubmittingOffer] = useState(false);
+  const [offerType, setOfferType] = useState('template'); // 'template' | 'file'
+  const [uploadedFile, setUploadedFile] = useState(null);
+
+  const fetchOfferTemplate = async () => {
+    try {
+      const response = await api.get('/api/company/offer-template');
+      if (response.status === 200) {
+        setOfferTemplate(response.data.offerLetterTemplate || '');
+      }
+    } catch (err) {
+      console.error("Failed to load offer letter template:", err);
+      setTemplateError("Failed to load offer letter template. Please try again.");
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'template') {
+      fetchOfferTemplate();
+      setTemplateSuccess('');
+      setTemplateError('');
+    }
+  }, [activeTab]);
+
+  const handleUpdateTemplate = async (e) => {
+    e.preventDefault();
+    setSavingTemplate(true);
+    setTemplateSuccess('');
+    setTemplateError('');
+    try {
+      const response = await api.put('/api/company/offer-template', { offerLetterTemplate: offerTemplate });
+      if (response.status === 200) {
+        setTemplateSuccess("Offer letter template saved successfully!");
+      }
+    } catch (err) {
+      console.error("Failed to save offer letter template:", err);
+      setTemplateError(err.response?.data?.message || "Failed to save template.");
+    } finally {
+      setSavingTemplate(false);
+    }
+  };
+
+  const handleOpenOfferModal = async (app) => {
+    setSelectedAppForOffer(app);
+    let currentTemplate = offerTemplate;
+    if (!currentTemplate) {
+      try {
+        const response = await api.get('/api/company/offer-template');
+        if (response.status === 200) {
+          currentTemplate = response.data.offerLetterTemplate;
+          setOfferTemplate(currentTemplate);
+        }
+      } catch (err) {
+        console.error("Failed to load offer letter template:", err);
+      }
+    }
+    
+    const dateStr = new Date().toLocaleDateString();
+    const studentName = app.studentId?.name || '';
+    const rollNumber = app.studentId?.rollNumber || '';
+    const branch = app.studentId?.branch || '';
+    const cgpa = app.studentId?.cgpa || '';
+    const ctc = selectedJob?.package || '';
+    const jobTitle = selectedJob?.title || '';
+    const companyName = user?.name || '';
+    
+    let compiled = currentTemplate || `<h2>OFFER LETTER</h2>
+<p>Date: {{DATE}}</p>
+<p>To,<br><strong>{{STUDENT_NAME}}</strong><br>Roll No: {{ROLL_NUMBER}}<br>Branch: {{BRANCH}}</p>
+<p>Dear {{STUDENT_NAME}},</p>
+<p>We are pleased to offer you the position of <strong>{{JOB_TITLE}}</strong> at <strong>{{COMPANY_NAME}}</strong>. Your annual compensation (CTC) will be <strong>{{CTC}} LPA</strong>.</p>
+<p>Please review and confirm your acceptance of this offer letter.</p>
+<p>Sincerely,<br><strong>{{COMPANY_NAME}}</strong></p>`;
+    
+    compiled = compiled
+      .replace(/{{DATE}}/g, dateStr)
+      .replace(/{{STUDENT_NAME}}/g, studentName)
+      .replace(/{{ROLL_NUMBER}}/g, rollNumber)
+      .replace(/{{BRANCH}}/g, branch)
+      .replace(/{{CGPA}}/g, String(cgpa))
+      .replace(/{{CTC}}/g, String(ctc))
+      .replace(/{{JOB_TITLE}}/g, jobTitle)
+      .replace(/{{COMPANY_NAME}}/g, companyName);
+      
+    setGeneratedOfferContent(compiled);
+    setUploadedFile(null);
+    setOfferType('template');
+    setIsOfferModalOpen(true);
+  };
+
+  const handleSendOfferLetter = async () => {
+    if (!selectedAppForOffer) return;
+    setSubmittingOffer(true);
+    try {
+      const formData = new FormData();
+      if (offerType === 'file') {
+        if (!uploadedFile) {
+          alert("Please select a PDF file first.");
+          setSubmittingOffer(false);
+          return;
+        }
+        formData.append('offerLetter', uploadedFile);
+      } else {
+        formData.append('offerLetterContent', generatedOfferContent);
+      }
+
+      const response = await api.put(`/api/applications/${selectedAppForOffer._id}/issue-offer`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      if (response.status === 200) {
+        setApplicants(prev => prev.map(a => a._id === selectedAppForOffer._id ? { 
+          ...a, 
+          offerLetterStatus: 'Pending Approval', 
+          offerLetterContent: offerType === 'template' ? generatedOfferContent : '',
+          offerLetterUrl: response.data.application.offerLetterUrl || ''
+        } : a));
+        setIsOfferModalOpen(false);
+        setUploadedFile(null);
+        alert("Offer letter submitted to Placement Cell successfully!");
+      }
+    } catch (err) {
+      console.error("Failed to issue offer letter:", err);
+      alert(err.response?.data?.message || "Failed to submit offer letter.");
+    } finally {
+      setSubmittingOffer(false);
+    }
+  };
 
   // Fetch drives posted by recruiter
   const fetchMyDrives = async () => {
@@ -309,7 +447,7 @@ const RecruiterDashboard = () => {
       </div>
 
       {/* Main Tabs */}
-      <div className="flex bg-white border border-[#E5E7EB] p-1 rounded-xl max-w-lg gap-1 shadow-sm">
+      <div className="flex bg-white border border-[#E5E7EB] p-1 rounded-xl max-w-2xl gap-1 shadow-sm">
         <button
           onClick={() => { setActiveTab('openings'); setSelectedJob(null); }}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
@@ -342,6 +480,17 @@ const RecruiterDashboard = () => {
         >
           <Send className="w-3.5 h-3.5" />
           Propose Schedule
+        </button>
+        <button
+          onClick={() => { setActiveTab('template'); setSelectedJob(null); }}
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+            activeTab === 'template'
+              ? 'bg-[#22C55E] text-white shadow-sm'
+              : 'text-[#94A3B8] hover:text-[#4B5563] hover:bg-[#F8FAFC]'
+          }`}
+        >
+          <FileText className="w-3.5 h-3.5" />
+          Offer Template
         </button>
       </div>
 
@@ -580,20 +729,23 @@ const RecruiterDashboard = () => {
                                   'Shortlist'
                                 )}
                               </button>
-                              <button
-                                onClick={() => handleUpdateStatus(app._id, 'Selected')}
-                                disabled={actionLoadingId !== null}
-                                className="px-3 py-1.5 text-xs bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold rounded-lg transition-all duration-200 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                              >
-                                {actionLoadingId === `${app._id}-Selected` ? (
-                                  <>
-                                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    Saving...
-                                  </>
-                                ) : (
-                                  'Select'
-                                )}
-                              </button>
+                              {app.offerLetterStatus && app.offerLetterStatus !== 'None' ? (
+                                <span className={`px-2.5 py-1.5 text-[10px] rounded-lg font-bold border uppercase ${
+                                  app.offerLetterStatus === 'Approved' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                                  app.offerLetterStatus === 'Rejected' ? 'bg-rose-50 border-rose-200 text-rose-600' :
+                                  'bg-amber-50 border-amber-200 text-amber-700'
+                                }`}>
+                                  Offer: {app.offerLetterStatus}
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => handleOpenOfferModal(app)}
+                                  disabled={actionLoadingId !== null}
+                                  className="px-3 py-1.5 text-xs bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold rounded-lg transition-all duration-200 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
+                                >
+                                  Issue Offer
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleUpdateStatus(app._id, 'Rejected')}
                                 disabled={actionLoadingId !== null}
@@ -1235,6 +1387,192 @@ const RecruiterDashboard = () => {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* OFFER LETTER TEMPLATE TAB */}
+      {activeTab === 'template' && (
+        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-8 max-w-3xl mx-auto space-y-8 shadow-sm animate-in fade-in duration-300">
+          <div className="border-b border-[#E5E7EB] pb-5">
+            <h2 className="text-lg font-bold text-[#111827] tracking-tight">Configure Offer Letter Template</h2>
+            <p className="text-xs text-[#4B5563] font-medium mt-1">Set up a default structure for your company's offer letters. Use placeholders to dynamically inject student details when issuing.</p>
+          </div>
+
+          {templateSuccess && (
+            <div className="bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#22C55E] p-4 rounded-xl flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-[#22C55E] flex-shrink-0" />
+              <p className="text-xs font-bold leading-normal">{templateSuccess}</p>
+            </div>
+          )}
+
+          {templateError && (
+            <div className="bg-rose-50 border border-rose-200 text-rose-600 p-4 rounded-xl flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-500 mt-0.5 flex-shrink-0" />
+              <p className="text-xs font-bold leading-normal">{templateError}</p>
+            </div>
+          )}
+
+          <form className="space-y-6 text-[#4B5563] font-semibold" onSubmit={handleUpdateTemplate}>
+            {/* Guide placeholders */}
+            <div className="p-4 bg-slate-50 border border-[#E5E7EB] rounded-xl space-y-2">
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Available Placeholders</h4>
+              <div className="flex flex-wrap gap-2 text-[10px]">
+                <span className="bg-white border border-[#E5E7EB] px-2 py-1 rounded text-slate-600 font-mono font-bold">{"{{STUDENT_NAME}}"}</span>
+                <span className="bg-white border border-[#E5E7EB] px-2 py-1 rounded text-slate-600 font-mono font-bold">{"{{ROLL_NUMBER}}"}</span>
+                <span className="bg-white border border-[#E5E7EB] px-2 py-1 rounded text-slate-600 font-mono font-bold">{"{{BRANCH}}"}</span>
+                <span className="bg-white border border-[#E5E7EB] px-2 py-1 rounded text-slate-600 font-mono font-bold">{"{{CGPA}}"}</span>
+                <span className="bg-white border border-[#E5E7EB] px-2 py-1 rounded text-slate-600 font-mono font-bold">{"{{CTC}}"}</span>
+                <span className="bg-white border border-[#E5E7EB] px-2 py-1 rounded text-slate-600 font-mono font-bold">{"{{JOB_TITLE}}"}</span>
+                <span className="bg-white border border-[#E5E7EB] px-2 py-1 rounded text-slate-600 font-mono font-bold">{"{{COMPANY_NAME}}"}</span>
+                <span className="bg-white border border-[#E5E7EB] px-2 py-1 rounded text-slate-600 font-mono font-bold">{"{{DATE}}"}</span>
+              </div>
+            </div>
+
+            {/* Template content editor */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Offer Letter Structure (HTML / Text) *</label>
+              <textarea
+                required
+                rows="12"
+                value={offerTemplate}
+                onChange={(e) => setOfferTemplate(e.target.value)}
+                className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm font-mono placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] text-[#111827]"
+                placeholder="Enter HTML or plain text offer letter structure..."
+              />
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={savingTemplate}
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-[#22C55E] hover:bg-[#16A34A] focus:outline-none focus:ring-4 focus:ring-[#22C55E]/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md active:scale-[0.98]"
+              >
+                {savingTemplate ? (
+                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  'Save Offer Letter Template'
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* ISSUE OFFER LETTER MODAL */}
+      {isOfferModalOpen && selectedAppForOffer && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative bg-white rounded-2xl w-full max-w-4xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 text-[#4B5563]">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-[#111827] tracking-tight">Issue Offer Letter</h3>
+                <p className="text-[11px] text-[#4B5563] font-medium mt-0.5">
+                  Review, customize, and issue offer letter for <strong>{selectedAppForOffer.studentId?.name}</strong> for the <strong>{selectedJob?.title}</strong> drive.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsOfferModalOpen(false)}
+                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <XCircle className="w-5 h-5 text-rose-500" />
+              </button>
+            </div>
+
+            {/* Toggle selection */}
+            <div className="px-6 pt-4 flex gap-4">
+              <label className="flex items-center gap-1.5 font-semibold text-xs text-slate-600 cursor-pointer">
+                <input 
+                  type="radio" 
+                  checked={offerType === 'template'} 
+                  onChange={() => setOfferType('template')}
+                  className="accent-[#22C55E]"
+                />
+                <span>Generate from Template</span>
+              </label>
+              <label className="flex items-center gap-1.5 font-semibold text-xs text-slate-600 cursor-pointer">
+                <input 
+                  type="radio" 
+                  checked={offerType === 'file'} 
+                  onChange={() => setOfferType('file')}
+                  className="accent-[#22C55E]"
+                />
+                <span>Upload custom PDF Offer Letter</span>
+              </label>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 max-h-[60vh] overflow-y-auto">
+              {offerType === 'template' ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Left Column: Edit generated offer letter */}
+                  <div className="space-y-3">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Customize Offer Content</label>
+                    <textarea
+                      value={generatedOfferContent}
+                      onChange={(e) => setGeneratedOfferContent(e.target.value)}
+                      rows="14"
+                      className="w-full p-4 bg-slate-50 font-mono text-xs text-[#111827] border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED]"
+                    />
+                  </div>
+
+                  {/* Right Column: Live Preview */}
+                  <div className="space-y-3 flex flex-col">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Live Preview</label>
+                    <div className="flex-1 p-6 bg-slate-50 border border-slate-200 rounded-xl overflow-y-auto select-none min-h-[300px]">
+                      <div 
+                        className="prose prose-sm max-w-none text-slate-700 font-sans text-xs bg-white p-6 rounded-lg border border-slate-100 shadow-sm"
+                        dangerouslySetInnerHTML={{ __html: generatedOfferContent }} 
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4 p-8 bg-slate-50 border border-dashed border-slate-300 rounded-2xl text-center">
+                  <Upload className="w-12 h-12 text-slate-400 mx-auto" />
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-slate-700">Upload candidate's custom PDF offer letter</p>
+                    <p className="text-[10px] text-slate-400">PDF documents only, up to 10MB</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => setUploadedFile(e.target.files[0])}
+                    className="block mx-auto text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer"
+                  />
+                  {uploadedFile && (
+                    <p className="text-xs font-bold text-emerald-600 mt-2">Selected File: {uploadedFile.name}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3 font-semibold">
+              <button
+                onClick={() => setIsOfferModalOpen(false)}
+                className="px-4 py-2 border border-slate-200 hover:bg-white text-xs text-slate-700 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendOfferLetter}
+                disabled={submittingOffer}
+                className="px-4 py-2 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
+              >
+                {submittingOffer ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    Submit to Placement Cell
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

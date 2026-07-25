@@ -27,6 +27,16 @@ const companySchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    offerLetterTemplate: {
+      type: String,
+      default: `<h2>OFFER LETTER</h2>
+<p>Date: {{DATE}}</p>
+<p>To,<br><strong>{{STUDENT_NAME}}</strong><br>Roll No: {{ROLL_NUMBER}}<br>Branch: {{BRANCH}}</p>
+<p>Dear {{STUDENT_NAME}},</p>
+<p>We are pleased to offer you the position of <strong>{{JOB_TITLE}}</strong> at <strong>{{COMPANY_NAME}}</strong>. Your annual compensation (CTC) will be <strong>{{CTC}} LPA</strong>.</p>
+<p>Please review and confirm your acceptance of this offer letter.</p>
+<p>Sincerely,<br><strong>{{COMPANY_NAME}}</strong></p>`
+    },
     jobPostings: [
       {
         type: mongoose.Schema.Types.ObjectId,

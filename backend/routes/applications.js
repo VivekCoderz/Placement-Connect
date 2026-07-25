@@ -21,4 +21,26 @@ router.put(
   applicationsController.updateStatus
 );
 
+router.put(
+  "/:id/issue-offer",
+  jwtVerify,
+  authorizeRoles("recruiter", "company", "admin"),
+  upload.single("offerLetter"),
+  applicationsController.issueOffer
+);
+
+router.put(
+  "/:id/approve-offer",
+  jwtVerify,
+  authorizeRoles("placementCell", "admin"),
+  applicationsController.approveOffer
+);
+
+router.put(
+  "/:id/reject-offer",
+  jwtVerify,
+  authorizeRoles("placementCell", "admin"),
+  applicationsController.rejectOffer
+);
+
 module.exports = router;

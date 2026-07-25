@@ -39,6 +39,14 @@ const applicationSchema = new mongoose.Schema(
     offerLetterUrl: {
       type: String, // Cloudinary link to offer letter PDF
     },
+    offerLetterContent: {
+      type: String,
+    },
+    offerLetterStatus: {
+      type: String,
+      enum: ["None", "Pending Approval", "Approved", "Rejected"],
+      default: "None",
+    },
   },
   { timestamps: true }
 );
