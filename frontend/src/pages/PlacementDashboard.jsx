@@ -38,7 +38,8 @@ const PlacementDashboard = () => {
   // CSV Shortlist state
   const [csvForm, setCsvForm] = useState({
     jobId: '',
-    roundName: ''
+    roundName: '',
+    rejectOthers: true
   });
   const [csvFile, setCsvFile] = useState(null);
   const [isUploadingCsv, setIsUploadingCsv] = useState(false);
@@ -49,6 +50,14 @@ const PlacementDashboard = () => {
   const [selectedAppForReview, setSelectedAppForReview] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+
+  // Result Approvals State
+  const [resultApprovals, setResultApprovals] = useState([]);
+  const [isLoadingApprovals, setIsLoadingApprovals] = useState(false);
+  const [approvalRejectionReason, setApprovalRejectionReason] = useState("");
+  const [rejectionModalId, setRejectionModalId] = useState(null); // id of ResultApproval being rejected
+  const [isSubmittingApprovalAction, setIsSubmittingApprovalAction] = useState(false);
+  const [roundTypes, setRoundTypes] = useState({}); // maps shortlist id to "Online" | "Physical"
 
   // Reports state
   const [reportFilterStatus, setReportFilterStatus] = useState('Selected'); // Selected | Rejected | All
@@ -245,6 +254,14 @@ const PlacementDashboard = () => {
         console.error('Failed to load shortlists:', err);
       }
 
+      // Fetch recruiter result approvals
+      try {
+        const approvalsRes = await api.get('/api/placement/result-approvals');
+        setResultApprovals(approvalsRes.data.approvals || []);
+      } catch (err) {
+        console.error('Failed to load result approvals:', err);
+      }
+
       // 4. Extract students list from applications or make distinct list
       const extractedStudents = [];
       const studentIdsSeen = new Set();
@@ -324,6 +341,7 @@ const PlacementDashboard = () => {
     const formData = new FormData();
     formData.append('jobId', csvForm.jobId);
     formData.append('roundName', csvForm.roundName);
+    formData.append('rejectOthers', csvForm.rejectOthers);
     formData.append('file', csvFile);
 
     setIsUploadingCsv(true);
@@ -337,7 +355,7 @@ const PlacementDashboard = () => {
       if (response.status === 200) {
         setCsvSuccess(response.data.message || 'CSV shortlist processed successfully!');
         setCsvFile(null);
-        setCsvForm({ jobId: '', roundName: '' });
+        setCsvForm({ jobId: '', roundName: '', rejectOthers: true });
         fetchDashboardData(); // Refresh stats and lists
       }
     } catch (err) {
@@ -505,6 +523,14 @@ const PlacementDashboard = () => {
           }`}
         >
           <FileText className="w-3.5 h-3.5" /> Offer Letters
+        </button>
+        <button
+          onClick={() => setActiveTab('resultApprovals')}
+          className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+            activeTab === 'resultApprovals' ? 'bg-[#22C55E] text-white shadow-sm' : 'text-[#94A3B8] hover:text-[#4B5563] hover:bg-[#F8FAFC]'
+          }`}
+        >
+          <Award className="w-3.5 h-3.5" /> Result Approvals
         </button>
         <button
           onClick={() => setActiveTab('reports')}
@@ -944,6 +970,25 @@ const PlacementDashboard = () => {
               />
             </div>
 
+            {/* Auto-Reject Checkbox */}
+            <div className="flex items-center gap-3 bg-[#F8FAFC] border border-[#E5E7EB] p-4 rounded-xl">
+              <input
+                type="checkbox"
+                id="rejectOthers"
+                checked={csvForm.rejectOthers}
+                onChange={(e) => setCsvForm(prev => ({ ...prev, rejectOthers: e.target.checked }))}
+                className="h-4.5 w-4.5 rounded border-[#E5E7EB] text-[#22C55E] focus:ring-[#22C55E] cursor-pointer"
+              />
+              <div className="cursor-pointer select-none" onClick={() => setCsvForm(prev => ({ ...prev, rejectOthers: !prev.rejectOthers }))}>
+                <label htmlFor="rejectOthers" className="text-xs font-bold text-[#111827] cursor-pointer block">
+                  Auto-reject remaining active candidates
+                </label>
+                <span className="text-[10px] text-[#4B5563] font-medium block mt-0.5">
+                  Check this to automatically reject all other active applicants for this drive who are not in the CSV file.
+                </span>
+              </div>
+            </div>
+
             {/* File Upload Area */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Upload Shortlist CSV *</label>
@@ -1062,12 +1107,19 @@ const PlacementDashboard = () => {
                           e.preventDefault();
                           const dateVal = e.target.scheduledAt.value;
                           const detailsVal = e.target.roundDetails.value;
+                          const roundTypeVal = roundTypes[sh._id] || "Online";
+                          const testLinkVal = e.target.testLink?.value || "";
+                          const venueVal = e.target.venue?.value || "";
+
                           if (!dateVal) return alert("Please specify the scheduled date and time.");
 
                           try {
                             const res = await api.post(`/api/placement/shortlist/${sh._id}/schedule`, {
                               scheduledAt: dateVal,
-                              message: detailsVal
+                              message: detailsVal,
+                              roundType: roundTypeVal,
+                              testLink: testLinkVal,
+                              venue: venueVal
                             });
                             if (res.status === 200) {
                               try {
@@ -1085,9 +1137,9 @@ const PlacementDashboard = () => {
                             alert(err.response?.data?.message || err.message || "Failed to schedule shortlist round");
                           }
                         }} className="space-y-4">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="space-y-1">
-                              <label className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Schedule Date & Time *</label>
+                              <label className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Schedule Date *</label>
                               <input
                                 type="datetime-local"
                                 name="scheduledAt"
@@ -1097,12 +1149,45 @@ const PlacementDashboard = () => {
                               />
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Update Instructions/Venue details</label>
+                              <label className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Round Type *</label>
+                              <select
+                                name="roundType"
+                                value={roundTypes[sh._id] || "Online"}
+                                onChange={(e) => setRoundTypes(prev => ({ ...prev, [sh._id]: e.target.value }))}
+                                className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                              >
+                                <option value="Online">Online</option>
+                                <option value="Physical">Physical</option>
+                              </select>
+                            </div>
+                            {(roundTypes[sh._id] || "Online") === "Online" ? (
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Test/Meeting Link</label>
+                                <input
+                                  type="text"
+                                  name="testLink"
+                                  placeholder="e.g. HackerRank / Meet link"
+                                  className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                                />
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Venue / Room</label>
+                                <input
+                                  type="text"
+                                  name="venue"
+                                  placeholder="e.g. Seminar Hall, Room 102"
+                                  className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                                />
+                              </div>
+                            )}
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Instructions</label>
                               <input
                                 type="text"
                                 name="roundDetails"
                                 defaultValue={sh.roundDetails || ""}
-                                placeholder="e.g. Online at 10 AM, HackerRank link"
+                                placeholder="Instructions"
                                 className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
                               />
                             </div>
@@ -1183,6 +1268,209 @@ const PlacementDashboard = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* RESULT APPROVALS TAB */}
+      {activeTab === 'resultApprovals' && (() => {
+        return (
+          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
+            <div className="border-b border-[#E5E7EB] pb-4">
+              <h2 className="text-base font-bold text-[#111827] tracking-tight">Recruiter Round Results Approval</h2>
+              <p className="text-xs text-[#4B5563] font-medium mt-1">Review candidate evaluation sheets uploaded by company recruiters. Approving them will automatically update the students' round status and progress their applications.</p>
+            </div>
+
+            {resultApprovals.length === 0 ? (
+              <div className="text-center py-16">
+                <Award className="w-10 h-10 text-[#94A3B8] mx-auto mb-3" />
+                <p className="text-xs font-semibold text-[#4B5563]">No result upload submissions found.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {resultApprovals.map((appr) => {
+                  const job = appr.jobId || {};
+                  const companyName = job.companyId?.name || "Company";
+                  const isPending = appr.status === 'Pending Approval';
+                  const isApproved = appr.status === 'Approved';
+                  const isRejected = appr.status === 'Rejected';
+
+                  return (
+                    <div 
+                      key={appr._id} 
+                      className={`p-6 rounded-xl border transition-all duration-200 bg-white ${
+                        isPending ? 'border-amber-200 bg-amber-50/5' : 
+                        isRejected ? 'border-rose-100 bg-rose-50/5' :
+                        'border-[#E5E7EB]'
+                      }`}
+                    >
+                      {/* Header */}
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-[#E5E7EB] border-dashed">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-[#7C3AED] uppercase tracking-widest">{companyName}</span>
+                            <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                              isApproved ? 'bg-emerald-100 text-emerald-700' :
+                              isRejected ? 'bg-rose-100 text-rose-700 font-bold' :
+                              'bg-amber-100 text-amber-700 animate-pulse'
+                            }`}>
+                              {appr.status}
+                            </span>
+                          </div>
+                          <h3 className="text-sm font-bold text-[#111827] mt-1">
+                            {job.title} — <span className="text-[#7C3AED]">{appr.roundName} Results Sheet</span>
+                          </h3>
+                          <p className="text-[10px] text-[#94A3B8] font-semibold mt-0.5">
+                            Uploaded by: {appr.uploadedBy?.name || "Recruiter"} ({appr.uploadedBy?.email}) on {new Date(appr.createdAt).toLocaleString()}
+                          </p>
+                          {isRejected && appr.rejectionReason && (
+                            <p className="text-[10px] text-rose-600 font-bold mt-1.5 bg-rose-50 p-2 rounded border border-rose-100">
+                              ❌ Rejection Reason: {appr.rejectionReason}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Actions */}
+                        {isPending && (
+                          <div className="flex items-center gap-2 font-semibold">
+                            <button
+                              disabled={isSubmittingApprovalAction}
+                              onClick={async () => {
+                                if (!window.confirm("Are you sure you want to approve this results sheet and update student applications?")) return;
+                                setIsSubmittingApprovalAction(true);
+                                try {
+                                  const res = await api.post(`/api/placement/result-approvals/${appr._id}/approve`);
+                                  if (res.status === 200) {
+                                    alert("Results successfully approved and students updated!");
+                                    fetchDashboardData();
+                                  }
+                                } catch (err) {
+                                  alert(err.response?.data?.message || err.message || "Failed to approve results");
+                                } finally {
+                                  setIsSubmittingApprovalAction(false);
+                                }
+                              }}
+                              className="px-3.5 py-2 text-xs bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold rounded-lg transition-all duration-200 shadow-sm active:scale-95 cursor-pointer disabled:opacity-50"
+                            >
+                              Approve Results
+                            </button>
+                            <button
+                              disabled={isSubmittingApprovalAction}
+                              onClick={() => {
+                                setRejectionModalId(appr._id);
+                                setApprovalRejectionReason("");
+                              }}
+                              className="px-3.5 py-2 text-xs bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 rounded-lg transition-all duration-200 active:scale-95 disabled:opacity-50"
+                            >
+                              Reject Sheet
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Candidates Table/List */}
+                      <div className="mt-4 space-y-2">
+                        <details className="group cursor-pointer select-none">
+                          <summary className="text-[10px] font-bold text-[#7C3AED] hover:underline flex items-center gap-1">
+                            <span>View Candidate Results Batch ({appr.results?.length || 0} students)</span>
+                            <ChevronRight className="w-3.5 h-3.5 transition-transform group-open:rotate-90" />
+                          </summary>
+                          
+                          <div className="mt-3 overflow-x-auto border border-[#E5E7EB] rounded-lg">
+                            <table className="min-w-full text-left text-[11px] font-semibold text-[#4B5563]">
+                              <thead className="bg-[#F8FAFC] border-b border-[#E5E7EB] text-[9px] uppercase tracking-wider text-[#94A3B8]">
+                                <tr>
+                                  <th className="px-4 py-2">Student Name</th>
+                                  <th className="px-4 py-2">Roll Number</th>
+                                  <th className="px-4 py-2">Branch / CGPA</th>
+                                  <th className="px-4 py-2 text-center">Result Status</th>
+                                  <th className="px-4 py-2">Notes / Feedback</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {appr.results?.map((resItem, rIdx) => {
+                                  const student = resItem.studentId || {};
+                                  const passed = resItem.result === 'Passed';
+                                  return (
+                                    <tr key={rIdx} className="bg-white border-b border-[#F1F5F9] hover:bg-slate-50/50">
+                                      <td className="px-4 py-2.5 font-bold text-[#111827]">{student.name || "Student"}</td>
+                                      <td className="px-4 py-2.5 font-mono">{student.rollNumber || "N/A"}</td>
+                                      <td className="px-4 py-2.5">{student.branch || "N/A"} (CGPA: {student.cgpa || "N/A"})</td>
+                                      <td className="px-4 py-2.5 text-center">
+                                        <span className={`px-2 py-0.5 rounded-full font-bold text-[8px] uppercase tracking-wider ${
+                                          passed ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                                        }`}>
+                                          {resItem.result}
+                                        </span>
+                                      </td>
+                                      <td className="px-4 py-2.5 text-slate-500 italic font-medium">{resItem.notes || "None"}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </details>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Rejection Modal */}
+            {rejectionModalId && (
+              <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm animate-in fade-in duration-200">
+                <div className="relative bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 space-y-4 text-[#4B5563]">
+                  <div>
+                    <h3 className="text-sm font-bold text-[#111827]">Reject Results Sheet</h3>
+                    <p className="text-[10px] mt-0.5">Please provide a reason for rejecting this results sheet. Recruiters will be notified.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Reason for Rejection *</label>
+                    <textarea
+                      required
+                      value={approvalRejectionReason}
+                      onChange={(e) => setApprovalRejectionReason(e.target.value)}
+                      placeholder="Specify reasons (e.g. Missing entries, Incorrect grading)..."
+                      rows="4"
+                      className="w-full p-3 bg-[#F8FAFC] border border-slate-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED]"
+                    />
+                  </div>
+                  <div className="flex items-center justify-end gap-2 font-semibold pt-2">
+                    <button
+                      onClick={() => setRejectionModalId(null)}
+                      className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-xs rounded-xl transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      disabled={isSubmittingApprovalAction || !approvalRejectionReason.trim()}
+                      onClick={async () => {
+                        setIsSubmittingApprovalAction(true);
+                        try {
+                          const res = await api.post(`/api/placement/result-approvals/${rejectionModalId}/reject`, {
+                            reason: approvalRejectionReason
+                          });
+                          if (res.status === 200) {
+                            alert("Results rejected and recruiter notified!");
+                            setRejectionModalId(null);
+                            fetchDashboardData();
+                          }
+                        } catch (err) {
+                          alert(err.response?.data?.message || err.message || "Failed to reject results");
+                        } finally {
+                          setIsSubmittingApprovalAction(false);
+                        }
+                      }}
+                      className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      Confirm Rejection
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>

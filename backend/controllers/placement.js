@@ -4,13 +4,15 @@ const Company = require("../models/company");
 const Application = require("../models/application");
 const Shortlist = require("../models/shortlist");
 const Notification = require("../models/notification");
+const ResultApproval = require("../models/resultApproval");
 const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
 const { sendEmail, generateICS } = require("../utils/email");
 
 // Upload round-wise CSV shortlist and notify students
 module.exports.uploadShortlist = ErrorWrapper(async (req, res, next) => {
-  const { jobId, roundName } = req.body;
+  const { jobId, roundName, rejectOthers } = req.body;
+  const shouldRejectOthers = rejectOthers === "true" || rejectOthers === true;
 
   if (!jobId || !roundName) {
     throw new ErrorHandler(400, "Job ID and Round Name are required");
@@ -62,6 +64,7 @@ module.exports.uploadShortlist = ErrorWrapper(async (req, res, next) => {
   }
 
   const studentIds = students.map(s => s._id);
+  const studentIdsSet = new Set(studentIds.map(id => id.toString()));
 
   // Update applications & notify
   const processedStudents = [];
@@ -109,6 +112,60 @@ module.exports.uploadShortlist = ErrorWrapper(async (req, res, next) => {
     }
   }
 
+  // Auto-reject non-shortlisted active applicants
+  let rejectedCount = 0;
+  if (shouldRejectOthers) {
+    const activeApps = await Application.find({
+      jobId: job._id,
+      status: { $in: ["Applied", "Shortlisted"] }
+    }).populate("studentId");
+
+    for (const app of activeApps) {
+      if (app.studentId && !studentIdsSet.has(app.studentId._id.toString())) {
+        app.status = "Rejected";
+
+        // Check if this round already exists
+        const roundIdx = app.rounds.findIndex(r => r.name.toLowerCase() === roundName.toLowerCase());
+        if (roundIdx > -1) {
+          app.rounds[roundIdx].result = "Failed";
+          app.rounds[roundIdx].notes = "Not in the shortlist CSV";
+        } else {
+          app.rounds.push({
+            name: roundName,
+            result: "Failed",
+            scheduledAt: new Date(),
+            notes: "Not in the shortlist CSV",
+          });
+        }
+        await app.save();
+
+        const notif = new Notification({
+          userId: app.studentId.userId,
+          message: `Application Update: You were not shortlisted for the ${roundName} round of ${job.title} at ${company.name}.`,
+          type: "application_status",
+        });
+        await notif.save();
+
+        // Send email (non-blocking)
+        sendEmail({
+          to: app.studentId.email,
+          subject: `Status Update: ${roundName} Round for ${job.title} at ${company.name}`,
+          html: `
+            <h3>Dear ${app.studentId.name},</h3>
+            <p>Thank you for your interest and participation in the selection process for <strong>${job.title}</strong> at <strong>${company.name}</strong>.</p>
+            <p>We regret to inform you that you have not cleared the <strong>${roundName}</strong> round. Your application has been updated accordingly.</p>
+            <p>We wish you the very best for other ongoing and future placement drives.</p>
+            <br/>
+            <p>Regards,</p>
+            <p>Training & Placement Cell, Geeta University</p>
+          `,
+        }).catch(err => console.error("Email send error for rejection:", err));
+
+        rejectedCount++;
+      }
+    }
+  }
+
   // Create shortlist record
   const shortlistRecord = new Shortlist({
     jobId: job._id,
@@ -117,10 +174,16 @@ module.exports.uploadShortlist = ErrorWrapper(async (req, res, next) => {
   });
   await shortlistRecord.save();
 
+  let message = `Shortlist uploaded and processed successfully. Updated ${processedStudents.length} student application(s) to shortlisted.`;
+  if (shouldRejectOthers) {
+    message += ` Auto-rejected ${rejectedCount} non-selected applicant(s).`;
+  }
+
   return res.status(200).json({
-    message: `Shortlist uploaded and processed successfully. Updated ${processedStudents.length} student application(s).`,
+    message,
     shortlistedCount: studentIds.length,
     processedStudents,
+    rejectedCount,
   });
 });
 
@@ -284,7 +347,7 @@ module.exports.getShortlists = ErrorWrapper(async (req, res, next) => {
 // Schedule a shortlist and notify students
 module.exports.scheduleShortlist = ErrorWrapper(async (req, res, next) => {
   const { id } = req.params;
-  const { scheduledAt, message } = req.body;
+  const { scheduledAt, message, roundType, testLink, venue } = req.body;
 
   if (!scheduledAt) {
     throw new ErrorHandler(400, "Schedule Date and Time is required");
@@ -314,6 +377,7 @@ module.exports.scheduleShortlist = ErrorWrapper(async (req, res, next) => {
   await shortlist.save();
 
   const notesText = message || shortlist.roundDetails || "No additional instructions provided.";
+  const isOnline = roundType === "Online";
 
   // Update applications & notify students
   let processedCount = 0;
@@ -327,12 +391,18 @@ module.exports.scheduleShortlist = ErrorWrapper(async (req, res, next) => {
         result: "Pending",
         scheduledAt: start,
         notes: notesText,
+        roundType: roundType || "Online",
+        testLink: testLink || "",
+        venue: venue || "",
       };
 
       const roundIdx = app.rounds.findIndex(r => r.name.toLowerCase() === roundName.toLowerCase());
       if (roundIdx > -1) {
         app.rounds[roundIdx].scheduledAt = start;
         app.rounds[roundIdx].notes = notesText;
+        if (roundType) app.rounds[roundIdx].roundType = roundType;
+        if (testLink) app.rounds[roundIdx].testLink = testLink;
+        if (venue) app.rounds[roundIdx].venue = venue;
       } else {
         app.rounds.push(roundData);
       }
@@ -341,7 +411,7 @@ module.exports.scheduleShortlist = ErrorWrapper(async (req, res, next) => {
       // Create notification
       const notif = new Notification({
         userId: student.userId,
-        message: `Evaluation Scheduled: Your ${roundName} round for ${job.title} at ${company.name} is on ${start.toLocaleString()}. Check email/invite.`,
+        message: `Evaluation Scheduled: Your ${roundName} (${roundType || "Online"}) round for ${job.title} at ${company.name} is on ${start.toLocaleString()}. ${isOnline ? `Link: ${testLink || "TBA"}` : `Venue: ${venue || "Placement Cell"}`}`,
         type: "interview_scheduled",
       });
       await notif.save();
@@ -351,8 +421,8 @@ module.exports.scheduleShortlist = ErrorWrapper(async (req, res, next) => {
         start,
         end,
         summary: `${roundName}: ${job.title} at ${company.name}`,
-        description: `You have an interview round scheduled for ${job.title} at ${company.name}. \nDetails/Venue: ${notesText}`,
-        location: "Online / Campus Placement Cell",
+        description: `You have an interview round scheduled for ${job.title} at ${company.name}. \nRound Type: ${roundType || "Online"}\n${isOnline ? `Test Link: ${testLink || "TBA"}` : `Venue: ${venue || "Placement Cell"}`}\nInstructions: ${notesText}`,
+        location: isOnline ? (testLink || "Online Interview (Teams/Meet/Zoom)") : (venue || "Campus Placement Cell"),
         studentName: student.name,
         studentEmail: student.email,
       });
@@ -367,6 +437,8 @@ module.exports.scheduleShortlist = ErrorWrapper(async (req, res, next) => {
           <div style="background:#f1f5f9; padding: 15px; border-left: 4px solid #10b981; margin: 15px 0;">
             <p><strong>Round Name:</strong> ${roundName}</p>
             <p><strong>Scheduled Time:</strong> ${start.toLocaleString()}</p>
+            <p><strong>Round Type:</strong> ${roundType || "Online"}</p>
+            ${isOnline ? `<p><strong>Test Link:</strong> <a href="${testLink}">${testLink || "TBA"}</a></p>` : `<p><strong>Venue:</strong> ${venue || "Placement Cell"}</p>`}
             <p><strong>Instructions/Venue:</strong> ${notesText}</p>
           </div>
           <p>Please check the attached calendar invite for direct details and log in to PlacementConnect to track status.</p>
@@ -390,6 +462,180 @@ module.exports.scheduleShortlist = ErrorWrapper(async (req, res, next) => {
   return res.status(200).json({
     message: `Successfully scheduled round and notified ${processedCount} shortlisted student(s).`,
     processedCount,
+  });
+});
+
+// Fetch all result approvals
+module.exports.getResultApprovals = ErrorWrapper(async (req, res, next) => {
+  const approvals = await ResultApproval.find()
+    .populate({
+      path: "jobId",
+      populate: { path: "companyId", select: "name" },
+    })
+    .populate({
+      path: "results.studentId",
+      select: "name email rollNumber branch year cgpa",
+    })
+    .populate("uploadedBy", "name email")
+    .sort({ createdAt: -1 });
+
+  return res.status(200).json({ approvals });
+});
+
+// Approve uploaded round results and apply updates to applications
+module.exports.approveResult = ErrorWrapper(async (req, res, next) => {
+  const { id } = req.params;
+
+  const approval = await ResultApproval.findById(id)
+    .populate({
+      path: "jobId",
+      populate: { path: "companyId", select: "name" },
+    });
+
+  if (!approval) {
+    throw new ErrorHandler(404, "Result approval request not found");
+  }
+
+  if (approval.status !== "Pending Approval") {
+    throw new ErrorHandler(400, `Result approval has already been ${approval.status}`);
+  }
+
+  const job = approval.jobId;
+  const company = job.companyId;
+  const roundName = approval.roundName;
+
+  // Process each result item
+  for (const item of approval.results) {
+    const studentId = item.studentId;
+    const result = item.result; // "Passed" or "Failed"
+    const notes = item.notes || "";
+
+    const app = await Application.findOne({ studentId, jobId: job._id }).populate("studentId");
+    if (!app) continue;
+
+    // Update round-by-round status
+    const roundIdx = app.rounds.findIndex(r => r.name.toLowerCase() === roundName.toLowerCase());
+    
+    if (roundIdx > -1) {
+      app.rounds[roundIdx].result = result;
+      app.rounds[roundIdx].notes = notes;
+    } else {
+      app.rounds.push({
+        name: roundName,
+        result,
+        scheduledAt: new Date(),
+        notes,
+      });
+    }
+
+    // If candidate failed, overall status is Rejected
+    if (result === "Failed") {
+      app.status = "Rejected";
+    } else if (result === "Passed") {
+      app.status = "Shortlisted";
+    }
+
+    app.markModified("rounds");
+    await app.save();
+
+    // Create Notification for Student
+    const student = app.studentId;
+    if (student) {
+      const message = result === "Passed"
+        ? `Congratulations! You have passed the ${roundName} round for ${job.title} at ${company.name}.`
+        : `Update: You were not selected in the ${roundName} round for ${job.title} at ${company.name}.`;
+
+      const notif = new Notification({
+        userId: student.userId,
+        message,
+        type: "application_status",
+      });
+      await notif.save();
+
+      // Send Email Notification
+      sendEmail({
+        to: student.email,
+        subject: `Placement Round Update: ${roundName} for ${job.title} at ${company.name}`,
+        html: `
+          <h3>Dear ${student.name},</h3>
+          <p>We have an update regarding your application for <strong>${job.title}</strong> at <strong>${company.name}</strong>.</p>
+          <div style="background:#f1f5f9; padding: 15px; border-left: 4px solid ${result === 'Passed' ? '#10b981' : '#f43f5e'}; margin: 15px 0;">
+            <p><strong>Round Name:</strong> ${roundName}</p>
+            <p><strong>Result:</strong> <strong style="color: ${result === 'Passed' ? '#10b981' : '#f43f5e'};">${result}</strong></p>
+            ${notes ? `<p><strong>Feedback:</strong> ${notes}</p>` : ""}
+          </div>
+          <p>Please log in to PlacementConnect to track your applications and check other drives.</p>
+          <br/>
+          <p>Regards,</p>
+          <p>Training & Placement Cell, Geeta University</p>
+        `,
+      }).catch(err => console.error("Result update email error:", err));
+    }
+  }
+
+  // Update ResultApproval state
+  approval.status = "Approved";
+  await approval.save();
+
+  // Notify recruiter
+  const companyUser = await Company.findOne({ _id: job.companyId });
+  if (companyUser) {
+    const notif = new Notification({
+      userId: companyUser.recruiterId,
+      message: `Placement Cell approved your round results for ${roundName} round of "${job.title}". Student statuses have been updated.`,
+      type: "general"
+    });
+    await notif.save();
+  }
+
+  return res.status(200).json({
+    message: "Round results approved and candidate applications updated successfully",
+    approval,
+  });
+});
+
+// Reject uploaded round results
+module.exports.rejectResult = ErrorWrapper(async (req, res, next) => {
+  const { id } = req.params;
+  const { reason } = req.body;
+
+  if (!reason) {
+    throw new ErrorHandler(400, "Rejection reason is required");
+  }
+
+  const approval = await ResultApproval.findById(id)
+    .populate({
+      path: "jobId",
+      populate: { path: "companyId", select: "name" },
+    });
+
+  if (!approval) {
+    throw new ErrorHandler(404, "Result approval request not found");
+  }
+
+  if (approval.status !== "Pending Approval") {
+    throw new ErrorHandler(400, `Result approval has already been ${approval.status}`);
+  }
+
+  approval.status = "Rejected";
+  approval.rejectionReason = reason;
+  await approval.save();
+
+  // Notify recruiter
+  const job = approval.jobId;
+  const companyUser = await Company.findOne({ _id: job.companyId });
+  if (companyUser) {
+    const notif = new Notification({
+      userId: companyUser.recruiterId,
+      message: `Placement Cell rejected your uploaded round results for ${approval.roundName} round of "${job.title}". Reason: ${reason}`,
+      type: "general"
+    });
+    await notif.save();
+  }
+
+  return res.status(200).json({
+    message: "Round results rejected successfully",
+    approval,
   });
 });
 

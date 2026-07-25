@@ -23,7 +23,7 @@ module.exports.getMyApplications = ErrorWrapper(async (req, res, next) => {
 
 module.exports.updateStatus = ErrorWrapper(async (req, res, next) => {
   const { id } = req.params;
-  const { status, roundName, roundResult, scheduledAt, notes } = req.body;
+  const { status, roundName, roundResult, scheduledAt, notes, roundType, testLink, venue } = req.body;
 
   const app = await Application.findById(id)
     .populate("studentId")
@@ -67,6 +67,9 @@ module.exports.updateStatus = ErrorWrapper(async (req, res, next) => {
       name: roundName,
       result: roundResult || "Pending",
       notes: notes || "",
+      roundType: roundType || "Online",
+      testLink: testLink || "",
+      venue: venue || "",
     };
 
     if (scheduledAt) {
@@ -82,6 +85,9 @@ module.exports.updateStatus = ErrorWrapper(async (req, res, next) => {
       }
       if (scheduledAt) app.rounds[roundIdx].scheduledAt = new Date(scheduledAt);
       if (notes) app.rounds[roundIdx].notes = notes;
+      if (roundType) app.rounds[roundIdx].roundType = roundType;
+      if (testLink) app.rounds[roundIdx].testLink = testLink;
+      if (venue) app.rounds[roundIdx].venue = venue;
     } else {
       if (roundResult === "Failed") {
         app.status = "Rejected";
@@ -98,13 +104,14 @@ module.exports.updateStatus = ErrorWrapper(async (req, res, next) => {
   if (roundName && scheduledAt) {
     const start = new Date(scheduledAt);
     const end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour duration default
+    const isOnline = roundType === "Online";
 
     const icsContent = generateICS({
       start,
       end,
       summary: `${roundName} Interview: ${job.title} at ${company.name}`,
-      description: `You have an interview scheduled for ${job.title} at ${company.name}. \nNotes: ${notes || "None"}`,
-      location: "Online Interview (Teams/Meet/Zoom)",
+      description: `You have an interview scheduled for ${job.title} at ${company.name}. \nRound Type: ${roundType || "Online"}\n${isOnline ? `Test Link: ${testLink || "TBA"}` : `Venue: ${venue || "Placement Cell"}`}\nNotes: ${notes || "None"}`,
+      location: isOnline ? (testLink || "Online Interview (Teams/Meet/Zoom)") : (venue || "Campus Placement Cell"),
       studentName: student.name,
       studentEmail: student.email,
     });
@@ -112,7 +119,7 @@ module.exports.updateStatus = ErrorWrapper(async (req, res, next) => {
     // Create Notification
     const notif = new Notification({
       userId: student.userId,
-      message: `Interview Scheduled: ${roundName} round for ${job.title} at ${company.name} on ${start.toLocaleString()}`,
+      message: `Interview Scheduled: ${roundName} (${roundType || "Online"}) for ${job.title} at ${company.name} on ${start.toLocaleString()}. ${isOnline ? `Link: ${testLink || "TBA"}` : `Venue: ${venue || "Placement Cell"}`}`,
       type: "interview_scheduled",
     });
     await notif.save();
@@ -125,6 +132,9 @@ module.exports.updateStatus = ErrorWrapper(async (req, res, next) => {
         <h3>Dear ${student.name},</h3>
         <p>Your interview for the <strong>${roundName}</strong> round of <strong>${job.title}</strong> at <strong>${company.name}</strong> has been scheduled.</p>
         <p><strong>Time:</strong> ${start.toLocaleString()}</p>
+        <p><strong>Round Type:</strong> ${roundType || "Online"}</p>
+        ${isOnline ? `<p><strong>Test/Meeting Link:</strong> <a href="${testLink}">${testLink || "TBA"}</a></p>` : `<p><strong>Venue:</strong> ${venue || "Campus Placement Cell"}</p>`}
+        ${notes ? `<p><strong>Notes:</strong> ${notes}</p>` : ""}
         <p>Please find the attached calendar invite for details.</p>
         <br/>
         <p>Regards,</p>

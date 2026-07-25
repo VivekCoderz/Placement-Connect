@@ -22,6 +22,11 @@ router.get("/applications", jwtVerify, authorizeRoles("placementCell", "admin"),
 router.get("/shortlists", jwtVerify, authorizeRoles("placementCell", "admin"), placementController.getShortlists);
 router.post("/shortlist/:id/schedule", jwtVerify, authorizeRoles("placementCell", "admin"), placementController.scheduleShortlist);
 
+// Result approvals endpoints
+router.get("/result-approvals", jwtVerify, authorizeRoles("placementCell", "admin"), placementController.getResultApprovals);
+router.post("/result-approvals/:id/approve", jwtVerify, authorizeRoles("placementCell", "admin"), placementController.approveResult);
+router.post("/result-approvals/:id/reject", jwtVerify, authorizeRoles("placementCell", "admin"), placementController.rejectResult);
+
 // Send round schedule notification to students - accessible by placementCell and admin
 router.post(
   "/notify",

@@ -34,6 +34,17 @@ const applicationSchema = new mongoose.Schema(
         notes: {
           type: String,
         },
+        roundType: {
+          type: String,
+          enum: ["Physical", "Online"],
+          default: "Online",
+        },
+        testLink: {
+          type: String,
+        },
+        venue: {
+          type: String,
+        },
       },
     ],
     offerLetterUrl: {

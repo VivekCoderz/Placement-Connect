@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
   Building2, Briefcase, Users, Calendar, DollarSign, Award, Plus, Check, Eye, FileText, ArrowRight, Clock, MapPin, 
-  Globe, Phone, User, AlertCircle, RefreshCw, CheckCircle2, XCircle, ChevronRight, Download, Send, Lock, Upload
+  Globe, Phone, User, AlertCircle, RefreshCw, CheckCircle2, XCircle, ChevronRight, Download, Send, Lock, Upload, Sparkles
 } from 'lucide-react';
 import { setUser } from '../redux/authSlice';
 import api from '../utils/api';
@@ -75,6 +75,72 @@ const RecruiterDashboard = () => {
   const [submittingOffer, setSubmittingOffer] = useState(false);
   const [offerType, setOfferType] = useState('template'); // 'template' | 'file'
   const [uploadedFile, setUploadedFile] = useState(null);
+
+  // ATS and Result Upload state
+  const [isAtsModalOpen, setIsAtsModalOpen] = useState(false);
+  const [atsThreshold, setAtsThreshold] = useState(70);
+  const [atsRoundName, setAtsRoundName] = useState('Aptitude Test');
+  const [isAtsProcessing, setIsAtsProcessing] = useState(false);
+
+  const [isCsvResultModalOpen, setIsCsvResultModalOpen] = useState(false);
+  const [csvResultRound, setCsvResultRound] = useState('Aptitude Test');
+  const [csvResultFile, setCsvResultFile] = useState(null);
+  const [isUploadingCsvResults, setIsUploadingCsvResults] = useState(false);
+  const [csvResultsSuccess, setCsvResultsSuccess] = useState('');
+  const [csvResultsError, setCsvResultsError] = useState('');
+
+  const handleAtsShortlist = async () => {
+    if (!selectedJob) return;
+    setIsAtsProcessing(true);
+    setActionSuccess('');
+    try {
+      const response = await api.post(`/api/company/jobs/${selectedJob._id}/ats-shortlist`, {
+        threshold: Number(atsThreshold),
+        roundName: atsRoundName
+      });
+      if (response.status === 200) {
+        setActionSuccess(response.data.message || 'Candidates shortlisted successfully via ATS!');
+        setIsAtsModalOpen(false);
+        handleFetchApplicants(selectedJob, true);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || 'ATS shortlisting failed');
+    } finally {
+      setIsAtsProcessing(false);
+    }
+  };
+
+  const handleUploadCsvResults = async (e) => {
+    e.preventDefault();
+    if (!selectedJob) return;
+    if (!csvResultFile) {
+      setCsvResultsError('Please select a CSV file');
+      return;
+    }
+    setCsvResultsSuccess('');
+    setCsvResultsError('');
+    setIsUploadingCsvResults(true);
+
+    const formData = new FormData();
+    formData.append('roundName', csvResultRound);
+    formData.append('file', csvResultFile);
+
+    try {
+      const response = await api.post(`/api/company/jobs/${selectedJob._id}/upload-results`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (response.status === 200) {
+        setCsvResultsSuccess(response.data.message || 'Results uploaded successfully! Pending Placement Cell approval.');
+        setCsvResultFile(null);
+        const fileInput = document.getElementById('csv-result-file-input');
+        if (fileInput) fileInput.value = '';
+      }
+    } catch (err) {
+      setCsvResultsError(err.response?.data?.message || err.message || 'Failed to upload CSV results');
+    } finally {
+      setIsUploadingCsvResults(false);
+    }
+  };
 
   const fetchOfferTemplate = async () => {
     try {
@@ -586,6 +652,24 @@ const RecruiterDashboard = () => {
                     <h2 className="text-lg font-bold text-[#111827] tracking-tight mt-1">{selectedJob.title}</h2>
                     <p className="text-xs text-[#4B5563] font-semibold mt-1">Review student profile cards, credentials, portfolios and download resume.</p>
                   </div>
+                  <div className="flex flex-wrap gap-2 md:self-end">
+                    <button
+                      onClick={() => setIsAtsModalOpen(true)}
+                      className="px-3 py-1.5 border border-[#7C3AED] text-[#7C3AED] hover:bg-[#7C3AED]/5 text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1 active:scale-95 cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" /> ATS Auto-Shortlist
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsCsvResultModalOpen(true);
+                        setCsvResultsSuccess('');
+                        setCsvResultsError('');
+                      }}
+                      className="px-3 py-1.5 border border-[#22C55E] text-[#22C55E] hover:bg-[#22C55E]/5 text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1 active:scale-95 cursor-pointer"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-[#22C55E]" /> Upload Results CSV
+                    </button>
+                  </div>
                 </div>
 
                 {actionSuccess && (
@@ -654,7 +738,18 @@ const RecruiterDashboard = () => {
                               {/* Student Info */}
                           <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                             <div className="space-y-1">
-                              <h4 className="font-bold text-[#111827] text-sm">{student.name}</h4>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h4 className="font-bold text-[#111827] text-sm">{student.name}</h4>
+                                {app.atsScore !== undefined && (
+                                  <span className={`px-2 py-0.5 rounded text-[9px] font-bold border uppercase tracking-wider ${
+                                    app.atsScore >= 80 ? 'bg-emerald-50 border-emerald-250 text-emerald-750' :
+                                    app.atsScore >= 55 ? 'bg-amber-50 border-amber-200 text-amber-750' :
+                                    'bg-rose-50 border-rose-200 text-rose-655'
+                                  }`}>
+                                    ATS Match: {app.atsScore}%
+                                  </span>
+                                )}
+                              </div>
                               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#4B5563] font-semibold">
                                 <span className="bg-white px-2 py-0.5 rounded-md text-[#4B5563] border border-[#E5E7EB]">Roll: {student.rollNumber}</span>
                                 <span>Branch: {student.branch}</span>
@@ -1572,6 +1667,193 @@ const RecruiterDashboard = () => {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ATS AUTO-SHORTLIST MODAL */}
+      {isAtsModalOpen && selectedJob && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 space-y-5 text-[#4B5563]">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-5 h-5 text-[#7C3AED]" />
+                <h3 className="text-base font-bold text-[#111827] tracking-tight">ATS Auto-Shortlist</h3>
+              </div>
+              <button
+                onClick={() => setIsAtsModalOpen(false)}
+                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <XCircle className="w-5 h-5 text-rose-500" />
+              </button>
+            </div>
+
+            <p className="text-xs font-semibold leading-relaxed">
+              Dynamically select candidates for the next round using the ATS Resume Score matcher. Candidates who meet the score threshold will be automatically shortlisted.
+            </p>
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Evaluation Stage / Round Name *</label>
+                <select
+                  value={atsRoundName}
+                  onChange={(e) => setAtsRoundName(e.target.value)}
+                  className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                >
+                  {(selectedJob.rounds && selectedJob.rounds.length > 0 ? selectedJob.rounds.map(r => r.name) : [
+                    'Aptitude Test', 'Group Discussion (GD)', 'Technical Interview', 'HR Round'
+                  ]).map((rName, idx) => (
+                    <option key={idx} value={rName}>{rName}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Minimum ATS Match Score: <span className="text-[#7C3AED] font-extrabold">{atsThreshold}%</span></label>
+                </div>
+                <input
+                  type="range"
+                  min="30"
+                  max="95"
+                  step="5"
+                  value={atsThreshold}
+                  onChange={(e) => setAtsThreshold(e.target.value)}
+                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#7C3AED]"
+                />
+                <div className="flex justify-between text-[9px] font-bold text-slate-400">
+                  <span>30% Match</span>
+                  <span>70% (Rec.)</span>
+                  <span>95% Match</span>
+                </div>
+              </div>
+
+              {/* Match preview count */}
+              {(() => {
+                const count = applicants.filter(a => a.status === 'Applied' && a.atsScore >= atsThreshold).length;
+                return (
+                  <div className="p-3 bg-[#FAF5FF] border border-[#F3E8FF] rounded-xl text-center">
+                    <p className="text-xs font-bold text-[#7C3AED]">
+                      Found {count} eligible applicant(s) in "Applied" status matching &ge; {atsThreshold}% score.
+                    </p>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 font-semibold pt-2 border-t border-slate-100">
+              <button
+                onClick={() => setIsAtsModalOpen(false)}
+                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-xs rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={isAtsProcessing || applicants.filter(a => a.status === 'Applied' && a.atsScore >= atsThreshold).length === 0}
+                onClick={handleAtsShortlist}
+                className="px-4 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              >
+                {isAtsProcessing ? 'Shortlisting...' : 'Shortlist Matches'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CSV RESULTS UPLOAD MODAL */}
+      {isCsvResultModalOpen && selectedJob && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 space-y-5 text-[#4B5563]">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-1.5">
+                <Upload className="w-5 h-5 text-[#22C55E]" />
+                <h3 className="text-base font-bold text-[#111827] tracking-tight">Upload Evaluation Results</h3>
+              </div>
+              <button
+                onClick={() => setIsCsvResultModalOpen(false)}
+                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <XCircle className="w-5 h-5 text-rose-500" />
+              </button>
+            </div>
+
+            {csvResultsSuccess ? (
+              <div className="space-y-4 py-3 text-center">
+                <CheckCircle2 className="w-12 h-12 text-[#22C55E] mx-auto animate-bounce" />
+                <p className="text-xs font-bold text-slate-800">{csvResultsSuccess}</p>
+                <button
+                  onClick={() => {
+                    setIsCsvResultModalOpen(false);
+                    setCsvResultsSuccess('');
+                  }}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-xl transition-colors"
+                >
+                  Close Window
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleUploadCsvResults} className="space-y-4">
+                <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-[10px] font-semibold leading-normal space-y-1 text-blue-700">
+                  <p className="font-bold">📄 Instructions & Sample Format:</p>
+                  <p>CSV file must have candidate email or roll number in the first column, result ("Passed" or "Failed") in the second, and optional notes in the third.</p>
+                  <p className="font-mono mt-1 bg-white p-1 rounded border border-blue-200">
+                    student@email.com, Passed, Good coding skills<br/>
+                    2023CSE41, Failed, Communication gap
+                  </p>
+                  <p className="font-bold text-[9px] text-[#7C3AED] mt-1.5">⚠️ Note: Result updates require Placement Cell (TPO) approval before being applied.</p>
+                </div>
+
+                {csvResultsError && (
+                  <div className="bg-rose-50 border border-rose-100 text-rose-650 p-2.5 rounded-xl text-[10px] font-bold">
+                    ⚠️ Error: {csvResultsError}
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Evaluation Stage / Round Name *</label>
+                  <select
+                    value={csvResultRound}
+                    onChange={(e) => setCsvResultRound(e.target.value)}
+                    className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                  >
+                    {(selectedJob.rounds && selectedJob.rounds.length > 0 ? selectedJob.rounds.map(r => r.name) : [
+                      'Aptitude Test', 'Group Discussion (GD)', 'Technical Interview', 'HR Round'
+                    ]).map((rName, idx) => (
+                      <option key={idx} value={rName}>{rName}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Choose Results CSV File *</label>
+                  <input
+                    type="file"
+                    id="csv-result-file-input"
+                    accept=".csv"
+                    required
+                    onChange={(e) => setCsvResultFile(e.target.files[0])}
+                    className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 font-semibold pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setIsCsvResultModalOpen(false)}
+                    className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-xs rounded-xl transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUploadingCsvResults || !csvResultFile}
+                    className="px-4 py-2 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                  >
+                    {isUploadingCsvResults ? 'Uploading...' : 'Submit Results Sheet'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

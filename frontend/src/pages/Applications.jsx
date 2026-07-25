@@ -211,15 +211,46 @@ const Applications = () => {
                               </span>
                             </div>
                             
+                            <div className="mt-1.5 flex flex-wrap gap-1 items-center">
+                              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${
+                                round.roundType === 'Physical' 
+                                  ? 'bg-purple-50 border-purple-200 text-purple-600' 
+                                  : 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                              }`}>
+                                {round.roundType || 'Online'} Round
+                              </span>
+                            </div>
+                            
                             {round.scheduledAt && (
                               <p className="text-[10px] text-[#4B5563] font-medium mt-2 flex items-center gap-1">
                                 <Calendar className="w-3.5 h-3.5 text-[#94A3B8]" />
                                 <span>Scheduled: {new Date(round.scheduledAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
                               </p>
                             )}
+
+                            {round.roundType === 'Physical' && round.venue && (
+                              <p className="text-[10px] text-[#4B5563] font-bold mt-1.5 bg-[#FAF5FF] border border-[#F3E8FF] p-1.5 rounded flex items-center gap-1">
+                                <span className="text-purple-600">📍 Venue:</span>
+                                <span className="text-[#111827]">{round.venue}</span>
+                              </p>
+                            )}
+                            {round.roundType !== 'Physical' && round.testLink && (
+                              <div className="mt-2 bg-[#EEF2FF] border border-[#E0E7FF] p-1.5 rounded flex flex-col gap-1.5">
+                                <p className="text-[9px] text-[#4B5563] font-semibold">🔗 Online Evaluation Link:</p>
+                                <a 
+                                  href={round.testLink.startsWith('http') ? round.testLink : `https://${round.testLink}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex justify-center items-center gap-1 px-2 py-1 text-[9px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded text-center transition-colors select-none shadow-sm cursor-pointer"
+                                >
+                                  Start Test / Join Round
+                                </a>
+                              </div>
+                            )}
+
                             {round.notes && (
                               <div className="mt-2 text-[10px] text-[#4B5563] bg-white border border-[#E5E7EB] rounded p-2 italic leading-relaxed">
-                                <strong>Feedback/Venue:</strong> {round.notes}
+                                <strong>Feedback/Instructions:</strong> {round.notes}
                               </div>
                             )}
                           </div>
