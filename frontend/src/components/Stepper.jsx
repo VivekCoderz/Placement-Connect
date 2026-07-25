@@ -53,9 +53,12 @@ const Stepper = ({ currentStatus, rounds, appRounds }) => {
       } else {
         currentIndex = steps.length - 1;
       }
-    } else if (currentStatus === 'Shortlisted') {
+    } else if (currentStatus === 'Shortlisted' || currentStatus.startsWith('Round') || currentStatus.startsWith('round')) {
       currentIndex = 1; // Default to first round
-      if (appRounds && Array.isArray(appRounds) && appRounds.length > 0) {
+      if (currentStatus.startsWith('Round') || currentStatus.startsWith('round')) {
+        const matchNum = parseInt(currentStatus.replace(/round/i, '')) || 1;
+        currentIndex = matchNum;
+      } else if (appRounds && Array.isArray(appRounds) && appRounds.length > 0) {
         const latestRound = appRounds[appRounds.length - 1];
         if (latestRound && latestRound.name) {
           const matchIdx = rounds.findIndex(r => r.name.toLowerCase() === latestRound.name.toLowerCase());
@@ -72,7 +75,11 @@ const Stepper = ({ currentStatus, rounds, appRounds }) => {
       'GD': 2,
       'HR': 3,
       'Selected': 4,
-      'Rejected': 4
+      'Rejected': 4,
+      'Round1': 1,
+      'Round2': 2,
+      'Round3': 3,
+      'Round4': 4
     };
 
     // Check if any round failed in fallback steps
@@ -86,6 +93,9 @@ const Stepper = ({ currentStatus, rounds, appRounds }) => {
 
     if (currentStatus === 'Rejected' && stageFailureIndex > -1) {
       currentIndex = stageFailureIndex;
+    } else if (currentStatus.startsWith('Round') || currentStatus.startsWith('round')) {
+      const matchNum = parseInt(currentStatus.replace(/round/i, '')) || 1;
+      currentIndex = matchNum;
     } else {
       currentIndex = statusIndices[currentStatus] ?? 0;
     }

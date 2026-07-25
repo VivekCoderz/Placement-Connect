@@ -14,7 +14,6 @@ const applicationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Applied", "Shortlisted", "Selected", "Rejected"],
       default: "Applied",
     },
     rounds: [
@@ -25,7 +24,7 @@ const applicationSchema = new mongoose.Schema(
         },
         result: {
           type: String,
-          enum: ["Pending", "Passed", "Failed"],
+          enum: ["Pending", "Passed", "Failed", "Selected", "Rejected", "Absent", "Waiting"],
           default: "Pending",
         },
         scheduledAt: {

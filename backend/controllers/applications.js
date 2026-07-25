@@ -18,7 +18,19 @@ module.exports.getMyApplications = ErrorWrapper(async (req, res, next) => {
       populate: { path: "companyId", select: "name industry" },
     });
 
-  return res.status(200).json({ applications });
+  const ResumeAnalysis = require("../models/ResumeAnalysis");
+  const enrichedApplications = await Promise.all(
+    applications.map(async (app) => {
+      const analysis = await ResumeAnalysis.findOne({ applicationId: app._id });
+      return {
+        ...app.toObject(),
+        id: app._id,
+        aiAnalysis: analysis || null
+      };
+    })
+  );
+
+  return res.status(200).json({ applications: enrichedApplications });
 });
 
 module.exports.updateStatus = ErrorWrapper(async (req, res, next) => {

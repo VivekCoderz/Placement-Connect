@@ -7,6 +7,11 @@ const Notification = require("../models/notification");
 const ResultApproval = require("../models/resultApproval");
 const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
+const ResumeAnalysis = require("../models/ResumeAnalysis");
+const Round = require("../models/Round");
+const RoundResult = require("../models/RoundResult");
+const StudentProgress = require("../models/StudentProgress");
+const { processCandidateResult } = require("../services/roundEngine");
 
 function calculateATSScore(student, job) {
   if (!student || !job) return 0;
@@ -58,7 +63,19 @@ function calculateATSScore(student, job) {
 
 // Post a new job drive
 module.exports.postJob = ErrorWrapper(async (req, res, next) => {
-  const { title, description, package, eligibility, deadline, rounds } = req.body;
+  const { 
+    title, 
+    description, 
+    package, 
+    eligibility, 
+    deadline, 
+    rounds,
+    requiredSkills,
+    preferredSkills,
+    experienceRequired,
+    numOpenings,
+    atsThreshold
+  } = req.body;
 
   if (!title || !description || !package || !eligibility || !deadline) {
     throw new ErrorHandler(400, "All fields (title, description, package, eligibility, deadline) are required");
@@ -85,16 +102,57 @@ module.exports.postJob = ErrorWrapper(async (req, res, next) => {
     companyId: company._id,
     description,
     package,
+    requiredSkills: requiredSkills || [],
+    preferredSkills: preferredSkills || [],
+    experienceRequired: experienceRequired || "0 years",
+    numOpenings: numOpenings || 5,
+    atsThreshold: atsThreshold || 60,
     eligibility: {
       cgpa,
       branches,
       years,
     },
     deadline: new Date(deadline),
-    rounds: rounds || [],
+    rounds: [], // Will populate with Round structures
   });
 
   const savedJob = await newJob.save();
+
+  // Create Round documents
+  const jobRoundsPayload = (rounds && rounds.length > 0) ? rounds : [
+    { number: 1, name: 'Aptitude Test', description: 'Online coding and aptitude test' },
+    { number: 2, name: 'Technical Interview', description: 'In-depth coding and systems discussion' },
+    { number: 3, name: 'HR Round', description: 'Cultural fit and salary negotiation' }
+  ];
+
+  const createdRounds = [];
+  for (let i = 0; i < jobRoundsPayload.length; i++) {
+    const roundDoc = new Round({
+      jobId: savedJob._id,
+      name: jobRoundsPayload[i].name,
+      description: jobRoundsPayload[i].description || "",
+      sequence: i + 1,
+      mode: jobRoundsPayload[i].mode || "Online",
+      meetingLink: jobRoundsPayload[i].meetingLink || "",
+      platform: jobRoundsPayload[i].platform || "Google Meet",
+      instructions: jobRoundsPayload[i].instructions || ""
+    });
+    await roundDoc.save();
+    
+    createdRounds.push({
+      number: roundDoc.sequence,
+      name: roundDoc.name,
+      description: roundDoc.description,
+      mode: roundDoc.mode,
+      platform: roundDoc.platform,
+      meetingLink: roundDoc.meetingLink,
+      instructions: roundDoc.instructions
+    });
+  }
+
+  // Update Job rounds details
+  savedJob.rounds = createdRounds;
+  await savedJob.save();
 
   // Link job to company postings
   company.jobPostings.push(savedJob._id);
@@ -148,16 +206,37 @@ module.exports.getApplications = ErrorWrapper(async (req, res, next) => {
       select: "name email rollNumber branch year cgpa skills resumeUrl phone isPlaced projects",
     });
 
+  const analyses = await ResumeAnalysis.find({ jobId });
+  const progressList = await StudentProgress.find({ jobId });
+
   const applicationsWithAts = applications.map(app => {
     if (!app.studentId) return app.toObject();
-    const atsScore = calculateATSScore(app.studentId, job);
+    
+    const analysis = analyses.find(a => a.applicationId.toString() === app._id.toString());
+    const progress = progressList.find(p => p.applicationId.toString() === app._id.toString());
     const appObj = app.toObject();
-    appObj.atsScore = atsScore;
+
+    if (analysis) {
+      appObj.atsScore = analysis.atsScore;
+      appObj.matchPercentage = analysis.matchPercentage;
+      appObj.aiAnalysis = analysis;
+    } else {
+      // Calculate dynamic preview if database analysis record doesn't exist
+      const score = calculateATSScore(app.studentId, job);
+      appObj.atsScore = score;
+      appObj.matchPercentage = score;
+    }
+
+    if (progress) {
+      appObj.progress = progress;
+    }
+
     return appObj;
   });
 
   return res.status(200).json({
     jobTitle: job.title,
+    job: job,
     applications: applicationsWithAts,
   });
 });
@@ -354,13 +433,13 @@ module.exports.atsShortlist = ErrorWrapper(async (req, res, next) => {
   });
 });
 
-// Upload round-wise CSV results pending TPO approval
+// Upload round-wise CSV results (now immediately processed!)
 module.exports.uploadRoundResults = ErrorWrapper(async (req, res, next) => {
   const { jobId } = req.params;
-  const { roundName } = req.body;
+  const { roundId } = req.body;
 
-  if (!roundName) {
-    throw new ErrorHandler(400, "Round name is required");
+  if (!roundId) {
+    throw new ErrorHandler(400, "Round ID is required");
   }
 
   if (!req.file) {
@@ -381,6 +460,11 @@ module.exports.uploadRoundResults = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(403, "Access Denied: You do not own this job posting");
   }
 
+  const round = await Round.findById(roundId);
+  if (!round) {
+    throw new ErrorHandler(404, "Round not found");
+  }
+
   // Parse CSV
   const csvContent = req.file.buffer.toString("utf8");
   const lines = csvContent.split(/\r?\n/);
@@ -396,16 +480,29 @@ module.exports.uploadRoundResults = ErrorWrapper(async (req, res, next) => {
     if (cols.length === 0 || !cols[0]) continue;
 
     // Header row check
-    if (i === 0 && (cols[0].toLowerCase() === "email" || cols[0].toLowerCase() === "rollnumber" || cols[0].toLowerCase() === "roll number" || cols[0].toLowerCase() === "student")) {
+    if (i === 0 && (cols[0].toLowerCase() === "email" || cols[0].toLowerCase() === "rollnumber" || cols[0].toLowerCase() === "roll number" || cols[0].toLowerCase() === "student" || cols[0].toLowerCase() === "studentid")) {
       continue;
     }
 
     const identifier = cols[0]; // Roll number or email
-    const resultVal = cols[1];  // Passed or Failed
-    const notesVal = cols[2] || "Uploaded via CSV";
+    let resultVal = cols[1];  // Selected, Rejected, Absent, Waiting
+    const scoreVal = parseFloat(cols[2]) || 0;
+    const remarksVal = cols[3] || "Uploaded via CSV";
 
-    if (!resultVal || (resultVal.toLowerCase() !== "passed" && resultVal.toLowerCase() !== "failed")) {
-      errors.push(`Line ${i + 1}: Invalid result value "${resultVal}". Must be "Passed" or "Failed"`);
+    const validResults = ["Selected", "Rejected", "Absent", "Waiting"];
+    
+    // Map common inputs (Passed -> Selected, Failed -> Rejected)
+    if (resultVal) {
+      if (resultVal.toLowerCase() === "passed") resultVal = "Selected";
+      else if (resultVal.toLowerCase() === "failed") resultVal = "Rejected";
+      else {
+        // Capitalize first letter
+        resultVal = resultVal.charAt(0).toUpperCase() + resultVal.slice(1).toLowerCase();
+      }
+    }
+
+    if (!resultVal || !validResults.includes(resultVal)) {
+      errors.push(`Line ${i + 1}: Invalid result value "${resultVal}". Must be Selected, Rejected, Absent, or Waiting.`);
       continue;
     }
 
@@ -428,8 +525,9 @@ module.exports.uploadRoundResults = ErrorWrapper(async (req, res, next) => {
 
     resultsList.push({
       studentId: student._id,
-      result: resultVal.toLowerCase() === "passed" ? "Passed" : "Failed",
-      notes: notesVal
+      result: resultVal,
+      score: scoreVal,
+      remarks: remarksVal
     });
   }
 
@@ -437,32 +535,337 @@ module.exports.uploadRoundResults = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(400, "No valid candidate rows could be processed. Errors: " + errors.join("; "));
   }
 
-  // Save ResultApproval pending Placement Cell approval
-  const newApproval = new ResultApproval({
-    jobId: job._id,
-    roundName,
-    results: resultsList,
-    status: "Pending Approval",
-    uploadedBy: req.user.id
-  });
-  await newApproval.save();
-
-  // Notify Placement Cell (TPO)
-  const User = require("../models/User");
-  const tpoUsers = await User.find({ role: "placementCell" });
-  for (const tpo of tpoUsers) {
-    const notif = new Notification({
-      userId: tpo._id,
-      message: `Recruiter at ${company.name} uploaded results for ${roundName} round of "${job.title}". Pending your approval.`,
-      type: "general"
+  // Process all results immediately!
+  for (const resItem of resultsList) {
+    await processCandidateResult({
+      jobId: job._id,
+      roundId,
+      studentId: resItem.studentId,
+      result: resItem.result,
+      score: resItem.score,
+      remarks: resItem.remarks,
+      recruiterUserId: req.user.id
     });
-    await notif.save();
   }
 
   return res.status(200).json({
-    message: `Uploaded successfully! ${resultsList.length} candidate results submitted for Placement Cell approval.`,
+    message: `Results processed successfully! Evaluated ${resultsList.length} candidates.`,
     resultsCount: resultsList.length,
     errors: errors.length > 0 ? errors : undefined
+  });
+});
+
+// Override AI Decision manual action
+module.exports.overrideDecision = ErrorWrapper(async (req, res, next) => {
+  const { appId } = req.params;
+  const { status, reason } = req.body;
+
+  if (!status || !["Shortlisted", "Rejected"].includes(status)) {
+    throw new ErrorHandler(400, "Invalid status override. Must be Shortlisted or Rejected");
+  }
+
+  const app = await Application.findById(appId)
+    .populate("studentId")
+    .populate({
+      path: "jobId",
+      populate: { path: "companyId", select: "name" }
+    });
+
+  if (!app) {
+    throw new ErrorHandler(404, "Application not found");
+  }
+
+  const student = app.studentId;
+  const job = app.jobId;
+  const company = job.companyId;
+
+  // Find or create ResumeAnalysis
+  let analysis = await ResumeAnalysis.findOne({ applicationId: appId });
+  if (!analysis) {
+    analysis = new ResumeAnalysis({
+      applicationId: appId,
+      studentId: student._id,
+      jobId: job._id,
+      atsScore: 70, // default override score
+      matchPercentage: 70,
+      status: status
+    });
+  }
+
+  analysis.isOverridden = true;
+  analysis.originalStatus = analysis.status;
+  analysis.status = status;
+  analysis.overrideReason = reason || "Recruiter manual override";
+  analysis.overriddenBy = req.user.id;
+  await analysis.save();
+
+  // Update Application overall status
+  app.status = status;
+
+  // Find or create StudentProgress
+  let progress = await StudentProgress.findOne({ applicationId: appId });
+  if (!progress) {
+    progress = new StudentProgress({
+      applicationId: appId,
+      studentId: student._id,
+      jobId: job._id,
+    });
+  }
+
+  let progressStatus = "";
+  let roundsList = [...app.rounds];
+
+  if (status === "Shortlisted") {
+    // Passed Applied stage
+    const appliedRoundIdx = app.rounds.findIndex(r => r.name.toLowerCase() === "applied");
+    if (appliedRoundIdx > -1) {
+      app.rounds[appliedRoundIdx].result = "Passed";
+    }
+
+    // Set up first round
+    const firstRound = await Round.findOne({ jobId: job._id }).sort({ sequence: 1 });
+    let currentRoundId = null;
+    if (firstRound) {
+      currentRoundId = firstRound._id;
+      progressStatus = `Round 1: ${firstRound.name}`;
+      
+      const rIdx = app.rounds.findIndex(r => r.name.toLowerCase() === firstRound.name.toLowerCase());
+      if (rIdx === -1) {
+        roundsList.push({
+          name: firstRound.name,
+          result: "Pending",
+          scheduledAt: firstRound.date,
+          roundType: firstRound.mode || "Online",
+          testLink: firstRound.meetingLink || "",
+          notes: firstRound.instructions || "",
+          venue: firstRound.mode === "Physical" ? (firstRound.meetingLink || "TPO Office") : ""
+        });
+      }
+    } else {
+      progressStatus = "Shortlisted";
+    }
+
+    progress.currentRoundIndex = 0;
+    progress.currentRoundId = currentRoundId;
+    progress.status = progressStatus;
+    
+    app.rounds = roundsList;
+  } else {
+    // Rejected
+    progressStatus = "Rejected";
+    progress.status = "Rejected";
+    progress.history.push({
+      roundName: "AI Screening Override",
+      result: "Rejected",
+      remarks: reason || "Manually overridden to Rejected"
+    });
+
+    const appliedRoundIdx = app.rounds.findIndex(r => r.name.toLowerCase() === "applied");
+    if (appliedRoundIdx > -1) {
+      app.rounds[appliedRoundIdx].result = "Failed";
+      app.rounds[appliedRoundIdx].notes = reason || "Rejected by manual override";
+    }
+  }
+
+  await progress.save();
+  app.markModified("rounds");
+  await app.save();
+
+  // Notify student
+  const overrideNotif = new Notification({
+    userId: student.userId,
+    message: `Recruiter manual review: Your application status for ${job.title} at ${company.name} has been updated to ${status}.`,
+    type: "application_status"
+  });
+  await overrideNotif.save();
+
+  await sendEmail({
+    to: student.email,
+    subject: `Application Update: Manual Review for ${job.title} at ${company.name}`,
+    html: `
+      <h3>Hello ${student.name},</h3>
+      <p>Your application status has been updated after a manual review by the recruiter.</p>
+      <p><strong>New Status:</strong> ${status}</p>
+      <p><strong>Review Remarks:</strong> ${reason || "No extra notes provided."}</p>
+      <br/>
+      <p>Log in to the placement portal to check details.</p>
+    `
+  }).catch(err => console.error("Override email delivery failed:", err));
+
+  return res.status(200).json({
+    message: `Manual decision override successfully processed to ${status}.`,
+    application: app,
+    analysis
+  });
+});
+
+// Dynamic Round Management: Get rounds
+module.exports.getRounds = ErrorWrapper(async (req, res, next) => {
+  const { jobId } = req.params;
+  const rounds = await Round.find({ jobId }).sort({ sequence: 1 });
+  return res.status(200).json({ rounds });
+});
+
+// Dynamic Round Management: Create round
+module.exports.createRound = ErrorWrapper(async (req, res, next) => {
+  const { jobId } = req.params;
+  const { name, description, date, time, mode, meetingLink, platform, instructions } = req.body;
+
+  if (!name) {
+    throw new ErrorHandler(400, "Round name is required");
+  }
+
+  const job = await Job.findById(jobId);
+  if (!job) {
+    throw new ErrorHandler(404, "Job drive not found");
+  }
+
+  const roundsCount = await Round.countDocuments({ jobId });
+
+  const newRound = new Round({
+    jobId,
+    name,
+    description: description || "",
+    sequence: roundsCount + 1,
+    date: date ? new Date(date) : undefined,
+    time: time || "",
+    mode: mode || "Online",
+    meetingLink: meetingLink || "",
+    platform: platform || "Google Meet",
+    instructions: instructions || ""
+  });
+
+  await newRound.save();
+
+  // Sync Job.rounds
+  job.rounds.push({
+    number: newRound.sequence,
+    name: newRound.name,
+    description: newRound.description,
+    date: newRound.date,
+    time: newRound.time,
+    mode: newRound.mode,
+    platform: newRound.platform,
+    meetingLink: newRound.meetingLink,
+    instructions: newRound.instructions
+  });
+  await job.save();
+
+  return res.status(201).json({
+    message: "Hiring round created successfully",
+    round: newRound
+  });
+});
+
+// Dynamic Round Management: Update round
+module.exports.updateRound = ErrorWrapper(async (req, res, next) => {
+  const { roundId } = req.params;
+  const { name, description, date, time, mode, meetingLink, platform, instructions } = req.body;
+
+  const round = await Round.findById(roundId);
+  if (!round) {
+    throw new ErrorHandler(404, "Round details not found");
+  }
+
+  if (name) round.name = name;
+  if (description !== undefined) round.description = description;
+  if (date !== undefined) round.date = date ? new Date(date) : null;
+  if (time !== undefined) round.time = time;
+  if (mode) round.mode = mode;
+  if (meetingLink !== undefined) round.meetingLink = meetingLink;
+  if (platform !== undefined) round.platform = platform;
+  if (instructions !== undefined) round.instructions = instructions;
+
+  await round.save();
+
+  // Sync with Job.rounds
+  const job = await Job.findById(round.jobId);
+  if (job) {
+    const allRounds = await Round.find({ jobId: job._id }).sort({ sequence: 1 });
+    job.rounds = allRounds.map(r => ({
+      number: r.sequence,
+      name: r.name,
+      description: r.description,
+      date: r.date,
+      time: r.time,
+      mode: r.mode,
+      platform: r.platform,
+      meetingLink: r.meetingLink,
+      instructions: r.instructions
+    }));
+    await job.save();
+  }
+
+  return res.status(200).json({
+    message: "Hiring round updated successfully",
+    round
+  });
+});
+
+// Dynamic Round Management: Delete round
+module.exports.deleteRound = ErrorWrapper(async (req, res, next) => {
+  const { roundId } = req.params;
+
+  const round = await Round.findById(roundId);
+  if (!round) {
+    throw new ErrorHandler(404, "Round details not found");
+  }
+
+  const jobId = round.jobId;
+  await Round.findByIdAndDelete(roundId);
+
+  // Re-sequence remaining rounds
+  const remaining = await Round.find({ jobId }).sort({ sequence: 1 });
+  for (let i = 0; i < remaining.length; i++) {
+    remaining[i].sequence = i + 1;
+    await remaining[i].save();
+  }
+
+  // Sync Job.rounds
+  const job = await Job.findById(jobId);
+  if (job) {
+    job.rounds = remaining.map(r => ({
+      number: r.sequence,
+      name: r.name,
+      description: r.description,
+      date: r.date,
+      time: r.time,
+      mode: r.mode,
+      platform: r.platform,
+      meetingLink: r.meetingLink,
+      instructions: r.instructions
+    }));
+    await job.save();
+  }
+
+  return res.status(200).json({
+    message: "Hiring round deleted successfully"
+  });
+});
+
+// Manual Candidate Result Marking
+module.exports.manualRoundResults = ErrorWrapper(async (req, res, next) => {
+  const { jobId, roundId } = req.params;
+  const { results } = req.body; // array of { studentId, result, score, remarks }
+
+  if (!results || !Array.isArray(results) || results.length === 0) {
+    throw new ErrorHandler(400, "results array is required and cannot be empty");
+  }
+
+  for (const resItem of results) {
+    await processCandidateResult({
+      jobId,
+      roundId,
+      studentId: resItem.studentId,
+      result: resItem.result,
+      score: resItem.score || 0,
+      remarks: resItem.remarks || "",
+      recruiterUserId: req.user.id
+    });
+  }
+
+  return res.status(200).json({
+    message: `Successfully processed results for ${results.length} candidates.`
   });
 });
 

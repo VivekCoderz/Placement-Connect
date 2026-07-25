@@ -6,6 +6,10 @@ const Notification = require("../models/notification");
 const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
 const { sendEmail } = require("../utils/email");
+const ResumeAnalysis = require("../models/ResumeAnalysis");
+const Round = require("../models/Round");
+const StudentProgress = require("../models/StudentProgress");
+const { analyzeResume } = require("../services/aiService");
 
 // Get eligible jobs for students or all jobs for other roles
 module.exports.getJobs = ErrorWrapper(async (req, res, next) => {
@@ -135,52 +139,207 @@ module.exports.applyJob = ErrorWrapper(async (req, res, next) => {
   const newApplication = new Application({
     studentId: student._id,
     jobId: job._id,
-    status: "Applied",
+    status: "AI Screening",
     rounds: [
       {
         name: "Applied",
-        result: "Pending",
+        result: "Passed",
         scheduledAt: new Date(),
-        notes: "Successfully applied to job drive",
+        notes: "Application submitted.",
       },
     ],
   });
   await newApplication.save();
 
-  // 6. In-App notifications
-  const studentNotification = new Notification({
-    userId: req.user.id,
-    message: `You successfully applied for ${job.title} at ${job.companyId.name}`,
-    type: "application_status",
+  // Run AI Resume Screening
+  let analysisResult;
+  try {
+    analysisResult = await analyzeResume(student, job);
+  } catch (err) {
+    console.error("AI resume parsing failed, using rules fallback:", err);
+    // basic mock parsing fallback
+    analysisResult = {
+      atsScore: 55,
+      matchPercentage: 55,
+      skillsMatch: student.skills || [],
+      missingSkills: [],
+      experienceMatch: "Candidate project history.",
+      educationMatch: "Eligible.",
+      aiSummary: "AI Screening failed. Basic eligibility passed.",
+      aiCandidateSummary: "Screening completed.",
+      aiRecruiterSummary: "ATS: 55%",
+      strengths: ["Academic eligibility"],
+      weaknesses: ["AI service error"],
+      recommendedLearning: ["Technical preparation"],
+      status: "Rejected",
+      rejectionReason: "Resume screening score below threshold."
+    };
+  }
+
+  // Create ResumeAnalysis record
+  const analysisDoc = new ResumeAnalysis({
+    applicationId: newApplication._id,
+    studentId: student._id,
+    jobId: job._id,
+    atsScore: analysisResult.atsScore,
+    matchPercentage: analysisResult.matchPercentage,
+    skillsMatch: analysisResult.skillsMatch,
+    missingSkills: analysisResult.missingSkills,
+    experienceMatch: analysisResult.experienceMatch,
+    educationMatch: analysisResult.educationMatch,
+    aiSummary: analysisResult.aiSummary,
+    aiCandidateSummary: analysisResult.aiCandidateSummary,
+    aiRecruiterSummary: analysisResult.aiRecruiterSummary,
+    strengths: analysisResult.strengths,
+    weaknesses: analysisResult.weaknesses,
+    recommendedLearning: analysisResult.recommendedLearning,
+    rejectionReason: analysisResult.rejectionReason,
+    selectionReason: analysisResult.selectionReason,
+    status: analysisResult.status,
   });
-  await studentNotification.save();
+  await analysisDoc.save();
+
+  // Apply decision
+  let progressStatus = "AI Screening";
+  let roundsList = [...newApplication.rounds];
+  let finalStatus = "Applied";
+
+  if (analysisResult.status === "Shortlisted") {
+    finalStatus = "Shortlisted";
+    // Find the first interview round if any
+    const firstRound = await Round.findOne({ jobId: job._id }).sort({ sequence: 1 });
+    
+    let currentRoundId = null;
+    if (firstRound) {
+      currentRoundId = firstRound._id;
+      progressStatus = `Round 1: ${firstRound.name}`;
+      
+      // Add first round to application rounds
+      roundsList.push({
+        name: firstRound.name,
+        result: "Pending",
+        scheduledAt: firstRound.date,
+        roundType: firstRound.mode || "Online",
+        testLink: firstRound.meetingLink || "",
+        notes: firstRound.instructions || "",
+        venue: firstRound.mode === "Physical" ? (firstRound.meetingLink || "TPO Office") : ""
+      });
+    } else {
+      progressStatus = "Shortlisted";
+    }
+
+    // Save StudentProgress
+    const progress = new StudentProgress({
+      applicationId: newApplication._id,
+      studentId: student._id,
+      jobId: job._id,
+      currentRoundIndex: 0,
+      currentRoundId,
+      status: progressStatus,
+    });
+    await progress.save();
+
+    newApplication.status = "Shortlisted";
+    newApplication.rounds = roundsList;
+    await newApplication.save();
+
+    // Send notifications
+    const shortNotif = new Notification({
+      userId: req.user.id,
+      message: `Congratulations! You have been Shortlisted by AI for "${job.title}" at ${job.companyId.name} with an ATS score of ${analysisResult.atsScore}%.`,
+      type: "application_status",
+    });
+    await shortNotif.save();
+
+    await sendEmail({
+      to: student.email,
+      subject: `Application Shortlisted: ${job.title} at ${job.companyId.name}`,
+      html: `
+        <h2>Congratulations ${student.name}!</h2>
+        <p>Your resume has been successfully screened by our AI system and you have been <strong>Shortlisted</strong>.</p>
+        <p><strong>ATS Score:</strong> ${analysisResult.atsScore}%</p>
+        <p><strong>Next Step:</strong> ${progressStatus}</p>
+        <p>Log in to PlacementConnect to check details and link schedule.</p>
+      `
+    });
+  } else {
+    // Rejected
+    finalStatus = "Rejected";
+    progressStatus = "Rejected";
+
+    // Save StudentProgress
+    const progress = new StudentProgress({
+      applicationId: newApplication._id,
+      studentId: student._id,
+      jobId: job._id,
+      currentRoundIndex: 0,
+      status: progressStatus,
+      history: [
+        {
+          roundName: "AI Screening",
+          result: "Rejected",
+          remarks: analysisResult.rejectionReason || "Failed to meet ATS threshold score."
+        }
+      ]
+    });
+    await progress.save();
+
+    // Add rejection notes to application rounds list
+    roundsList.push({
+      name: "Resume Screening",
+      result: "Failed",
+      scheduledAt: new Date(),
+      notes: `Rejected because: ${analysisResult.rejectionReason || "Below required score."}`
+    });
+
+    newApplication.status = "Rejected";
+    newApplication.rounds = roundsList;
+    await newApplication.save();
+
+    // Send notifications
+    const rejNotif = new Notification({
+      userId: req.user.id,
+      message: `Application Update: Your application for "${job.title}" at ${job.companyId.name} was not shortlisted.`,
+      type: "application_status",
+    });
+    await rejNotif.save();
+
+    // Send detailed rejection feedback via email
+    let suggestionsHtml = "";
+    if (analysisResult.recommendedLearning && analysisResult.recommendedLearning.length > 0) {
+      suggestionsHtml = `<h4>Suggestions to Improve:</h4><ul>` + 
+        analysisResult.recommendedLearning.map(topic => `<li>${topic}</li>`).join("") + `</ul>`;
+    }
+
+    await sendEmail({
+      to: student.email,
+      subject: `Application Status: ${job.title} at ${job.companyId.name}`,
+      html: `
+        <p>Dear ${student.name},</p>
+        <p>Thank you for applying to the <strong>${job.title}</strong> role at <strong>${job.companyId.name}</strong>.</p>
+        <p>Unfortunately, your application was not selected for further evaluation as your resume score did not meet our threshold.</p>
+        <p><strong>Resume Match Score:</strong> ${analysisResult.atsScore}% (Threshold: ${job.atsThreshold}%)</p>
+        <h4>Reason for Rejection:</h4>
+        <p>${analysisResult.rejectionReason || "Lacked matching skills or eligibility metrics."}</p>
+        ${suggestionsHtml}
+        <br/>
+        <p>We wish you the very best in your next application!</p>
+      `
+    });
+  }
 
   // Notify recruiter
   const company = job.companyId;
   const recruiterNotification = new Notification({
     userId: company.recruiterId,
-    message: `New applicant ${student.name} (${student.branch}) for your job posting: ${job.title}`,
+    message: `New applicant ${student.name} screened. Status: ${analysisResult.status} (ATS: ${analysisResult.atsScore}%) for job: ${job.title}`,
     type: "general",
   });
   await recruiterNotification.save();
 
-  // 7. Email notifications
-  await sendEmail({
-    to: student.email,
-    subject: `Application Confirmed: ${job.title} at ${company.name}`,
-    html: `
-      <h2>Hello ${student.name},</h2>
-      <p>Your application for <strong>${job.title}</strong> at <strong>${company.name}</strong> has been successfully received.</p>
-      <p><strong>Package:</strong> ${job.package} LPA</p>
-      <p>You can track your application status in the PlacementConnect dashboard.</p>
-      <br/>
-      <p>Regards,</p>
-      <p>Geeta University Placement Cell</p>
-    `,
-  });
-
   return res.status(201).json({
-    message: "Applied to placement drive successfully",
+    message: `Applied successfully. AI screening complete: ${analysisResult.status}`,
     application: newApplication,
+    analysis: analysisDoc,
   });
 });

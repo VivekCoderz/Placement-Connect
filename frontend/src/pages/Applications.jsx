@@ -181,6 +181,73 @@ const Applications = () => {
                   <Stepper currentStatus={app.status} rounds={job.rounds} appRounds={app.rounds} />
                 </div>
 
+                {app.status === 'Rejected' && (
+                  <div className="mx-6 md:mx-8 mb-6 p-5 bg-rose-50/50 border border-rose-200 rounded-2xl space-y-4 animate-in fade-in duration-300">
+                    <div className="flex items-center gap-2">
+                      <XCircle className="w-5 h-5 text-rose-500 flex-shrink-0 animate-pulse" />
+                      <div>
+                        <h4 className="font-bold text-rose-800 uppercase tracking-wider text-[10px]">Evaluation Result Outcome</h4>
+                        <p className="text-[11px] text-rose-600 font-semibold mt-0.5">We regret to inform you that your application was not selected to advance further.</p>
+                      </div>
+                    </div>
+
+                    {app.aiAnalysis && app.aiAnalysis.rejectionReason && (
+                      <div className="bg-white border border-rose-100 p-4 rounded-xl space-y-3 shadow-sm text-xs font-semibold">
+                        <div className="flex items-center gap-1.5 text-indigo-700 font-bold">
+                          <Sparkles className="w-4 h-4 text-indigo-650" />
+                          <span>AI Resume Screening Feedback:</span>
+                        </div>
+                        <p className="text-[#4B5563] leading-relaxed italic">"{app.aiAnalysis.rejectionReason}"</p>
+                        
+                        {app.aiAnalysis.strengths && app.aiAnalysis.strengths.length > 0 && (
+                          <div className="pt-2 border-t border-slate-100">
+                            <span className="text-[#22C55E] font-bold text-[10px] uppercase tracking-wider">Your Key Strengths:</span>
+                            <ul className="list-disc pl-4 mt-1 space-y-0.5 text-slate-500 font-semibold">
+                              {app.aiAnalysis.strengths.map((str, idx) => <li key={idx}>{str}</li>)}
+                            </ul>
+                          </div>
+                        )}
+
+                        {app.aiAnalysis.missingSkills && app.aiAnalysis.missingSkills.length > 0 && (
+                          <div className="pt-2 border-t border-slate-100">
+                            <span className="text-rose-500 font-bold text-[10px] uppercase tracking-wider">Identified Gaps / Skills to Improve:</span>
+                            <ul className="list-disc pl-4 mt-1 space-y-0.5 text-slate-500 font-semibold">
+                              {app.aiAnalysis.missingSkills.map((gap, idx) => <li key={idx}>{gap}</li>)}
+                            </ul>
+                          </div>
+                        )}
+
+                        {app.aiAnalysis.recommendedLearning && app.aiAnalysis.recommendedLearning.length > 0 && (
+                          <div className="pt-2 border-t border-slate-100">
+                            <span className="text-amber-600 font-bold text-[10px] uppercase tracking-wider">Recommended Preparation / Courses:</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {app.aiAnalysis.recommendedLearning.map((topic, idx) => (
+                                <span key={idx} className="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded text-[9px] font-bold">
+                                  {topic}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Check if rejected during custom round */}
+                    {app.rounds?.some(r => r.result === 'Failed' || r.result === 'Rejected') && (() => {
+                      const failedRound = app.rounds.find(r => r.result === 'Failed' || r.result === 'Rejected');
+                      if (failedRound && failedRound.notes) {
+                        return (
+                          <div className="bg-white border border-rose-100 p-4 rounded-xl space-y-1 shadow-sm text-xs font-semibold">
+                            <span className="text-rose-600 font-bold text-[10px] uppercase tracking-wider">Feedback from Recruiter ({failedRound.name}):</span>
+                            <p className="text-[#4B5563] leading-relaxed italic mt-1">"{failedRound.notes}"</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
+                )}
+
                 {/* Round-by-Round Evaluation Journey History */}
                 {app.rounds && app.rounds.length > 0 && (
                   <div className="px-6 pb-6 bg-white border-t border-[#F1F5F9]">

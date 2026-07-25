@@ -20,6 +20,28 @@ const jobSchema = new mongoose.Schema(
       type: Number, // CTC in LPA
       required: true,
     },
+    requiredSkills: [
+      {
+        type: String,
+      },
+    ],
+    preferredSkills: [
+      {
+        type: String,
+      },
+    ],
+    experienceRequired: {
+      type: String, // e.g. "0-2 years", "Freshers"
+      default: "0 years",
+    },
+    numOpenings: {
+      type: Number,
+      default: 5,
+    },
+    atsThreshold: {
+      type: Number,
+      default: 60,
+    },
     eligibility: {
       cgpa: {
         type: Number,
@@ -52,6 +74,12 @@ const jobSchema = new mongoose.Schema(
         number: { type: Number },
         name: { type: String, required: true },
         description: { type: String },
+        date: { type: Date },
+        time: { type: String },
+        mode: { type: String, enum: ["Online", "Physical"], default: "Online" },
+        meetingLink: { type: String },
+        platform: { type: String },
+        instructions: { type: String },
       },
     ],
   },
@@ -59,3 +87,4 @@ const jobSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("Job", jobSchema);
+
