@@ -212,7 +212,7 @@ module.exports.applyJob = ErrorWrapper(async (req, res, next) => {
       name: "Resume Screening",
       result: "Passed",
       scheduledAt: new Date(),
-      notes: "Passed automatic AI resume screening."
+      notes: `Passed automatic AI resume screening (Score: ${analysisResult.atsScore}%).`
     });
 
     // Find the first interview round if any
@@ -269,6 +269,57 @@ module.exports.applyJob = ErrorWrapper(async (req, res, next) => {
         <p><strong>ATS Score:</strong> ${analysisResult.atsScore}%</p>
         <p><strong>Next Step:</strong> ${progressStatus}</p>
         <p>Log in to PlacementConnect to check details and link schedule.</p>
+      `
+    });
+  } else if (analysisResult.status === "Borderline") {
+    finalStatus = "Applied";
+    progressStatus = "AI Screening (Borderline)";
+
+    // Add Resume Screening as Pending in roundsList
+    roundsList.push({
+      name: "Resume Screening",
+      result: "Pending",
+      scheduledAt: new Date(),
+      notes: `Application is Borderline (Score: ${analysisResult.atsScore}%). Placed in queue for manual recruiter review.`
+    });
+
+    // Save StudentProgress
+    const progress = new StudentProgress({
+      applicationId: newApplication._id,
+      studentId: student._id,
+      jobId: job._id,
+      currentRoundIndex: 0,
+      status: progressStatus,
+      history: [
+        {
+          roundName: "AI Screening",
+          result: "Pending",
+          remarks: `ATS Score: ${analysisResult.atsScore}%. Placed in borderline queue for manual review.`
+        }
+      ]
+    });
+    await progress.save();
+
+    newApplication.status = "Applied"; // Keep under Applied status for recruiter review
+    newApplication.rounds = roundsList;
+    await newApplication.save();
+
+    // Send notifications
+    const borderlineNotif = new Notification({
+      userId: req.user.id,
+      message: `Application Update: Your application for "${job.title}" at ${job.companyId.name} is in borderline review (Score: ${analysisResult.atsScore}%).`,
+      type: "application_status",
+    });
+    await borderlineNotif.save();
+
+    await sendEmail({
+      to: student.email,
+      subject: `Application Update: ${job.title} at ${job.companyId.name}`,
+      html: `
+        <p>Dear ${student.name},</p>
+        <p>Your application for the <strong>${job.title}</strong> role at <strong>${job.companyId.name}</strong> has been received.</p>
+        <p>Your resume matches the requirements with a score of <strong>${analysisResult.atsScore}%</strong>, placing your application in our <strong>Borderline/Manual Review</strong> queue.</p>
+        <p>Recruiters will manually review your profile and update your status shortly. Good luck!</p>
       `
     });
   } else {

@@ -1,5 +1,5 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const pdfParse = require("pdf-parse");
+const { PDFParse } = require("pdf-parse");
 
 /**
  * Helper to download and parse raw text from PDF resume URL
@@ -15,12 +15,185 @@ async function extractTextFromPdf(url) {
     }
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const pdfData = await pdfParse(buffer);
-    return pdfData.text || "";
+    const parser = new PDFParse({ data: buffer });
+    const result = await parser.getText();
+    return result.text || "";
   } catch (err) {
     console.error("Failed to parse PDF resume:", err);
     return "";
   }
+}
+
+/**
+ * Helper to parse and extract sections/skills/metadata from raw resume text
+ */
+function parseResumeText(text) {
+  const parsed = {
+    skills: [],
+    languages: [],
+    frameworks: [],
+    tools: [],
+    projects: [],
+    experience: [],
+    certifications: [],
+    degree: null,
+    branch: null,
+    cgpa: null,
+    keywords: [],
+    internships: [],
+    achievements: []
+  };
+
+  if (!text) return parsed;
+
+  const textLower = text.toLowerCase();
+
+  // Dictionary of known technical skills, grouped by category
+  const skillsDict = {
+    languages: ["javascript", "typescript", "python", "java", "c++", "c#", "ruby", "golang", "go", "rust", "kotlin", "swift", "php", "sql", "html", "css", "r", "scala", "shell", "bash"],
+    frameworks: ["react", "angular", "vue", "next.js", "nextjs", "express", "django", "flask", "spring boot", "springboot", "laravel", "fastapi", "jquery", "bootstrap", "tailwind", "hibernate", "nest.js", "nestjs"],
+    tools: ["docker", "kubernetes", "aws", "amazon web services", "azure", "gcp", "google cloud", "git", "github", "jenkins", "gitlab", "ansible", "terraform", "maven", "npm", "yarn", "postman", "jira"],
+    databases: ["mongodb", "mysql", "postgresql", "sqlite", "redis", "oracle", "mariadb", "cassandra", "dynamodb"],
+    coreCS: ["data structures", "algorithms", "dsa", "system design", "oops", "operating systems", "computer networks", "dbms", "software engineering", "compiler design"],
+    eceEmbedded: ["embedded c", "arduino", "raspberry pi", "iot", "internet of things", "vlsi", "verilog", "vhdl", "microcontroller", "matlab"],
+    mechCivil: ["solidworks", "autocad", "catia", "ansys", "revit", "staad pro", "fusion 360"]
+  };
+
+  const matchedSkillsSet = new Set();
+  
+  // Custom check for C++ to avoid matching just "C"
+  if (/\bc\+\+\b/i.test(text)) {
+    matchedSkillsSet.add("C++");
+    parsed.languages.push("C++");
+  }
+  if (/\bc\#\b/i.test(text)) {
+    matchedSkillsSet.add("C#");
+    parsed.languages.push("C#");
+  }
+  // Custom check for C to avoid matching inside other words
+  if (/\bC\b/.test(text)) {
+    matchedSkillsSet.add("C");
+    parsed.languages.push("C");
+  }
+
+  // Iterate other skills
+  for (const [category, list] of Object.entries(skillsDict)) {
+    for (const skill of list) {
+      if (skill === "c++" || skill === "c#" || skill === "c") continue;
+      const escapedSkill = skill.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const regex = new RegExp(`\\b${escapedSkill}\\b`, 'i');
+      if (regex.test(text)) {
+        const displaySkill = ["dsa", "oop", "aws", "gcp", "sql", "bca", "mca", "it", "cse"].includes(skill.toLowerCase())
+          ? skill.toUpperCase()
+          : skill.charAt(0).toUpperCase() + skill.slice(1);
+        matchedSkillsSet.add(displaySkill);
+
+        if (category === "languages") parsed.languages.push(displaySkill);
+        else if (category === "frameworks") parsed.frameworks.push(displaySkill);
+        else if (category === "tools") parsed.tools.push(displaySkill);
+      }
+    }
+  }
+
+  parsed.skills = Array.from(matchedSkillsSet);
+
+  // Extract CGPA
+  const cgpaRegexes = [
+    /cgpa\s*[:\-]?\s*([0-9]+(?:\.[0-9]+)?)/i,
+    /([0-9]+(?:\.[0-9]+)?)\s*cgpa/i,
+    /([0-9]+(?:\.[0-9]+)?)\s*\/\s*10/i,
+    /gpa\s*[:\-]?\s*([0-9]+(?:\.[0-9]+)?)/i,
+    /pointer\s*[:\-]?\s*([0-9]+(?:\.[0-9]+)?)/i,
+  ];
+  for (const regex of cgpaRegexes) {
+    const match = text.match(regex);
+    if (match) {
+      const val = parseFloat(match[1]);
+      if (val > 0 && val <= 10) {
+        parsed.cgpa = val;
+        break;
+      }
+    }
+  }
+
+  // Extract branch
+  if (textLower.includes("computer science") || textLower.includes("cse")) {
+    parsed.branch = "Computer Science & Engineering";
+  } else if (textLower.includes("information technology") || textLower.includes("it")) {
+    parsed.branch = "Information Technology";
+  } else if (textLower.includes("electronics") || textLower.includes("ece")) {
+    parsed.branch = "Electronics & Communication Engineering";
+  } else if (textLower.includes("mechanical") || textLower.includes("me")) {
+    parsed.branch = "Mechanical Engineering";
+  } else if (textLower.includes("civil") || textLower.includes("ce")) {
+    parsed.branch = "Civil Engineering";
+  }
+
+  // Extract degree
+  if (textLower.includes("b.tech") || textLower.includes("btech") || textLower.includes("bachelor of technology")) {
+    parsed.degree = "B.Tech";
+  } else if (textLower.includes("m.tech") || textLower.includes("mtech") || textLower.includes("master of technology")) {
+    parsed.degree = "M.Tech";
+  } else if (textLower.includes("bca") || textLower.includes("bachelor of computer applications")) {
+    parsed.degree = "BCA";
+  } else if (textLower.includes("mca") || textLower.includes("master of computer applications")) {
+    parsed.degree = "MCA";
+  } else if (textLower.includes("bsc") || textLower.includes("b.sc") || textLower.includes("bachelor of science")) {
+    parsed.degree = "B.Sc";
+  } else if (textLower.includes("msc") || textLower.includes("m.sc") || textLower.includes("master of science")) {
+    parsed.degree = "M.Sc";
+  }
+
+  // Extract sections: Certifications, Projects, Experience, Achievements
+  const sections = text.split(/\n\s*\n/);
+  sections.forEach(sec => {
+    const secLower = sec.toLowerCase();
+    
+    if (secLower.includes("certif") || secLower.includes("credential") || secLower.includes("licensed")) {
+      const lines = sec.split("\n").map(l => l.trim()).filter(l => l.length > 3);
+      lines.forEach(l => {
+        if (!l.toLowerCase().includes("certif") && l.length < 100) {
+          parsed.certifications.push(l.replace(/^[●\-\*\s]+/, ""));
+        }
+      });
+    }
+
+    if (secLower.includes("project") || secLower.includes("academic project")) {
+      const lines = sec.split("\n").map(l => l.trim()).filter(l => l.length > 5);
+      lines.forEach(l => {
+        if (!l.toLowerCase().includes("project") && l.length < 150) {
+          parsed.projects.push(l.replace(/^[●\-\*\s]+/, ""));
+        }
+      });
+    }
+
+    if (secLower.includes("experience") || secLower.includes("intern") || secLower.includes("work history")) {
+      const lines = sec.split("\n").map(l => l.trim()).filter(l => l.length > 5);
+      lines.forEach(l => {
+        if (l.toLowerCase().includes("intern") || l.toLowerCase().includes("trainee") || l.toLowerCase().includes("developer")) {
+          parsed.internships.push(l.replace(/^[●\-\*\s]+/, ""));
+        }
+      });
+    }
+
+    if (secLower.includes("achievement") || secLower.includes("award") || secLower.includes("honors")) {
+      const lines = sec.split("\n").map(l => l.trim()).filter(l => l.length > 5);
+      lines.forEach(l => {
+        if (!l.toLowerCase().includes("achievement") && l.length < 150) {
+          parsed.achievements.push(l.replace(/^[●\-\*\s]+/, ""));
+        }
+      });
+    }
+  });
+
+  const keywordsDict = ["team", "collaboration", "agile", "scrum", "development", "analytical", "problem-solving", "scalable", "leadership", "management", "cloud", "security", "testing", "deployment", "design", "communication"];
+  keywordsDict.forEach(kw => {
+    if (textLower.includes(kw)) {
+      parsed.keywords.push(kw);
+    }
+  });
+
+  return parsed;
 }
 
 /**
@@ -108,7 +281,7 @@ async function analyzeWithGemini(student, job, resumeText, apiKey) {
       "recommendedLearning": [array of 2-3 specific topics they should learn/courses to take],
       "selectionReason": "Detailed reason why they were shortlisted (empty if rejected)",
       "rejectionReason": "Detailed rejection reason list of bullet points explaining why they failed (empty if shortlisted)",
-      "status": "Shortlisted" or "Rejected" (determine based on: atsScore >= ATS Score Threshold and CGPA eligibility)
+      "status": "Shortlisted" or "Borderline" or "Rejected" (determine based on: atsScore >= 80 -> "Shortlisted"; atsScore >= ATS Score Threshold -> "Borderline"; atsScore < ATS Score Threshold -> "Rejected"; verify CGPA eligibility)
     }
   `;
 
@@ -119,7 +292,19 @@ async function analyzeWithGemini(student, job, resumeText, apiKey) {
   // Safety checks on parsed data
   parsedData.atsScore = Number(parsedData.atsScore) || 50;
   parsedData.matchPercentage = Number(parsedData.matchPercentage) || parsedData.atsScore;
-  parsedData.status = parsedData.atsScore >= (job.atsThreshold || 60) ? "Shortlisted" : "Rejected";
+
+  const threshold = job.atsThreshold || 60;
+  if (parsedData.atsScore >= 80) {
+    parsedData.status = "Shortlisted";
+  } else if (parsedData.atsScore >= threshold) {
+    parsedData.status = "Borderline";
+  } else {
+    parsedData.status = "Rejected";
+  }
+
+  // Ensure flat fields are fully populated
+  parsedData.matchedKeywords = parsedData.skillsMatch;
+  parsedData.missingKeywords = parsedData.missingSkills;
 
   return parsedData;
 }
@@ -128,159 +313,208 @@ async function analyzeWithGemini(student, job, resumeText, apiKey) {
  * Standard rule-based keyword matching algorithm as a fallback
  */
 function analyzeWithRules(student, job, resumeText) {
+  const parsedResume = parseResumeText(resumeText);
+
+  // Combine database values and parsed resume values
+  const studentSkills = Array.from(new Set([
+    ...(student.skills || []).map(s => s.toLowerCase()),
+    ...parsedResume.skills.map(s => s.toLowerCase())
+  ]));
+
+  const studentProjects = student.projects && student.projects.length > 0
+    ? student.projects
+    : parsedResume.projects.map(title => ({ title, description: "", techStack: [] }));
+
+  const studentCgpa = student.cgpa || parsedResume.cgpa || 0;
+  const studentBranch = student.branch || parsedResume.branch || "";
+
+  // 1. Resolve skills match
   const reqSkills = (job.requiredSkills || []).map(s => s.toLowerCase());
   const prefSkills = (job.preferredSkills || []).map(s => s.toLowerCase());
-  const studentSkills = (student.skills || []).map(s => s.toLowerCase());
   
-  // Projects tech stack serialization
-  const projectTech = [];
-  if (student.projects && student.projects.length > 0) {
-    student.projects.forEach(p => {
-      if (p.techStack) {
-        p.techStack.forEach(t => projectTech.push(t.toLowerCase()));
-      }
-    });
-  }
-
-  // Combine database student skills and projects tech stack
-  const dbStudentSkills = Array.from(new Set([...studentSkills, ...projectTech]));
+  const jobText = `${job.title} ${job.description}`.toLowerCase();
   
-  const normalizedResumeText = (resumeText || "").toLowerCase();
+  // If requiredSkills array is empty, dynamically extract keywords from JD
+  const jdSkills = [];
+  const skillsDictFlattened = [
+    "react", "angular", "vue", "next.js", "nextjs", "express", "django", "flask", "spring boot", "springboot", "laravel", "fastapi", "html", "css", "bootstrap", "tailwind",
+    "node.js", "nodejs", "python", "java", "c++", "c#", "ruby", "golang", "go", "rust", "kotlin", "swift", "php", "sql",
+    "mongodb", "mysql", "postgresql", "sqlite", "redis", "oracle", "docker", "kubernetes", "aws", "azure", "gcp", "git", "github", "jenkins",
+    "data structures", "algorithms", "dsa", "system design", "oops", "operating systems", "computer networks", "dbms",
+    "embedded c", "arduino", "raspberry pi", "iot", "vlsi", "verilog", "vhdl", "matlab", "solidworks", "autocad", "catia", "ansys", "revit", "staad pro"
+  ];
+  skillsDictFlattened.forEach(skill => {
+    const escaped = skill.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+    if (regex.test(jobText)) {
+      jdSkills.push(skill);
+    }
+  });
 
-  // Calculate skill matches
+  const finalReqSkills = reqSkills.length > 0 ? reqSkills : jdSkills.slice(0, 5);
+
   const skillsMatch = [];
   const missingSkills = [];
   
-  reqSkills.forEach(req => {
-    // 1. Check in structured DB skills
-    let found = dbStudentSkills.some(s => s.includes(req) || req.includes(s));
-    
-    // 2. Check in raw resume text if not found in DB skills
-    if (!found && normalizedResumeText) {
-      found = normalizedResumeText.includes(req);
-    }
-
-    if (found) {
-      // Find the display name
-      const displaySkill = student.skills?.find(s => s.toLowerCase() === req) || req;
-      skillsMatch.push(displaySkill);
+  finalReqSkills.forEach(req => {
+    if (studentSkills.some(s => s.includes(req) || req.includes(s))) {
+      skillsMatch.push(req.toUpperCase());
     } else {
-      missingSkills.push(req);
+      missingSkills.push(req.toUpperCase());
     }
   });
 
   const matchedPref = [];
   prefSkills.forEach(pref => {
-    let found = dbStudentSkills.some(s => s.includes(pref) || pref.includes(s));
-    if (!found && normalizedResumeText) {
-      found = normalizedResumeText.includes(pref);
-    }
-
-    if (found) {
-      const displaySkill = student.skills?.find(s => s.toLowerCase() === pref) || pref;
-      matchedPref.push(displaySkill);
+    if (studentSkills.some(s => s.includes(pref) || pref.includes(s))) {
+      matchedPref.push(pref.toUpperCase());
     }
   });
 
-  // Score calculation
+  // Calculate Weights
+  // A. Skills Match (40 points)
   let skillPoints = 0;
-  if (reqSkills.length > 0) {
-    skillPoints += (skillsMatch.length / reqSkills.length) * 55; // increased skill weight
+  if (finalReqSkills.length > 0) {
+    skillPoints += (skillsMatch.length / finalReqSkills.length) * 30;
   } else {
-    skillPoints += 35; // base points
+    skillPoints += 25; // default base points
   }
-
   if (prefSkills.length > 0) {
-    skillPoints += (matchedPref.length / prefSkills.length) * 15;
+    skillPoints += (matchedPref.length / prefSkills.length) * 10;
+  } else {
+    skillPoints += Math.min(10, skillsMatch.length * 2); // extra credit for matching more required skills
   }
 
-  // CGPA match
+  // B. Keyword Match (15 points)
+  const commonKeywords = ["development", "design", "testing", "deployment", "analysis", "agile", "database", "cloud", "system", "scrum", "teamwork", "communication", "leadership"];
+  let matchedKeywordsCount = 0;
+  commonKeywords.forEach(kw => {
+    if (jobText.includes(kw) && (resumeText.toLowerCase().includes(kw) || student.skills?.some(s => s.toLowerCase().includes(kw)))) {
+      matchedKeywordsCount++;
+    }
+  });
+  const keywordPoints = Math.min(15, (matchedKeywordsCount / Math.max(1, commonKeywords.filter(k => jobText.includes(k)).length)) * 15);
+
+  // C. Project Relevance (15 points)
+  let projectPoints = 0;
+  if (studentProjects.length > 0) {
+    let relevantCount = 0;
+    studentProjects.forEach(proj => {
+      const projText = `${proj.title} ${proj.description || ""} ${JSON.stringify(proj.techStack || [])}`.toLowerCase();
+      const isRelevant = finalReqSkills.some(req => projText.includes(req)) || jdSkills.some(jd => projText.includes(jd));
+      if (isRelevant) relevantCount++;
+    });
+    projectPoints = relevantCount >= 2 ? 15 : relevantCount === 1 ? 10 : 7;
+  }
+
+  // D. Experience Match (10 points)
+  let experiencePoints = 3; // base points
+  if (parsedResume.internships.length > 0 || jobText.includes("experience") && (resumeText.toLowerCase().includes("intern") || resumeText.toLowerCase().includes("experience"))) {
+    experiencePoints = 10;
+  }
+
+  // E. Education Match (10 points)
+  let educationPoints = 0;
+  const eligibleBranches = (job.eligibility?.branches || []).map(b => b.toLowerCase());
+  const isBranchEligible = eligibleBranches.length === 0 || eligibleBranches.includes(studentBranch.toLowerCase());
+  if (isBranchEligible) {
+    educationPoints += 10;
+  } else {
+    educationPoints += 4;
+  }
+
+  // F. CGPA Match (10 points)
   let cgpaPoints = 0;
   const minCgpa = job.eligibility?.cgpa || 0;
-  if (student.cgpa >= minCgpa) {
-    cgpaPoints = 20;
+  if (studentCgpa >= minCgpa) {
+    cgpaPoints = 10;
+  } else if (minCgpa > 0) {
+    cgpaPoints = Math.max(0, Math.round((studentCgpa / minCgpa) * 8));
   } else {
-    cgpaPoints = Math.max(0, (student.cgpa / minCgpa) * 15);
+    cgpaPoints = 10;
   }
 
-  // Project points
-  let projectPoints = 0;
-  if (student.projects?.length > 0) {
-    projectPoints = Math.min(10, student.projects.length * 5);
-  } else if (normalizedResumeText.includes("project")) {
-    projectPoints = 10;
-  }
-
-  const atsScore = Math.min(100, Math.round(skillPoints + cgpaPoints + projectPoints));
+  const atsScore = Math.min(100, Math.round(skillPoints + keywordPoints + projectPoints + experiencePoints + educationPoints + cgpaPoints));
   const threshold = job.atsThreshold || 60;
-  
-  // Branch eligibility
-  const branchEligible = job.eligibility?.branches?.length === 0 || 
-                         job.eligibility?.branches?.map(b => b.toLowerCase()).includes(student.branch.toLowerCase());
 
-  // Final status decision
-  const isCgpaEligible = student.cgpa >= minCgpa;
-  const isShortlisted = atsScore >= threshold && branchEligible && isCgpaEligible;
-  const status = isShortlisted ? "Shortlisted" : "Rejected";
+  // Decide status
+  let status = "Rejected";
+  if (atsScore >= 80) {
+    status = "Shortlisted";
+  } else if (atsScore >= threshold) {
+    status = "Borderline";
+  } else {
+    status = "Rejected";
+  }
 
-  // Strengths & Weaknesses
+  // Safety override: if student fails basic CGPA eligibility in db, status is Rejected
+  if (student.cgpa < minCgpa) {
+    status = "Rejected";
+  }
+
+  // Strengths and Weaknesses
   const strengths = [];
   const weaknesses = [];
-  
-  if (student.cgpa >= 8.5) strengths.push("Excellent academic CGPA record");
-  if (skillsMatch.length > 2) strengths.push("Strong alignment with required skills");
-  if (student.projects?.length >= 2 || normalizedResumeText.includes("project")) {
-    strengths.push("Demonstrated hands-on experience via project implementations");
-  }
-  
-  if (strengths.length === 0) strengths.push("Basic academic eligibility met");
 
-  if (missingSkills.length > 0) weaknesses.push(`Missing key required technical stack: ${missingSkills.slice(0, 2).join(", ")}`);
-  if (student.cgpa < minCgpa) weaknesses.push("Academic CGPA is below the desired target");
+  if (studentCgpa >= 8.5) strengths.push("Excellent academic CGPA record");
+  if (skillsMatch.length >= 2) strengths.push(`Strong matching skills: ${skillsMatch.slice(0, 3).join(", ")}`);
+  if (studentProjects.length >= 1) strengths.push("Hands-on experience demonstrated via projects");
+  if (strengths.length === 0) strengths.push("Meets base qualification guidelines");
 
+  if (missingSkills.length > 0) weaknesses.push(`Missing key technologies: ${missingSkills.slice(0, 2).join(", ")}`);
+  if (studentCgpa < minCgpa) weaknesses.push(`CGPA is below the desired target of ${minCgpa}`);
+  if (studentProjects.length === 0) weaknesses.push("Lacks major project implementations");
   if (weaknesses.length === 0) weaknesses.push("No major skill gaps identified");
 
-  // Rejection/Selection Reasons
+  // Selection / Rejection Reasons
   let selectionReason = "";
   let rejectionReason = "";
   const recommendedLearning = [];
 
   missingSkills.forEach(skill => {
-    recommendedLearning.push(`Learn ${skill.toUpperCase()} fundamentals and build a basic project`);
+    recommendedLearning.push(`Learn ${skill} fundamentals and build a mini-project`);
   });
   if (recommendedLearning.length < 2) {
     recommendedLearning.push("Build a portfolio project showcasing React & backend integrations");
     recommendedLearning.push("Prepare system design and data structures for coding interview");
   }
 
-  if (isShortlisted) {
-    selectionReason = `Candidate exhibits a strong ATS score of ${atsScore}% (threshold: ${threshold}%) and matches key skills like ${skillsMatch.slice(0, 3).join(", ")}. Academic CGPA is ${student.cgpa} which exceeds the required minimum.`;
+  if (status === "Shortlisted") {
+    selectionReason = `Candidate exhibits a strong ATS score of ${atsScore}% (threshold: ${threshold}%) and matches key skills like ${skillsMatch.slice(0, 3).join(", ")}. Academic CGPA is ${studentCgpa} which exceeds the required minimum.`;
+  } else if (status === "Borderline") {
+    selectionReason = `Candidate is in the borderline zone with an ATS score of ${atsScore}% (threshold: ${threshold}%). Shows decent matching in ${skillsMatch.slice(0, 2).join(", ")}, pending recruiter final manual review.`;
   } else {
     const reasons = [];
-    if (!isCgpaEligible) reasons.push(`CGPA (${student.cgpa}) is below the required ${minCgpa}`);
-    if (!branchEligible) reasons.push(`Branch ${student.branch} is not eligible`);
+    if (studentCgpa < minCgpa) reasons.push(`CGPA (${studentCgpa}) is below the required ${minCgpa}`);
+    if (!isBranchEligible) reasons.push(`Branch ${studentBranch} is not eligible`);
     if (atsScore < threshold) reasons.push(`ATS Score (${atsScore}%) did not meet the screening threshold (${threshold}%)`);
     if (missingSkills.length > 0) reasons.push(`Missing core skills: ${missingSkills.slice(0, 3).join(", ")}`);
     
     rejectionReason = reasons.join("; ");
   }
 
-  const skillsListCombined = [...skillsMatch, ...matchedPref];
+  const skillsListCombined = Array.from(new Set([...skillsMatch, ...matchedPref]));
+  const matchedKeywords = skillsMatch; // Map skills as matched keywords
+  const missingKeywords = missingSkills;
 
   return {
     atsScore,
     matchPercentage: atsScore,
     skillsMatch: skillsListCombined,
     missingSkills,
-    experienceMatch: student.projects?.length > 0 
-      ? `Student has built ${student.projects.length} project(s) matching experience expectations.`
-      : "No commercial experience or major project implementations found.",
-    educationMatch: `${student.branch} branch, CGPA ${student.cgpa} (Min required: ${minCgpa}).`,
-    aiSummary: `Candidate matches ${skillsMatch.length} out of ${reqSkills.length} required skills. ATS Score is ${atsScore}%.`,
-    aiCandidateSummary: isShortlisted 
+    matchedKeywords,
+    missingKeywords,
+    experienceMatch: studentProjects.length > 0 
+      ? `Student has built ${studentProjects.length} project(s) matching experience expectations.`
+      : "No major project implementations or commercial experience found.",
+    educationMatch: `${studentBranch} branch, CGPA ${studentCgpa} (Min required: ${minCgpa}).`,
+    aiSummary: `Candidate matches ${skillsMatch.length} out of ${finalReqSkills.length} required skills. ATS Score is ${atsScore}%.`,
+    aiCandidateSummary: status === "Shortlisted"
       ? `Great job! Your resume matches the job description. Prepare for upcoming rounds by focusing on ${skillsMatch.slice(0, 2).join(", ")}.`
+      : status === "Borderline"
+      ? `Your profile is borderline. Improve your chances by learning: ${missingSkills.slice(0, 2).join(", ")} and updating your projects.`
       : `To improve your score for this role, try adding projects in ${missingSkills.slice(0, 2).join(", ")}, raise your CGPA if possible, and include certifications.`,
-    aiRecruiterSummary: `ATS: ${atsScore}%. Candidate meets CGPA requirements. Match level is ${isShortlisted ? 'HIGH' : 'LOW'}. ${missingSkills.length > 0 ? `Lacks: ${missingSkills.slice(0, 2).join(", ")}` : ''}`,
+    aiRecruiterSummary: `ATS: ${atsScore}%. Candidate meets CGPA requirements. Match level is ${status}. ${missingSkills.length > 0 ? `Lacks: ${missingSkills.slice(0, 2).join(", ")}` : ''}`,
     strengths: strengths.slice(0, 3),
     weaknesses: weaknesses.slice(0, 2),
     recommendedLearning: recommendedLearning.slice(0, 3),

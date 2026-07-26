@@ -15,50 +15,114 @@ const { processCandidateResult } = require("../services/roundEngine");
 
 function calculateATSScore(student, job) {
   if (!student || !job) return 0;
+
+  const studentSkills = (student.skills || []).map(s => s.toLowerCase());
+  const studentProjects = student.projects || [];
+  const studentCgpa = student.cgpa || 0;
+  const studentBranch = student.branch || "";
+
+  const reqSkills = (job.requiredSkills || []).map(s => s.toLowerCase());
+  const prefSkills = (job.preferredSkills || []).map(s => s.toLowerCase());
   
   const jobText = `${job.title} ${job.description}`.toLowerCase();
-  let matches = 0;
-  let totalItemsChecked = 0;
   
-  if (student.skills && student.skills.length > 0) {
-    for (const skill of student.skills) {
-      if (!skill) continue;
-      totalItemsChecked++;
-      if (jobText.includes(skill.toLowerCase())) {
-        matches++;
-      }
+  // Extract skills from JD dynamically if requiredSkills array is empty
+  const jdSkills = [];
+  const skillsDictFlattened = [
+    "react", "angular", "vue", "next.js", "nextjs", "express", "django", "flask", "spring boot", "springboot", "laravel", "fastapi", "html", "css", "bootstrap", "tailwind",
+    "node.js", "nodejs", "python", "java", "c++", "c#", "ruby", "golang", "go", "rust", "kotlin", "swift", "php", "sql",
+    "mongodb", "mysql", "postgresql", "sqlite", "redis", "oracle", "docker", "kubernetes", "aws", "azure", "gcp", "git", "github", "jenkins",
+    "data structures", "algorithms", "dsa", "system design", "oops", "operating systems", "computer networks", "dbms",
+    "embedded c", "arduino", "raspberry pi", "iot", "vlsi", "verilog", "vhdl", "matlab", "solidworks", "autocad", "catia", "ansys", "revit", "staad pro"
+  ];
+  skillsDictFlattened.forEach(skill => {
+    const escaped = skill.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+    if (regex.test(jobText)) {
+      jdSkills.push(skill);
     }
-  }
-  
-  if (student.projects && student.projects.length > 0) {
-    for (const proj of student.projects) {
-      if (proj.techStack && proj.techStack.length > 0) {
-        for (const tech of proj.techStack) {
-          if (!tech) continue;
-          totalItemsChecked++;
-          if (jobText.includes(tech.toLowerCase())) {
-            matches++;
-          }
-        }
-      }
+  });
+
+  const finalReqSkills = reqSkills.length > 0 ? reqSkills : jdSkills.slice(0, 5);
+
+  const skillsMatch = [];
+  finalReqSkills.forEach(req => {
+    if (studentSkills.some(s => s.includes(req) || req.includes(s))) {
+      skillsMatch.push(req);
     }
-  }
-  
-  let skillScore = 0;
-  if (totalItemsChecked > 0) {
-    skillScore = (matches / totalItemsChecked) * 80;
+  });
+
+  const matchedPref = [];
+  prefSkills.forEach(pref => {
+    if (studentSkills.some(s => s.includes(pref) || pref.includes(s))) {
+      matchedPref.push(pref);
+    }
+  });
+
+  // Calculate weights
+  let skillPoints = 0;
+  if (finalReqSkills.length > 0) {
+    skillPoints += (skillsMatch.length / finalReqSkills.length) * 30;
   } else {
-    skillScore = 30;
+    skillPoints += 25;
   }
-  
-  let cgpaScore = 0;
-  const reqCgpa = job.eligibility?.cgpa || 0;
-  const studentCgpa = student.cgpa || 0;
-  if (studentCgpa >= reqCgpa) {
-    cgpaScore = 20;
+  if (prefSkills.length > 0) {
+    skillPoints += (matchedPref.length / prefSkills.length) * 10;
+  } else {
+    skillPoints += Math.min(10, skillsMatch.length * 2);
   }
-  
-  return Math.min(100, Math.max(10, Math.round(skillScore + cgpaScore)));
+
+  // Keyword Match (15 points)
+  const commonKeywords = ["development", "design", "testing", "deployment", "analysis", "agile", "database", "cloud", "system", "scrum", "teamwork", "communication", "leadership"];
+  let matchedKeywordsCount = 0;
+  commonKeywords.forEach(kw => {
+    if (jobText.includes(kw) && studentSkills.some(s => s.includes(kw))) {
+      matchedKeywordsCount++;
+    }
+  });
+  const keywordPoints = Math.min(15, (matchedKeywordsCount / Math.max(1, commonKeywords.filter(k => jobText.includes(k)).length)) * 15);
+
+  // Project Relevance (15 points)
+  let projectPoints = 0;
+  if (studentProjects.length > 0) {
+    let relevantCount = 0;
+    studentProjects.forEach(proj => {
+      const projText = `${proj.title} ${proj.description || ""} ${JSON.stringify(proj.techStack || [])}`.toLowerCase();
+      const isRelevant = finalReqSkills.some(req => projText.includes(req)) || jdSkills.some(jd => projText.includes(jd));
+      if (isRelevant) relevantCount++;
+    });
+    projectPoints = relevantCount >= 2 ? 15 : relevantCount === 1 ? 10 : 7;
+  }
+
+  // Experience Match (10 points)
+  let experiencePoints = 3;
+  if (studentProjects.length > 0 || studentSkills.some(s => s.includes("intern") || s.includes("trainee"))) {
+    experiencePoints = 10;
+  }
+
+  // Education Match (10 points)
+  let educationPoints = 0;
+  const eligibleBranches = (job.eligibility?.branches || []).map(b => b.toLowerCase());
+  const isBranchEligible = eligibleBranches.length === 0 || eligibleBranches.includes(studentBranch.toLowerCase());
+  if (isBranchEligible) {
+    educationPoints += 10;
+  } else {
+    educationPoints += 4;
+  }
+
+  // CGPA Match (10 points)
+  let cgpaPoints = 0;
+  const minCgpa = job.eligibility?.cgpa || 0;
+  if (studentCgpa >= minCgpa) {
+    cgpaPoints = 10;
+  } else if (minCgpa > 0) {
+    cgpaPoints = Math.max(0, Math.round((studentCgpa / minCgpa) * 8));
+  } else {
+    cgpaPoints = 10;
+  }
+
+  const atsScore = Math.min(100, Math.round(skillPoints + keywordPoints + projectPoints + experiencePoints + educationPoints + cgpaPoints));
+  return atsScore;
 }
 
 // Post a new job drive
@@ -219,12 +283,34 @@ module.exports.getApplications = ErrorWrapper(async (req, res, next) => {
     if (analysis) {
       appObj.atsScore = analysis.atsScore;
       appObj.matchPercentage = analysis.matchPercentage;
+      appObj.matchedSkills = analysis.skillsMatch || [];
+      appObj.skillsMatch = analysis.skillsMatch || [];
+      appObj.missingSkills = analysis.missingSkills || [];
+      appObj.matchedKeywords = analysis.matchedKeywords || analysis.skillsMatch || [];
+      appObj.missingKeywords = analysis.missingKeywords || analysis.missingSkills || [];
+      appObj.resumeSummary = analysis.aiSummary || "";
+      appObj.aiSummary = analysis.aiSummary || "";
+      appObj.strengths = analysis.strengths || [];
+      appObj.weaknesses = analysis.weaknesses || [];
+      appObj.decision = analysis.status;
+      appObj.reason = analysis.status === "Shortlisted" ? analysis.selectionReason : (analysis.rejectionReason || analysis.selectionReason);
       appObj.aiAnalysis = analysis;
     } else {
       // Calculate dynamic preview if database analysis record doesn't exist
       const score = calculateATSScore(app.studentId, job);
       appObj.atsScore = score;
       appObj.matchPercentage = score;
+      appObj.matchedSkills = app.studentId.skills || [];
+      appObj.skillsMatch = app.studentId.skills || [];
+      appObj.missingSkills = [];
+      appObj.matchedKeywords = app.studentId.skills || [];
+      appObj.missingKeywords = [];
+      appObj.resumeSummary = "AI Screening record missing. Showing profile preview match score.";
+      appObj.aiSummary = "AI Screening record missing. Showing profile preview match score.";
+      appObj.strengths = ["Database profile preview matched"];
+      appObj.weaknesses = [];
+      appObj.decision = score >= 80 ? "Shortlisted" : score >= (job.atsThreshold || 60) ? "Borderline" : "Rejected";
+      appObj.reason = "Profile evaluation preview.";
     }
 
     if (progress) {
@@ -394,10 +480,16 @@ module.exports.atsShortlist = ErrorWrapper(async (req, res, next) => {
       select: "name email rollNumber branch year cgpa skills resumeUrl phone isPlaced projects userId",
     });
 
+  const analyses = await ResumeAnalysis.find({ jobId });
+
   let processedCount = 0;
   for (const app of applications) {
     if (!app.studentId) continue;
-    const score = calculateATSScore(app.studentId, job);
+    
+    // Fetch score from ResumeAnalysis if exists, else fallback to calculateATSScore
+    const analysis = analyses.find(a => a.applicationId.toString() === app._id.toString());
+    const score = analysis ? analysis.atsScore : calculateATSScore(app.studentId, job);
+
     if (score >= threshold) {
       app.status = "Shortlisted";
       

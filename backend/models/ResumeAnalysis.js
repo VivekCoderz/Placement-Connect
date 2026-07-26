@@ -75,7 +75,7 @@ const resumeAnalysisSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Shortlisted", "Rejected"],
+      enum: ["Shortlisted", "Rejected", "Borderline"],
       required: true,
     },
     isOverridden: {

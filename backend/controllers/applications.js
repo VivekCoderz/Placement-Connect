@@ -22,11 +22,29 @@ module.exports.getMyApplications = ErrorWrapper(async (req, res, next) => {
   const enrichedApplications = await Promise.all(
     applications.map(async (app) => {
       const analysis = await ResumeAnalysis.findOne({ applicationId: app._id });
-      return {
+      const appObj = {
         ...app.toObject(),
         id: app._id,
         aiAnalysis: analysis || null
       };
+
+      if (analysis) {
+        appObj.atsScore = analysis.atsScore;
+        appObj.matchPercentage = analysis.matchPercentage;
+        appObj.matchedSkills = analysis.skillsMatch || [];
+        appObj.skillsMatch = analysis.skillsMatch || [];
+        appObj.missingSkills = analysis.missingSkills || [];
+        appObj.matchedKeywords = analysis.matchedKeywords || analysis.skillsMatch || [];
+        appObj.missingKeywords = analysis.missingKeywords || analysis.missingSkills || [];
+        appObj.resumeSummary = analysis.aiSummary || "";
+        appObj.aiSummary = analysis.aiSummary || "";
+        appObj.strengths = analysis.strengths || [];
+        appObj.weaknesses = analysis.weaknesses || [];
+        appObj.decision = analysis.status;
+        appObj.reason = analysis.status === "Shortlisted" ? analysis.selectionReason : (analysis.rejectionReason || analysis.selectionReason);
+      }
+
+      return appObj;
     })
   );
 
