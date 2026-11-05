@@ -8,6 +8,7 @@ const ResultApproval = require("../models/resultApproval");
 const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
 const { sendEmail, generateICS } = require("../utils/email");
+const { assertJobOwner } = require("../utils/ownership");
 
 // Upload round-wise CSV shortlist and notify students
 module.exports.uploadShortlist = ErrorWrapper(async (req, res, next) => {
@@ -22,10 +23,10 @@ module.exports.uploadShortlist = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(400, "Please upload a CSV file containing shortlisted student details");
   }
 
-  const job = await Job.findById(jobId).populate("companyId");
-  if (!job) {
-    throw new ErrorHandler(404, "Placement drive job posting not found");
-  }
+  // Companies may only upload shortlists (and auto-reject applicants) for their own jobs;
+  // placementCell/admin may act on any job.
+  const job = await assertJobOwner(req, jobId);
+  await job.populate("companyId");
   const company = job.companyId;
 
   // Convert buffer to text and parse lines

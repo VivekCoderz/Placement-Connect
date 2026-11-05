@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Job = require("../models/job");
 const Company = require("../models/company");
 const Student = require("../models/student");
@@ -13,6 +14,12 @@ const Round = require("../models/Round");
 const RoundResult = require("../models/RoundResult");
 const StudentProgress = require("../models/StudentProgress");
 const { processCandidateResult } = require("../services/roundEngine");
+const { sendEmail } = require("../utils/email");
+const {
+  assertJobOwner,
+  assertApplicationOwner,
+  assertRoundOwner,
+} = require("../utils/ownership");
 
 function calculateATSScore(student, job) {
   if (!student || !job) return 0;
@@ -365,10 +372,7 @@ module.exports.proposeSchedule = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(404, "Recruiter company details not found");
   }
 
-  const job = await Job.findById(jobId);
-  if (!job) {
-    throw new ErrorHandler(404, "Job drive not found");
-  }
+  const job = await assertJobOwner(req, jobId);
 
   // Find all placement cell users
   const User = require("../models/User");
@@ -407,10 +411,7 @@ module.exports.submitShortlist = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(404, "Recruiter company details not found");
   }
 
-  const job = await Job.findById(jobId);
-  if (!job) {
-    throw new ErrorHandler(404, "Job drive not found");
-  }
+  const job = await assertJobOwner(req, jobId);
 
   // Create shortlist record
   const shortlist = new Shortlist({
@@ -577,10 +578,8 @@ module.exports.uploadRoundResults = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(403, "Access Denied: You do not own this job posting");
   }
 
-  const round = await Round.findById(roundId);
-  if (!round) {
-    throw new ErrorHandler(404, "Round not found");
-  }
+  // Round must belong to this (owned) job
+  await assertRoundOwner(req, roundId, job._id);
 
   // Parse CSV
   const csvContent = req.file.buffer.toString("utf8");
@@ -681,16 +680,12 @@ module.exports.overrideDecision = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(400, "Invalid status override. Must be Shortlisted or Rejected");
   }
 
-  const app = await Application.findById(appId)
-    .populate("studentId")
-    .populate({
+  const app = await assertApplicationOwner(req, appId, (q) =>
+    q.populate("studentId").populate({
       path: "jobId",
-      populate: { path: "companyId", select: "name" }
-    });
-
-  if (!app) {
-    throw new ErrorHandler(404, "Application not found");
-  }
+      populate: { path: "companyId", select: "name" },
+    }),
+  );
 
   const student = app.studentId;
   const job = app.jobId;
@@ -852,6 +847,10 @@ module.exports.overrideDecision = ErrorWrapper(async (req, res, next) => {
 // Dynamic Round Management: Get rounds
 module.exports.getRounds = ErrorWrapper(async (req, res, next) => {
   const { jobId } = req.params;
+  // Companies only see rounds of their own jobs; students can view any drive's rounds.
+  if (req.user.role !== "student") {
+    await assertJobOwner(req, jobId);
+  }
   const rounds = await Round.find({ jobId }).sort({ sequence: 1 });
   return res.status(200).json({ rounds });
 });
@@ -865,10 +864,7 @@ module.exports.createRound = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(400, "Round name is required");
   }
 
-  const job = await Job.findById(jobId);
-  if (!job) {
-    throw new ErrorHandler(404, "Job drive not found");
-  }
+  const job = await assertJobOwner(req, jobId);
 
   const roundsCount = await Round.countDocuments({ jobId });
 
@@ -912,10 +908,7 @@ module.exports.updateRound = ErrorWrapper(async (req, res, next) => {
   const { roundId } = req.params;
   const { name, description, date, time, mode, meetingLink, platform, instructions } = req.body;
 
-  const round = await Round.findById(roundId);
-  if (!round) {
-    throw new ErrorHandler(404, "Round details not found");
-  }
+  const { round } = await assertRoundOwner(req, roundId);
 
   if (name) round.name = name;
   if (description !== undefined) round.description = description;
@@ -956,10 +949,7 @@ module.exports.updateRound = ErrorWrapper(async (req, res, next) => {
 module.exports.deleteRound = ErrorWrapper(async (req, res, next) => {
   const { roundId } = req.params;
 
-  const round = await Round.findById(roundId);
-  if (!round) {
-    throw new ErrorHandler(404, "Round details not found");
-  }
+  const { round } = await assertRoundOwner(req, roundId);
 
   const jobId = round.jobId;
   await Round.findByIdAndDelete(roundId);
@@ -1001,6 +991,9 @@ module.exports.manualRoundResults = ErrorWrapper(async (req, res, next) => {
   if (!results || !Array.isArray(results) || results.length === 0) {
     throw new ErrorHandler(400, "results array is required and cannot be empty");
   }
+
+  // Job must be owned by the requester and the round must belong to that job
+  await assertRoundOwner(req, roundId, jobId);
 
   for (const resItem of results) {
     await processCandidateResult({
@@ -1051,11 +1044,11 @@ module.exports.bulkAction = ErrorWrapper(async (req, res, next) => {
 
   const updatedApps = [];
   for (const studentId of studentIds) {
+    if (!mongoose.isValidObjectId(studentId)) continue;
+    // Always scoped to this (owned) job: an id may be an application id or a student id
     const app = await Application.findOne({
-      $or: [
-        { _id: studentId },
-        { studentId: studentId, jobId: jobId }
-      ]
+      jobId,
+      $or: [{ _id: studentId }, { studentId: studentId }],
     });
     if (app) {
       if (pendingStatus !== "None") {
@@ -1115,11 +1108,10 @@ module.exports.approveSelection = ErrorWrapper(async (req, res, next) => {
     const { actionType, studentIds, details } = action;
 
     for (const studentId of studentIds) {
+      if (!mongoose.isValidObjectId(studentId)) continue;
       const app = await Application.findOne({
-        $or: [
-          { _id: studentId },
-          { studentId: studentId, jobId: jobId }
-        ]
+        jobId,
+        $or: [{ _id: studentId }, { studentId: studentId }],
       }).populate("studentId");
       if (!app || !app.studentId) continue;
 

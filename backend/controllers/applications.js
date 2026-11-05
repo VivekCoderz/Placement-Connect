@@ -5,6 +5,7 @@ const Notification = require("../models/notification");
 const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
 const { sendEmail, generateICS } = require("../utils/email");
+const { assertApplicationOwner } = require("../utils/ownership");
 
 module.exports.getMyApplications = ErrorWrapper(async (req, res, next) => {
   const student = await Student.findOne({ userId: req.user.id });
@@ -55,16 +56,13 @@ module.exports.updateStatus = ErrorWrapper(async (req, res, next) => {
   const { id } = req.params;
   const { status, roundName, roundResult, scheduledAt, notes, roundType, testLink, venue } = req.body;
 
-  const app = await Application.findById(id)
-    .populate("studentId")
-    .populate({
+  // Company users may only update applications to their own jobs.
+  const app = await assertApplicationOwner(req, id, (q) =>
+    q.populate("studentId").populate({
       path: "jobId",
       populate: { path: "companyId", select: "name" },
-    });
-
-  if (!app) {
-    throw new ErrorHandler(404, "Application not found");
-  }
+    }),
+  );
 
   const student = app.studentId;
   const job = app.jobId;
@@ -248,10 +246,7 @@ module.exports.issueOffer = ErrorWrapper(async (req, res, next) => {
   const { id } = req.params;
   const { offerLetterContent } = req.body;
 
-  const app = await Application.findById(id).populate("studentId").populate("jobId");
-  if (!app) {
-    throw new ErrorHandler(404, "Application not found");
-  }
+  const app = await assertApplicationOwner(req, id, (q) => q.populate("studentId").populate("jobId"));
 
   if (req.file) {
     app.offerLetterUrl = req.file.path; // Cloudinary PDF URL

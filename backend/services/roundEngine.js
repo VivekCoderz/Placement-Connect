@@ -5,6 +5,7 @@ const RoundResult = require("../models/RoundResult");
 const Notification = require("../models/notification");
 const Student = require("../models/student");
 const { sendEmail } = require("../utils/email");
+const ErrorHandler = require("../utils/ErrorHandle");
 
 /**
  * Process a single candidate round result, advancing them in the pipeline or rejecting them.
@@ -20,7 +21,13 @@ const { sendEmail } = require("../utils/email");
 async function processCandidateResult({ jobId, roundId, studentId, result, score, remarks, recruiterUserId }) {
   // 1. Fetch Job and Round details
   const round = await Round.findById(roundId);
-  if (!round) throw new Error("Round not found");
+  if (!round) throw new ErrorHandler(404, "Round not found");
+  if (round.jobId.toString() !== jobId.toString()) {
+    throw new ErrorHandler(400, "Round does not belong to this job");
+  }
+  if (!["Selected", "Rejected", "Absent", "Waiting"].includes(result)) {
+    throw new ErrorHandler(400, "Result must be Selected, Rejected, Absent, or Waiting");
+  }
 
   const jobRounds = await Round.find({ jobId }).sort({ sequence: 1 });
   const currentRoundIdx = jobRounds.findIndex(r => r._id.toString() === roundId.toString());
