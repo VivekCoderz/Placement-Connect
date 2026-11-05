@@ -1,18 +1,17 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
 const placementController = require("../controllers/placement");
-const { jwtVerify, authorizeRoles } = require("../middleware/jwtVerify");
+const { jwtVerify, authorizeRoles, getAssociatedDetails } = require("../middleware/jwtVerify");
+const { uploadCsv } = require("../middleware/upload");
 
-const memoryStorage = multer.memoryStorage();
-const uploadMemory = multer({ storage: memoryStorage });
-
-// Upload shortlist CSV - accessible by placementCell, recruiters, or admin
+// Upload shortlist CSV - placementCell/admin for any job; a company only for its own jobs
+// (ownership is enforced in the controller once the multipart body, which carries jobId, is parsed).
 router.post(
   "/shortlist/upload",
   jwtVerify,
-  authorizeRoles("placementCell", "recruiter", "company", "admin"),
-  uploadMemory.single("file"),
+  authorizeRoles("placementCell", "company", "admin"),
+  getAssociatedDetails,
+  uploadCsv.single("file"),
   placementController.uploadShortlist
 );
 

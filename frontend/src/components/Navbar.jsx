@@ -62,17 +62,25 @@ const Navbar = () => {
         { name: 'My Profile', path: '/profile', icon: User },
       ];
 
+  const initials = (user?.name || '?')
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <nav className="sticky top-0 z-40 bg-[#0B3D91] border-b border-[#082F70]/40 shadow-md">
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
-        <div className="flex items-center justify-between h-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-10">
+        <div className="flex items-center justify-between gap-2 h-16 sm:h-20">
           {/* Logo */}
           <div className="flex items-center">
-            <Link to={user?.role === 'company' ? '/recruiter/dashboard' : user?.role === 'placementCell' ? '/placement/dashboard' : user?.role === 'admin' ? '/admin/dashboard' : user?.role === 'student' ? '/jobs' : '/'} className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-[#F5A623] to-[#E0921B] flex items-center justify-center shadow-md">
-                <GraduationCap className="w-5 h-5 text-white" />
+            <Link to={user?.role === 'company' ? '/recruiter/dashboard' : user?.role === 'placementCell' ? '/placement/dashboard' : user?.role === 'admin' ? '/admin/dashboard' : user?.role === 'student' ? '/jobs' : '/'} className="flex items-center space-x-3 rounded-xl" aria-label="PlacementConnect home">
+              <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-tr from-[#F5A623] to-[#E0921B] flex items-center justify-center shadow-md">
+                <GraduationCap className="w-5 h-5 text-white" aria-hidden="true" />
               </div>
-              <span className="font-extrabold text-xl tracking-tight text-white">
+              <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white max-[399px]:sr-only">
                 Placement<span className="text-[#F5A623]">Connect</span>
               </span>
             </Link>
@@ -110,6 +118,7 @@ const Navbar = () => {
                   onClick={toggleTheme}
                   className="p-2.5 text-slate-200 hover:text-[#F5A623] hover:bg-[#082F70] rounded-xl transition-all duration-200"
                   title="Toggle Theme"
+                  aria-label="Toggle theme"
                 >
                   {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 </button>
@@ -117,7 +126,7 @@ const Navbar = () => {
                 <div className="h-8 w-px bg-white/10" />
                 <div className="flex items-center space-x-3">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-[#F5A623] to-[#E0921B] flex items-center justify-center font-bold text-sm text-white ring-2 ring-[#F5A623]/60 shadow-md">
-                    {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    {initials}
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-white max-w-[130px] truncate leading-tight">{user.name}</span>
@@ -128,6 +137,7 @@ const Navbar = () => {
                   onClick={handleLogout}
                   className="p-2.5 text-slate-200 hover:text-rose-400 hover:bg-[#082F70] rounded-xl transition-all duration-250"
                   title="Logout"
+                  aria-label="Log out"
                 >
                   <LogOut className="w-5 h-5" />
                 </button>
@@ -138,6 +148,7 @@ const Navbar = () => {
                   onClick={toggleTheme}
                   className="p-2.5 text-slate-200 hover:text-[#F5A623] hover:bg-[#082F70] rounded-xl transition-all duration-200 mr-1"
                   title="Toggle Theme"
+                  aria-label="Toggle theme"
                 >
                   {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 </button>
@@ -149,7 +160,7 @@ const Navbar = () => {
                 </Link>
                 <Link
                   to="/signup"
-                  className="text-sm font-semibold bg-[#F5A623] hover:bg-[#E0921B] text-white px-5 py-2.5 rounded-xl transition-all duration-200 shadow-sm"
+                  className="text-sm font-semibold bg-[#F5A623] hover:bg-[#E0921B] text-[#0B1F44] px-5 py-2.5 rounded-xl transition-all duration-200 shadow-sm"
                 >
                   Register
                 </Link>
@@ -158,21 +169,31 @@ const Navbar = () => {
           </div>
 
           {/* Mobile hamburger button */}
-          <div className="flex items-center space-x-3 md:hidden">
+          <div className="flex items-center space-x-1 sm:space-x-3 md:hidden">
             <button
               onClick={toggleTheme}
-              className="p-2.5 text-slate-100 hover:text-[#F5A623] hover:bg-[#082F70] rounded-xl transition-all duration-200"
+              aria-label="Toggle theme"
+              className="p-2 sm:p-2.5 text-slate-100 hover:text-[#F5A623] hover:bg-[#082F70] rounded-xl transition-all duration-200"
               title="Toggle Theme"
             >
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
             {user && <NotificationBell />}
+            {user ? (
             <button
+              type="button"
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2.5 rounded-xl text-slate-100 hover:text-white hover:bg-[#082F70] focus:outline-none transition-colors"
+              aria-label={isOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isOpen}
+              className="p-2 sm:p-2.5 rounded-xl text-slate-100 hover:text-white hover:bg-[#082F70] transition-colors"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
+            ) : (
+              <Link to="/login" className="px-3 py-2 rounded-xl text-sm font-semibold text-white hover:bg-[#082F70]">
+                Sign in
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -203,10 +224,10 @@ const Navbar = () => {
             <div className="border-t border-[#082F70] my-3 pt-3 px-4 flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-[#F5A623] to-[#E0921B] flex items-center justify-center font-bold text-white shadow">
-                  {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  {initials}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold text-white">{user.name}</span>
+                  <span className="text-sm font-bold text-white max-w-[150px] truncate">{user.name}</span>
                   <span className="text-xs text-slate-300 font-mono">{user.role === 'admin' ? 'Admin' : user.role === 'placementCell' ? 'T&P Cell' : user.role === 'company' ? 'Recruiter' : user.rollNumber}</span>
                 </div>
               </div>

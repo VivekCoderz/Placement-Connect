@@ -4,6 +4,8 @@ import { ChevronRight, Sparkles, CheckCircle2, XCircle, ListChecks, Calendar, Fi
 import { useSelector } from 'react-redux';
 import Stepper from '../components/Stepper';
 import api from '../utils/api';
+import { createSocket } from '../utils/socket';
+import { sanitizeHtml, writePrintDocument } from '../utils/sanitize';
 
 const Applications = () => {
   const user = useSelector((state) => state.auth.user);
@@ -12,37 +14,22 @@ const Applications = () => {
   const [showSimulator, setShowSimulator] = useState({});
   const [selectedOfferContent, setSelectedOfferContent] = useState('');
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
+  const [currentSection, setCurrentSection] = useState('active');
+  const [isLoading, setIsLoading] = useState(true);
 
   const handlePrintOffer = (content) => {
     const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Offer Letter</title>
-          <style>
+    writePrintDocument(printWindow, {
+      title: `Offer Letter`,
+      styles: `
             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748; padding: 40px; }
             .letter-content { line-height: 1.6; font-size: 14px; }
             @media print {
               body { padding: 0; }
             }
-          </style>
-        </head>
-        <body>
-          <div class="letter-content">
-            \${content}
-          </div>
-          <script>
-            window.onload = function() {
-              window.print();
-              window.onafterprint = function() {
-                window.close();
-              };
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+          `,
+      body: `<div class="letter-content">${sanitizeHtml(content)}</div>`,
+    });
   };
 
   const fetchApplicationsData = async () => {
@@ -69,6 +56,8 @@ const Applications = () => {
       setJobs(populatedJobs);
     } catch (err) {
       console.error("Failed to fetch applications:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -76,6 +65,29 @@ const Applications = () => {
     if (user) {
       fetchApplicationsData();
     }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Identity comes from the JWT on the server; it joins the user's own room.
+    const socket = createSocket();
+
+    socket.on('application_status_update', (data) => {
+      console.log('Real-time application status update received:', data);
+      fetchApplicationsData();
+      if (data.message) {
+        try {
+          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-120.wav');
+          audio.volume = 0.4;
+          audio.play().catch(() => {});
+        } catch {}
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [user]);
 
   const getJobDetails = (jobId) => {
@@ -93,10 +105,21 @@ const Applications = () => {
     }));
   };
 
+  const activeApps = applications.filter(app => app.status !== 'Selected' && app.status !== 'Rejected');
+  const selectedApps = applications.filter(app => app.status === 'Selected');
+  const rejectedApps = applications.filter(app => app.status === 'Rejected');
+  const completedApps = applications.filter(app => app.status === 'Selected' || app.status === 'Rejected');
+
+  let displayedApps = [];
+  if (currentSection === 'active') displayedApps = activeApps;
+  else if (currentSection === 'selected') displayedApps = selectedApps;
+  else if (currentSection === 'rejected') displayedApps = rejectedApps;
+  else if (currentSection === 'completed') displayedApps = completedApps;
+
   return (
     <div className="space-y-8 animate-in fade-in duration-300 text-[#4B5563]">
       {/* Banner */}
-      <div className="bg-white border border-[#E5E7EB] p-8 rounded-2xl shadow-sm">
+      <div className="bg-white border border-[#E5E7EB] p-5 sm:p-8 rounded-2xl shadow-sm">
         <h1 className="text-xl md:text-2xl font-bold text-[#111827] tracking-tight">
           My Applications
         </h1>
@@ -105,21 +128,77 @@ const Applications = () => {
         </p>
       </div>
 
-      {applications.length === 0 ? (
-        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-20 text-center space-y-5 shadow-sm animate-slide-up">
+      {/* Navigation Sections */}
+      <div className="flex flex-wrap border-b border-[#E5E7EB] gap-2 font-bold text-xs select-none">
+        <button
+          onClick={() => setCurrentSection('active')}
+          className={`pb-3 px-4 border-b-2 transition-all cursor-pointer ${
+            currentSection === 'active'
+              ? 'border-[#22C55E] text-[#22C55E]'
+              : 'border-transparent text-[#94A3B8] hover:text-[#4B5563]'
+          }`}
+        >
+          Active Applications ({activeApps.length})
+        </button>
+        <button
+          onClick={() => setCurrentSection('selected')}
+          className={`pb-3 px-4 border-b-2 transition-all cursor-pointer ${
+            currentSection === 'selected'
+              ? 'border-emerald-500 text-emerald-600'
+              : 'border-transparent text-[#94A3B8] hover:text-[#4B5563]'
+          }`}
+        >
+          Selected Jobs ({selectedApps.length})
+        </button>
+        <button
+          onClick={() => setCurrentSection('rejected')}
+          className={`pb-3 px-4 border-b-2 transition-all cursor-pointer ${
+            currentSection === 'rejected'
+              ? 'border-rose-500 text-rose-600'
+              : 'border-transparent text-[#94A3B8] hover:text-[#4B5563]'
+          }`}
+        >
+          Rejected Jobs ({rejectedApps.length})
+        </button>
+        <button
+          onClick={() => setCurrentSection('completed')}
+          className={`pb-3 px-4 border-b-2 transition-all cursor-pointer ${
+            currentSection === 'completed'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-[#94A3B8] hover:text-[#4B5563]'
+          }`}
+        >
+          Completed Applications ({completedApps.length})
+        </button>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-4" role="status" aria-label="Loading applications">
+          {[0, 1].map((i) => (
+            <div key={i} className="pc-card p-6 space-y-3">
+              <div className="pc-skeleton h-4 w-1/3" />
+              <div className="pc-skeleton h-3 w-1/2" />
+              <div className="pc-skeleton h-10 w-full rounded-xl" />
+            </div>
+          ))}
+        </div>
+      ) : displayedApps.length === 0 ? (
+        <div className="pc-empty space-y-3 animate-slide-up">
           <p className="text-[#4B5563] text-sm font-semibold">
-            You haven't applied to any job drives yet.
+            No applications found in this section.
           </p>
-          <Link
-            to="/jobs"
-            className="inline-flex items-center gap-1 bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-sm active:scale-[0.98]"
-          >
-            Explore Active Drives <ChevronRight className="w-4 h-4 text-white" />
-          </Link>
+          {currentSection === 'active' && (
+            <Link
+              to="/jobs"
+              className="inline-flex items-center gap-1 bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-sm active:scale-[0.98]"
+            >
+              Explore Active Drives <ChevronRight className="w-4 h-4 text-white" />
+            </Link>
+          )}
         </div>
       ) : (
         <div className="space-y-6 animate-slide-up">
-          {applications.map((app) => {
+          {displayedApps.map((app) => {
             const job = getJobDetails(app.jobId);
             const isDrawerOpen = !!showSimulator[app.id];
 
@@ -131,7 +210,7 @@ const Applications = () => {
                 {/* Top Section */}
                 <div className="p-6 bg-[#F8FAFC] border-b border-[#E5E7EB] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center font-bold text-[#7C3AED] text-xs flex-shrink-0 shadow-sm">
+                    <div className="h-10 w-10 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center font-bold text-[#0B3D91] text-xs flex-shrink-0 shadow-sm">
                       {job.companyName ? job.companyName.substring(0, 2).toUpperCase() : 'PC'}
                     </div>
                     <div>
@@ -332,8 +411,8 @@ const Applications = () => {
                   <div className="p-5 bg-[#F8FAFC] border-t border-[#E5E7EB] animate-in slide-in-from-bottom-2 duration-200">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
                       <div className="space-y-0.5">
-                        <h4 className="text-[10px] font-bold text-[#7C3AED] bg-[#7C3AED]/10 border border-[#7C3AED]/20 px-2.5 py-0.5 rounded inline-flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 text-[#7C3AED]" /> Stage Evaluation Simulator
+                        <h4 className="text-[10px] font-bold text-[#0B3D91] bg-[#0B3D91]/10 border border-[#0B3D91]/20 px-2.5 py-0.5 rounded inline-flex items-center gap-1">
+                          <Sparkles className="w-3 h-3 text-[#0B3D91]" /> Stage Evaluation Simulator
                         </h4>
                         <p className="text-[10px] text-[#4B5563] font-medium">
                           Advance stages or trigger selection/rejection outcomes to inspect the tracker UI and notifications.
@@ -413,10 +492,10 @@ const Applications = () => {
             </div>
 
             {/* Modal Body */}
-            <div className="p-8 bg-slate-50 overflow-y-auto max-h-[60vh] flex justify-center">
+            <div className="p-5 sm:p-8 bg-slate-50 overflow-y-auto max-h-[60vh] flex justify-center">
               <div 
-                className="prose prose-sm max-w-none text-slate-700 font-sans text-xs bg-white p-10 rounded-lg border border-slate-100 shadow-md w-full"
-                dangerouslySetInnerHTML={{ __html: selectedOfferContent }} 
+                className="prose prose-sm max-w-none text-slate-700 font-sans text-xs bg-white p-5 sm:p-10 rounded-lg border border-slate-100 shadow-md w-full"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedOfferContent) }} 
               />
             </div>
 

@@ -2,7 +2,30 @@ const Student = require("../models/student");
 const User = require("../models/User");
 const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
-const bcrypt = require("bcrypt");
+
+const ACADEMIC_LOCKED_MESSAGE =
+  "Academic details (CGPA, branch, year, roll number) can only be changed by the Placement Cell. Please contact the TPO office.";
+
+// Certifications may arrive as plain strings (current frontend) or as objects;
+// store them in the schema's object shape `{ title, issuedBy, certificateUrl }`.
+const normalizeCertifications = (certifications) => {
+  if (!Array.isArray(certifications)) {
+    throw new ErrorHandler(400, "certifications must be an array");
+  }
+  return certifications
+    .map((cert) => {
+      if (typeof cert === "string") return { title: cert.trim() };
+      if (cert && typeof cert === "object") {
+        return {
+          title: String(cert.title || cert.name || "").trim(),
+          issuedBy: cert.issuedBy,
+          certificateUrl: cert.certificateUrl,
+        };
+      }
+      return null;
+    })
+    .filter((cert) => cert && cert.title);
+};
 
 // Get Student Profile
 module.exports.getProfile = ErrorWrapper(async (req, res, next) => {
@@ -25,7 +48,7 @@ module.exports.updateProfile = ErrorWrapper(async (req, res, next) => {
   if (phone !== undefined) student.phone = phone;
   if (skills !== undefined) student.skills = skills;
   if (projects !== undefined) student.projects = projects;
-  if (certifications !== undefined) student.certifications = certifications;
+  if (certifications !== undefined) student.certifications = normalizeCertifications(certifications);
 
   const updatedStudent = await student.save();
 
@@ -60,11 +83,17 @@ module.exports.uploadProfilePicture = ErrorWrapper(async (req, res, next) => {
   if (!req.file) {
     throw new ErrorHandler(400, "Please upload a file");
   }
-  // Standard profile picture is just returned or saved if path exists.
-  // We can return the URL
+  const student = await Student.findOne({ userId: req.user.id });
+  if (!student) {
+    throw new ErrorHandler(404, "Student profile not found");
+  }
+
+  student.profilePictureUrl = req.file.path; // Cloudinary URL
+  await student.save();
+
   return res.status(200).json({
     message: "Profile picture uploaded successfully",
-    imageUrl: req.file.path,
+    imageUrl: student.profilePictureUrl,
   });
 });
 
@@ -114,22 +143,22 @@ module.exports.updateSkills = ErrorWrapper(async (req, res, next) => {
 
 // Update CGPA
 module.exports.updateCgpa = ErrorWrapper(async (req, res, next) => {
-  const { cgpa } = req.body;
-
-  if (cgpa === undefined || cgpa < 0 || cgpa > 10) {
-    throw new ErrorHandler(400, "Please provide a valid CGPA between 0 and 10");
-  }
+  // CGPA is a verified academic field: students cannot change it themselves.
+  // Re-submitting the current value is accepted as a no-op so the existing
+  // profile form (which always sends it) keeps working.
+  const cgpa = Number(req.body.cgpa);
 
   const student = await Student.findOne({ userId: req.user.id });
   if (!student) {
     throw new ErrorHandler(404, "Student profile not found");
   }
 
-  student.cgpa = cgpa;
-  await student.save();
+  if (req.body.cgpa !== undefined && cgpa !== student.cgpa) {
+    throw new ErrorHandler(403, ACADEMIC_LOCKED_MESSAGE);
+  }
 
   return res.status(200).json({
-    message: "CGPA updated successfully",
+    message: "CGPA unchanged",
     cgpa: student.cgpa,
   });
 });
@@ -143,20 +172,18 @@ module.exports.updateBranchYearRollNumber = ErrorWrapper(async (req, res, next) 
     throw new ErrorHandler(404, "Student profile not found");
   }
 
-  if (branch) student.branch = branch;
-  if (year) student.year = year;
-  if (rollNumber) {
-    const existing = await Student.findOne({ rollNumber, _id: { $ne: student._id } });
-    if (existing) {
-      throw new ErrorHandler(400, "Roll number already in use");
-    }
-    student.rollNumber = rollNumber;
+  // Branch, year and roll number are verified academic fields (see updateCgpa).
+  const changed =
+    (branch !== undefined && branch !== null && String(branch) !== String(student.branch)) ||
+    (year !== undefined && year !== null && Number(year) !== Number(student.year)) ||
+    (rollNumber !== undefined && rollNumber !== null && String(rollNumber) !== String(student.rollNumber));
+
+  if (changed) {
+    throw new ErrorHandler(403, ACADEMIC_LOCKED_MESSAGE);
   }
 
-  await student.save();
-
   return res.status(200).json({
-    message: "Academic information updated successfully",
+    message: "Academic information unchanged",
     student,
   });
 });

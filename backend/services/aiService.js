@@ -198,15 +198,150 @@ function parseResumeText(text) {
 
 /**
  * Perform AI Resume screening by comparing student profile with Job description.
- * Utilizes Google Gemini API if GEMINI_API_KEY is defined in .env,
- * otherwise falls back to a high-fidelity local keyword rules matching engine.
- * 
- * @param {Object} student - Student database record
- * @param {Object} job - Job database record
- * @returns {Promise<Object>} Analysis results matching ResumeAnalysis schema
+ * Queries the local Ollama service.
+ */
+async function analyzeWithOllama(student, job, resumeText) {
+  const url = "http://127.0.0.1:11434/api/chat";
+  
+  const jdString = `
+Title: ${job.title}
+Description: ${job.description}
+Required Skills: ${(job.requiredSkills || []).join(", ")}
+Preferred Skills: ${(job.preferredSkills || []).join(", ")}
+Eligibility CGPA: ${job.eligibility?.cgpa || "None"}
+Eligibility Branches: ${(job.eligibility?.branches || []).join(", ")}
+`;
+
+  const resumeString = `
+Name: ${student.name}
+Email: ${student.email}
+Branch: ${student.branch}
+CGPA: ${student.cgpa}
+Skills: ${(student.skills || []).join(", ")}
+Projects: ${JSON.stringify(student.projects || [])}
+Certifications: ${JSON.stringify(student.certifications || [])}
+Raw Resume Text: ${resumeText || "No raw resume text provided."}
+`;
+
+  const systemInstruction = `You are an ATS (Applicant Tracking System) and Senior Technical Recruiter.
+Analyze the candidate's resume against the given Job Description.
+Return the response only in valid JSON. Do not write any explanations before or after the JSON.
+Your JSON must strictly follow this structure:
+{
+  "overallScore": 0,
+  "recommendation": "",
+  "matchedSkills": [],
+  "missingSkills": [],
+  "resumeSummary": "",
+  "strengths": [],
+  "weaknesses": [],
+  "educationScore": 0,
+  "projectScore": 0,
+  "experienceScore": 0,
+  "skillScore": 0,
+  "atsScore": 0,
+  "finalRankScore": 0,
+  "reason": ""
+}
+
+Scoring Rules:
+* Skills Match: 40% (represented by skillScore, max 40)
+* Projects: 20% (represented by projectScore, max 20)
+* Experience: 15% (represented by experienceScore, max 15)
+* Education/CGPA: 10% (represented by educationScore, max 10)
+* Certifications: 5% (max 5)
+* Resume Quality & ATS Formatting: 10% (max 10)
+All scores must be integers. The overallScore, atsScore, and finalRankScore must equal the sum of: skillScore + projectScore + experienceScore + educationScore + certificationScore + resumeQualityScore. Maximum score is 100.
+
+Recommendation Rules:
+90–100 = Strongly Recommended
+80–89 = Recommended
+60–79 = Consider
+Below 60 = Not Recommended
+
+Do not invent information that is not present in the resume. If data is missing, reduce the score accordingly and explain why in the 'reason' field.`;
+
+  const payload = {
+    model: "qwen2.5:3b",
+    messages: [
+      {
+        role: "system",
+        content: systemInstruction
+      },
+      {
+        role: "user",
+        content: `Inputs:\n1. Job Description:\n${jdString}\n\n2. Candidate Resume:\n${resumeString}`
+      }
+    ],
+    stream: false,
+    options: {
+      temperature: 0.1
+    }
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const responseData = await response.json();
+  const content = responseData.message?.content || "";
+  
+  const jsonMatch = content.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error("Could not parse JSON from Ollama response content: " + content);
+  }
+  
+  const parsed = JSON.parse(jsonMatch[0]);
+  
+  parsed.overallScore = Number(parsed.overallScore) || Number(parsed.atsScore) || 50;
+  parsed.atsScore = parsed.overallScore;
+  parsed.finalRankScore = parsed.overallScore;
+  parsed.matchedSkills = parsed.matchedSkills || [];
+  parsed.missingSkills = parsed.missingSkills || [];
+  parsed.strengths = parsed.strengths || [];
+  parsed.weaknesses = parsed.weaknesses || [];
+  
+  if (parsed.overallScore >= 90) {
+    parsed.recommendation = "Strongly Recommended";
+  } else if (parsed.overallScore >= 80) {
+    parsed.recommendation = "Recommended";
+  } else if (parsed.overallScore >= 60) {
+    parsed.recommendation = "Consider";
+  } else {
+    parsed.recommendation = "Not Recommended";
+  }
+  
+  parsed.reason = parsed.reason || "";
+  
+  // Compatibility mappings
+  parsed.matchPercentage = parsed.overallScore;
+  parsed.skillsMatch = parsed.matchedSkills;
+  parsed.aiSummary = parsed.resumeSummary;
+  parsed.experienceMatch = `Experience Score: ${parsed.experienceScore || 0}/15. Project Score: ${parsed.projectScore || 0}/20.`;
+  parsed.educationMatch = `Education Score: ${parsed.educationScore || 0}/10. CGPA: ${student.cgpa}.`;
+  
+  if (parsed.overallScore >= 80) {
+    parsed.status = "Shortlisted";
+  } else if (parsed.overallScore >= (job.atsThreshold || 60)) {
+    parsed.status = "Borderline";
+  } else {
+    parsed.status = "Rejected";
+  }
+  
+  return parsed;
+}
+
+/**
+ * Perform AI Resume screening by comparing student profile with Job description.
+ * Utilizes local Ollama model qwen2.5:3b, falling back to a rules engine on failure.
  */
 async function analyzeResume(student, job) {
-  const apiKey = process.env.GEMINI_API_KEY;
   let resumeText = "";
   
   if (student.resumeUrl) {
@@ -215,15 +350,11 @@ async function analyzeResume(student, job) {
     console.log("No resume url found on candidate profile. Using structured database fields only.");
   }
   
-  if (apiKey) {
-    try {
-      return await analyzeWithGemini(student, job, resumeText, apiKey);
-    } catch (err) {
-      console.error("Gemini API resume analysis failed, falling back to rules engine:", err);
-      return analyzeWithRules(student, job, resumeText);
-    }
-  } else {
-    console.log("No GEMINI_API_KEY found in environment. Using high-fidelity Rules Engine fallback.");
+  try {
+    console.log("Analyzing resume using local Ollama model...");
+    return await analyzeWithOllama(student, job, resumeText);
+  } catch (err) {
+    console.error("Ollama resume analysis failed, falling back to rules engine:", err);
     return analyzeWithRules(student, job, resumeText);
   }
 }
@@ -499,8 +630,17 @@ function analyzeWithRules(student, job, resumeText) {
 
   return {
     atsScore,
+    overallScore: atsScore,
+    recommendation: atsScore >= 90 ? "Strongly Recommended" : atsScore >= 80 ? "Recommended" : atsScore >= 60 ? "Consider" : "Not Recommended",
+    educationScore: educationPoints,
+    projectScore: projectPoints,
+    experienceScore: experiencePoints,
+    skillScore: skillPoints,
+    finalRankScore: atsScore,
+    reason: selectionReason || rejectionReason,
     matchPercentage: atsScore,
     skillsMatch: skillsListCombined,
+    matchedSkills: skillsListCombined,
     missingSkills,
     matchedKeywords,
     missingKeywords,
@@ -508,6 +648,7 @@ function analyzeWithRules(student, job, resumeText) {
       ? `Student has built ${studentProjects.length} project(s) matching experience expectations.`
       : "No major project implementations or commercial experience found.",
     educationMatch: `${studentBranch} branch, CGPA ${studentCgpa} (Min required: ${minCgpa}).`,
+    resumeSummary: `Candidate matches ${skillsMatch.length} out of ${finalReqSkills.length} required skills. ATS Score is ${atsScore}%.`,
     aiSummary: `Candidate matches ${skillsMatch.length} out of ${finalReqSkills.length} required skills. ATS Score is ${atsScore}%.`,
     aiCandidateSummary: status === "Shortlisted"
       ? `Great job! Your resume matches the job description. Prepare for upcoming rounds by focusing on ${skillsMatch.slice(0, 2).join(", ")}.`

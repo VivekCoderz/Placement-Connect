@@ -22,7 +22,7 @@ module.exports.getContacts = ErrorWrapper(async (req, res, next) => {
         role: "recruiter" 
       }))
     ];
-  } else if (currentRole === "recruiter") {
+  } else if (currentRole === "company") {
     // Can chat with all students and placement cell staff
     const staff = await User.find({ role: { $in: ["placementCell", "admin"] } }, "name email role");
     const students = await Student.find().populate("userId", "name email");

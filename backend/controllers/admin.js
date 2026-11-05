@@ -5,6 +5,55 @@ const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
 const { sendEmail } = require("../utils/email");
 
+// Create a staff account (admin or placementCell). Admin only.
+module.exports.createStaffUser = ErrorWrapper(async (req, res, next) => {
+  const { name, email, password, role } = req.body;
+
+  const existing = await User.findOne({ email });
+  if (existing) {
+    throw new ErrorHandler(400, "A user with this email already exists");
+  }
+
+  const user = await User.create({ name, email, password, role, isApproved: true, isActive: true });
+
+  return res.status(201).json({
+    success: true,
+    message: `${role} account created successfully`,
+    data: { userId: user._id, name: user.name, email: user.email, role: user.role },
+  });
+});
+
+// Update a student's verified academic record (CGPA, branch, year, roll number).
+// Students cannot change these themselves; only admin / placementCell (TPO) can.
+module.exports.updateStudentAcademic = ErrorWrapper(async (req, res, next) => {
+  const { studentId } = req.params;
+  const { cgpa, branch, year, rollNumber } = req.body;
+
+  const student = await Student.findById(studentId);
+  if (!student) {
+    throw new ErrorHandler(404, "Student not found");
+  }
+
+  if (rollNumber !== undefined && rollNumber !== student.rollNumber) {
+    const taken = await Student.exists({ rollNumber, _id: { $ne: student._id } });
+    if (taken) {
+      throw new ErrorHandler(400, "Roll number already in use");
+    }
+    student.rollNumber = rollNumber;
+  }
+  if (cgpa !== undefined) student.cgpa = cgpa;
+  if (branch !== undefined) student.branch = branch;
+  if (year !== undefined) student.year = year;
+
+  await student.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Student academic record updated",
+    student,
+  });
+});
+
 // Approve company and its recruiter
 module.exports.approveCompany = ErrorWrapper(async (req, res, next) => {
   const { companyId } = req.body;
@@ -28,8 +77,8 @@ module.exports.approveCompany = ErrorWrapper(async (req, res, next) => {
     recruiter.isApproved = true;
     await recruiter.save();
 
-    // Send email alert to recruiter
-    await sendEmail({
+    // Send email alert to recruiter (failure must not fail the approval)
+    sendEmail({
       to: recruiter.email,
       subject: "Recruiter Profile Approved - PlacementConnect",
       html: `
@@ -40,7 +89,7 @@ module.exports.approveCompany = ErrorWrapper(async (req, res, next) => {
         <p>Regards,</p>
         <p>Placement Cell, Geeta University</p>
       `,
-    });
+    }).catch((err) => console.error("Approval email delivery failed:", err.message));
   }
 
   return res.status(200).json({

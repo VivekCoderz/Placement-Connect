@@ -38,25 +38,45 @@ PlacementConnect is a modern, full-featured campus placement portal built for **
    cd backend
    npm install
    ```
-2. Create or verify a `.env` file containing:
-   ```env
-   PORT=5000
-   mongoURI=YOUR_MONGODB_ATLAS_CONNECTION_STRING
-   JWT_SECRET=YOUR_JWT_SECRET_KEY
-   EMAIL_USER=YOUR_NODEMAILER_SMTP_EMAIL
-   EMAIL_PASS=YOUR_NODEMAILER_SMTP_PASSWORD
-   CLOUDINARY_CLOUD_NAME=YOUR_CLOUDINARY_NAME
-   CLOUDINARY_API_KEY=YOUR_CLOUDINARY_KEY
-   CLOUDINARY_API_SECRET=YOUR_CLOUDINARY_SECRET
-   ```
-3. Run the database seeder to populate test profiles, active drives, and mock applications:
-   ```bash
-   node seed_all.js
-   ```
-4. Start the API server:
+2. Copy `backend/.env.example` to `backend/.env` and fill in real values. Never commit `.env`.
+
+   | Variable | Required | Purpose |
+   |---|---|---|
+   | `JWT_SECRET` | **yes** | Signing key for auth tokens. The server refuses to start without it. Use a long random string. |
+   | `MONGO_URI` (legacy `mongoURI`) | **yes** | MongoDB connection string. |
+   | `CLIENT_URL` (legacy `FRONTEND_URL`) | yes in production | Comma-separated **exact** frontend origins allowed by CORS. The first one is used for password-reset links. `localhost:5173/3000` are allowed automatically when `NODE_ENV` is not `production`. |
+   | `NODE_ENV` | recommended | `production` on the server, `development` locally. |
+   | `PORT` | no | Defaults to `5000`. |
+   | `TRUST_PROXY` | no | Number of proxies in front of the app (set `1` on Render/Railway) so rate limiting sees real client IPs. |
+   | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | for uploads | Resume, offer letter and profile picture storage. |
+   | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | for email | Any SMTP provider (Brevo, Resend SMTP, Gmail app password...). If unset, emails are skipped with a warning. |
+   | `JWT_EXPIRE`, `AUTH_RATE_LIMIT`, `PASSWORD_RESET_RATE_LIMIT` | no | Token lifetime (default `1d`) and per-IP limits per 15 minutes (defaults 20 and 5). |
+
+3. Start the API server:
    ```bash
    npm start
    ```
+
+#### Creating the first admin (safely)
+Public sign-up only creates **student** and **company** accounts; staff accounts cannot self-register.
+Create the first admin once, with credentials passed through the environment (they are never stored in the repo):
+```bash
+cd backend
+ADMIN_EMAIL=you@your-domain.edu ADMIN_PASSWORD='a-long-unique-password' ADMIN_NAME="System Administrator" npm run seed:admin
+```
+The script only creates the account if that email does not exist yet; it never modifies other data.
+After that, the admin creates further staff accounts from the app (`POST /api/admin/users` with `role` `admin` or `placementCell`)
+and approves new companies (company sign-ups start as *pending* and cannot log in or post jobs until approved).
+
+#### Running the tests
+The integration tests use Jest + supertest against a **local** MongoDB (`mongodb://127.0.0.1:27017` by default, override with `TEST_MONGO_URI`).
+They never read `backend/.env`, refuse to run unless the target is localhost and the database name contains `test`,
+create a throwaway database per test file and drop it afterwards. Email and Cloudinary are mocked.
+```bash
+cd backend
+npm test          # full suite
+npm run check     # node --check on every backend file
+```
 
 ### 💻 Frontend Setup
 1. Open a terminal in the `/frontend` directory:
@@ -74,16 +94,23 @@ PlacementConnect is a modern, full-featured campus placement portal built for **
 
 ## 🔑 Seeding & Test Credentials
 
-The database seeder (`node seed_all.js`) populates the system with these pre-configured login profiles (Password is identical for all test roles):
+The demo seeder **wipes** users, students, companies, jobs, applications, notifications and messages, then loads demo data.
+It only runs against a localhost database with `NODE_ENV=development` (or with an explicit `--force`), and every demo account uses the password you pass in `SEED_PASSWORD`:
+```bash
+cd backend
+NODE_ENV=development MONGO_URI=mongodb://127.0.0.1:27017/placementconnect-dev SEED_PASSWORD='choose-a-demo-password' npm run seed:demo
+```
 
-| Role | Username / Email | Password | Details |
-|---|---|---|---|
-| **System Admin** | `admin@placementconnect.com` | `admin123` | Control panel, company approvals |
-| **Placement Cell** | `placementcell@placementconnect.com` | `cell123` | Manage drives, CSV shortlist, audit analytics |
-| **Recruiter (Google)** | `recruiter.google@placementconnect.com` | `recruiter123` | Post drives, review candidates, upload offers |
-| **Student (CSE)** | `student.cse@placementconnect.com` | `student123` | CGPA: 9.2, Placed at Google |
-| **Student (IT)** | `student.it@placementconnect.com` | `student123` | CGPA: 8.5, Placed at Microsoft |
-| **Student (ECE)** | `student.ece@placementconnect.com` | `student123` | CGPA: 7.8, Shortlisted at TCS |
+| Role | Username / Email | Details |
+|---|---|---|
+| **System Admin** | `admin@placementconnect.com` | Control panel, company approvals |
+| **Placement Cell** | `placementcell@placementconnect.com` | Manage drives, CSV shortlist, audit analytics |
+| **Recruiter (Google)** | `recruiter.google@placementconnect.com` | Post drives, review candidates, upload offers |
+| **Student (CSE)** | `student.cse@placementconnect.com` | CGPA: 9.2, Placed at Google |
+| **Student (IT)** | `student.it@placementconnect.com` | CGPA: 8.5, Placed at Microsoft |
+| **Student (ECE)** | `student.ece@placementconnect.com` | CGPA: 7.8, Shortlisted at TCS |
+
+Never run the demo seeder against the production database.
 
 ---
 

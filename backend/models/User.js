@@ -35,10 +35,7 @@ const userSchema = new mongoose.Schema(
     },
     isApproved: {
       type: Boolean,
-      default: function () {
-        // Automatically approved unless role is company
-        return this.role !== "company";
-      },
+      default: true,
     },
     isActive: {
       type: Boolean,
@@ -90,7 +87,7 @@ userSchema.methods.generateToken = function () {
       id: this._id,
       role: this.role,
     },
-    process.env.JWT_SECRET || "GeetaUniversityPlacementConnect",
+    process.env.JWT_SECRET,
     {
       expiresIn: process.env.JWT_EXPIRE || "1d",
     }

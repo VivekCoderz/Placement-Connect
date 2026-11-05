@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, Mail, Lock, User, Globe, Phone, MapPin, Briefcase, AlertCircle, ArrowRight } from 'lucide-react';
+import { Building2, Mail, Lock, User, Globe, Phone, MapPin, Briefcase, AlertCircle, ArrowRight, CheckCircle2, Clock } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from '../redux/authSlice';
-import api from '../utils/api';
+import api, { getErrorMessage } from '../utils/api';
 
 const RecruiterSignup = () => {
   const dispatch = useDispatch();
@@ -23,6 +23,8 @@ const RecruiterSignup = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  // false when the backend holds new companies for admin approval (login returns 403)
+  const [isApproved, setIsApproved] = useState(true);
 
   useEffect(() => {
     if (authenticatedUser) {
@@ -33,6 +35,15 @@ const RecruiterSignup = () => {
       }
     }
   }, [authenticatedUser, navigate]);
+
+  useEffect(() => {
+    if (isSuccess && isApproved) {
+      const timer = setTimeout(() => {
+        navigate('/recruiter/dashboard');
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess, isApproved, navigate]);
 
   const handleChange = (e) => {
     setFormData({
@@ -66,9 +77,39 @@ const RecruiterSignup = () => {
         address
       });
 
+      // Try to sign in straight away. If the company still needs admin
+      // approval the backend answers 403 and we show a pending screen.
+      let approved = true;
+      try {
+        const loginResponse = await api.post('/api/auth/login', { email, password });
+        const loginRes = loginResponse.data;
+        const { token } = loginRes.data;
+        localStorage.setItem('token', token);
+
+        const meResponse = await api.get('/api/auth/me');
+        const meRes = meResponse.data;
+
+        const combinedUser = {
+          ...meRes.data.user,
+          ...meRes.data.details,
+          id: meRes.data.user._id || meRes.data.user.id,
+        };
+
+        localStorage.setItem('user', JSON.stringify(combinedUser));
+        dispatch(setUser(combinedUser));
+      } catch (loginErr) {
+        localStorage.removeItem('token');
+        if (loginErr?.response?.status === 403) {
+          approved = false;
+        } else {
+          console.error('Auto-login error after registration:', loginErr);
+        }
+      }
+
+      setIsApproved(approved);
       setIsSuccess(true);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Company registration failed');
+      setError(getErrorMessage(err, 'Company registration failed'));
     } finally {
       setIsLoading(false);
     }
@@ -78,47 +119,67 @@ const RecruiterSignup = () => {
     <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center py-20 px-4 sm:px-6 relative overflow-hidden font-sans text-[#4B5563]">
       {/* Floating ambient shapes - matches Student signup page */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-[#22C55E]/10 blur-[100px] pointer-events-none z-0 animate-float-slow" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-[#7C3AED]/8 blur-[100px] pointer-events-none z-0 animate-float-medium" />
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-[#0B3D91]/8 blur-[100px] pointer-events-none z-0 animate-float-medium" />
 
       {/* Main Glassmorphic Panel */}
-      <div className="max-w-2xl w-full space-y-8 bg-white border border-[#E5E7EB] p-8 sm:p-12 rounded-2xl shadow-xl relative z-10 animate-slide-up">
+      <div className="max-w-2xl w-full space-y-8 bg-white border border-[#E5E7EB] p-5 sm:p-8 sm:p-12 rounded-2xl shadow-xl relative z-10 animate-slide-up">
         
-        {isSuccess ? (
+        {isSuccess && !isApproved ? (
+          <div className="text-center space-y-6 py-6 font-sans" role="status">
+            <div className="mx-auto h-16 w-16 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-600">
+              <Clock className="h-9 w-9" aria-hidden="true" />
+            </div>
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-[#111827] tracking-tight">Registration received</h2>
+              <p className="text-sm text-[#4B5563] max-w-md mx-auto leading-relaxed">
+                Thanks for registering <strong className="text-[#111827]">{formData.companyName}</strong>.
+                Your recruiter account is <strong>pending admin approval</strong>. We'll email{' '}
+                <strong className="text-[#111827]">{formData.email}</strong> once it has been reviewed, and you can sign in after that.
+              </p>
+            </div>
+            <div className="pt-2 flex justify-center">
+              <Link to="/login" className="pc-btn-primary w-full sm:w-auto">
+                Back to sign in <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+        ) : isSuccess ? (
           <div className="text-center space-y-6 py-6 font-sans">
-            <div className="mx-auto h-16 w-16 rounded-full bg-[#22C55E]/10 border border-[#22C55E]/20 flex items-center justify-center text-[#22C55E] shadow-sm">
-              <Building2 className="h-8 w-8" />
+            <div className="mx-auto h-16 w-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-sm animate-bounce">
+              <CheckCircle2 className="h-9 w-9" />
             </div>
             <div className="space-y-3">
               <h2 className="text-2xl font-bold text-[#111827] tracking-tight">
-                Profile Submitted!
+                Account approved
               </h2>
               <p className="text-sm font-semibold text-[#4B5563] max-w-md mx-auto leading-relaxed">
-                Thank you for registering <strong className="text-[#111827]">{formData.companyName}</strong> on PlacementConnect.
+                Welcome to PlacementConnect! Your recruiter profile for <strong className="text-[#111827]">{formData.companyName}</strong> is approved and ready to use.
               </p>
             </div>
             <div className="bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl p-5 text-left text-xs font-semibold text-[#4B5563] space-y-2.5 max-w-md mx-auto">
-              <p className="text-[#111827] font-bold uppercase tracking-wider text-[10px] mb-1">What happens next?</p>
-              <div className="flex gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#22C55E] mt-1 flex-shrink-0" />
-                <span>The Placement Cell administrator will review your recruiter account details.</span>
+              <p className="text-[#111827] font-bold uppercase tracking-wider text-[10px] mb-1">Approval Summary</p>
+              <div className="flex items-center gap-2 text-emerald-700">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-600" />
+                <span>Placement Cell approval: <strong>Granted (Active)</strong></span>
               </div>
-              <div className="flex gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#22C55E] mt-1 flex-shrink-0" />
-                <span>You will receive an email notification once your profile is approved.</span>
+              <div className="flex items-center gap-2 text-slate-700">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-600" />
+                <span>Job posting & candidate evaluation privileges: <strong>Unlocked</strong></span>
               </div>
-              <div className="flex gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#22C55E] mt-1 flex-shrink-0" />
-                <span>After approval, you can sign in using your corporate email: <strong className="text-[#111827]">{formData.email}</strong>.</span>
+              <div className="flex items-center gap-2 text-slate-700">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-600" />
+                <span>Signed in as: <strong className="text-[#111827]">{formData.email}</strong></span>
               </div>
             </div>
-            <div className="pt-4">
+            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
-                to="/login"
-                className="inline-flex items-center gap-2 justify-center w-full sm:w-auto px-8 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-[#22C55E] hover:bg-[#16A34A] shadow-md transition-all active:scale-[0.98]"
+                to="/recruiter/dashboard"
+                className="inline-flex items-center gap-2 justify-center w-full sm:w-auto px-5 sm:px-8 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-[#22C55E] hover:bg-[#16A34A] shadow-md transition-all active:scale-[0.98]"
               >
-                Go to Sign In <ArrowRight className="w-4 h-4 text-white" />
+                Go to Recruiter Dashboard <ArrowRight className="w-4 h-4 text-white" />
               </Link>
             </div>
+            <p className="text-xs text-slate-400 font-medium">Redirecting to recruiter dashboard in a moment...</p>
           </div>
         ) : (
           <>
@@ -147,25 +208,25 @@ const RecruiterSignup = () => {
               {/* Section 1: Recruiter Profile */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 border-b border-[#E5E7EB] pb-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#7C3AED]" />
-                  <h3 className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest">Recruiter Details</h3>
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#0B3D91]" />
+                  <h3 className="text-xs font-bold text-[#0B3D91] uppercase tracking-widest">Recruiter Details</h3>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Full Name */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Recruiter Name *</label>
+                    <label htmlFor="recruite-field-1" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Recruiter Name *</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <User className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-1"
                         name="name"
                         type="text"
                         required
                         value={formData.name}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="e.g. John Doe"
                       />
                     </div>
@@ -173,18 +234,18 @@ const RecruiterSignup = () => {
 
                   {/* Corporate Email */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Corporate Email *</label>
+                    <label htmlFor="recruite-field-2" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Corporate Email *</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <Mail className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-2"
                         name="email"
                         type="email"
                         required
                         value={formData.email}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="e.g. hr@company.com"
                       />
                     </div>
@@ -194,18 +255,18 @@ const RecruiterSignup = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Password */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Password *</label>
+                    <label htmlFor="recruite-field-3" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Password *</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <Lock className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-3"
                         name="password"
                         type="password"
                         required
                         value={formData.password}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="Minimum 6 characters"
                       />
                     </div>
@@ -213,18 +274,18 @@ const RecruiterSignup = () => {
 
                   {/* Phone */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Contact Phone *</label>
+                    <label htmlFor="recruite-field-4" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Contact Phone *</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <Phone className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-4"
                         name="phone"
                         type="text"
                         required
                         value={formData.phone}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="HR Direct Phone"
                       />
                     </div>
@@ -235,25 +296,25 @@ const RecruiterSignup = () => {
               {/* Section 2: Company Details */}
               <div className="space-y-4 pt-2">
                 <div className="flex items-center gap-2 border-b border-[#E5E7EB] pb-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#7C3AED]" />
-                  <h3 className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest">Company Profile</h3>
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#0B3D91]" />
+                  <h3 className="text-xs font-bold text-[#0B3D91] uppercase tracking-widest">Company Profile</h3>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Company Name */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Company Name *</label>
+                    <label htmlFor="recruite-field-5" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Company Name *</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <Building2 className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-5"
                         name="companyName"
                         type="text"
                         required
                         value={formData.companyName}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="e.g. Microsoft India"
                       />
                     </div>
@@ -261,17 +322,17 @@ const RecruiterSignup = () => {
 
                   {/* Website */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Company Website</label>
+                    <label htmlFor="recruite-field-6" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Company Website</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <Globe className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-6"
                         name="website"
                         type="url"
                         value={formData.website}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="e.g. https://microsoft.com"
                       />
                     </div>
@@ -281,17 +342,17 @@ const RecruiterSignup = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Industry */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Industry</label>
+                    <label htmlFor="recruite-field-7" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Industry</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <Briefcase className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-7"
                         name="industry"
                         type="text"
                         value={formData.industry}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="e.g. Tech, consulting"
                       />
                     </div>
@@ -299,17 +360,17 @@ const RecruiterSignup = () => {
 
                   {/* Address */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Company Location /HQ</label>
+                    <label htmlFor="recruite-field-8" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Company Location /HQ</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <MapPin className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-8"
                         name="address"
                         type="text"
                         value={formData.address}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="e.g. Bangalore, India"
                       />
                     </div>

@@ -1,115 +1,156 @@
 import React from 'react';
 import { Check, X, ClipboardCheck, Code, Users, UserCheck, CheckCircle2, FileText } from 'lucide-react';
 
-const Stepper = ({ currentStatus, rounds, appRounds }) => {
-  let steps = [
+const Stepper = ({ currentStatus, appRounds }) => {
+  const steps = [
     { label: 'Applied', key: 'Applied', desc: 'Application Received', icon: ClipboardCheck },
-    { label: 'Resume Screening', key: 'ResumeScreening', desc: 'AI Resume screening', icon: FileText },
+    { label: 'Resume Screening', key: 'ResumeScreening', desc: 'AI screening & scoring', icon: FileText },
+    { label: 'Assessment', key: 'Assessment', desc: 'Online tests & coding rounds', icon: Code },
+    { label: 'Interview', key: 'Interview', desc: 'Technical evaluations', icon: Users },
+    { label: 'HR Round', key: 'HRRound', desc: 'HR & package review', icon: UserCheck },
     { label: 'Decision', key: 'Decision', desc: 'Final Selection Status', icon: CheckCircle2 }
   ];
 
-  if (rounds && Array.isArray(rounds) && rounds.length > 0) {
-    steps = [
-      { label: 'Applied', key: 'Applied', desc: 'Application Received', icon: ClipboardCheck },
-      { label: 'Resume Screening', key: 'ResumeScreening', desc: 'AI Resume screening', icon: FileText },
-      ...rounds.map((r, idx) => {
-        let icon = Code;
-        const nameLower = r.name.toLowerCase();
-        if (nameLower.includes('gd') || nameLower.includes('group') || nameLower.includes('discussion')) {
-          icon = Users;
-        } else if (nameLower.includes('hr') || nameLower.includes('personal') || nameLower.includes('interview')) {
-          icon = UserCheck;
-        }
-        return {
-          label: r.name,
-          key: `round-${idx}`,
-          desc: r.description || `Round ${idx + 1} Evaluation`,
-          icon
-        };
-      }),
-      { label: 'Decision', key: 'Decision', desc: 'Final Selection Status', icon: CheckCircle2 }
-    ];
-  }
-
   const getStepStatus = (index) => {
-    // 1. Applied stage
+    // 0. Applied stage
     if (index === 0) {
       return 'Completed';
     }
 
     // Determine if any previous stage failed
-    let anyPriorFailed = false;
-    for (let prevIdx = 1; prevIdx < index; prevIdx++) {
-      const prevStatus = getStepStatus(prevIdx);
-      if (prevStatus === 'Failed') {
-        anyPriorFailed = true;
+    const checkPriorFailed = (idx) => {
+      for (let prevIdx = 1; prevIdx < idx; prevIdx++) {
+        if (getStepStatus(prevIdx) === 'Failed') return true;
       }
-    }
+      return false;
+    };
 
-    if (anyPriorFailed) {
+    if (checkPriorFailed(index)) {
       return 'Disabled';
     }
 
-    // 2. Resume Screening stage
+    // 1. Resume Screening
     if (index === 1) {
-      const match = appRounds?.find(r => r.name.toLowerCase() === "resume screening" || r.name.toLowerCase() === "ai screening");
+      const match = appRounds?.find(r => r.name.toLowerCase().includes("screening") || r.name.toLowerCase().includes("resume"));
       if (match) {
         if (match.result === 'Passed' || match.result === 'Selected') return 'Completed';
         if (match.result === 'Failed' || match.result === 'Rejected') return 'Failed';
         return 'Active';
       }
       
-      if (currentStatus === 'Applied' || currentStatus === 'AI Screening') {
+      if (currentStatus === 'Applied') {
         return 'Active';
       }
       if (currentStatus === 'Rejected') {
-        const anyInterviewFailed = appRounds?.some(r => r.result === 'Failed' || r.result === 'Rejected');
-        if (!anyInterviewFailed) return 'Failed';
+        const otherRoundsExist = appRounds?.some(r => r.name.toLowerCase() !== "resume screening" && r.name.toLowerCase() !== "ai screening" && r.result !== "Pending");
+        if (!otherRoundsExist) return 'Failed';
         return 'Completed';
       }
       return 'Completed';
     }
 
-    const isDecisionStep = index === steps.length - 1;
-
-    // 3. Dynamic Interview Rounds
-    if (!isDecisionStep) {
-      const roundIdx = index - 2;
-      const roundConfig = (rounds && rounds[roundIdx]) ? rounds[roundIdx] : null;
-      const roundName = roundConfig ? roundConfig.name : (
-        roundIdx === 0 ? 'Aptitude' : roundIdx === 1 ? 'GD' : 'HR'
-      );
-
-      const match = appRounds?.find(r => r.name.toLowerCase() === roundName.toLowerCase());
+    // 2. Assessment
+    if (index === 2) {
+      const match = appRounds?.find(r => r.name.toLowerCase().includes("assessment") || r.name.toLowerCase().includes("test") || r.name.toLowerCase().includes("aptitude"));
       if (match) {
-        if (match.result === 'Passed' || match.result === 'Selected') return 'Completed';
-        if (match.result === 'Failed' || match.result === 'Rejected' || match.result === 'Absent') return 'Failed';
+        if (match.result === 'Passed') return 'Completed';
+        if (match.result === 'Failed' || match.result === 'Rejected') return 'Failed';
         return 'Active';
       }
 
-      const prevStepStatus = getStepStatus(index - 1);
-      if (prevStepStatus === 'Completed') {
+      if (currentStatus === 'Assessment') {
         return 'Active';
       }
-      return 'Disabled';
-    }
+      
+      if (getStepStatus(1) !== 'Completed') return 'Disabled';
 
-    // 4. Final Decision stage
-    if (currentStatus === 'Selected') {
+      if (currentStatus === 'Rejected') {
+        const failedMatch = appRounds?.find(r => (r.name.toLowerCase().includes("assessment") || r.name.toLowerCase().includes("test")) && (r.result === 'Failed' || r.result === 'Rejected'));
+        if (failedMatch) return 'Failed';
+        const laterRoundsExist = appRounds?.some(r => (r.name.toLowerCase().includes("interview") || r.name.toLowerCase().includes("hr")) && r.result !== "Pending");
+        if (laterRoundsExist) return 'Completed';
+        return 'Active';
+      }
+
+      if (currentStatus === 'Under Review' || currentStatus === 'Shortlisted') {
+        return 'Disabled';
+      }
+
       return 'Completed';
     }
-    if (currentStatus === 'Rejected') {
-      const prevStepStatus = getStepStatus(index - 1);
-      if (prevStepStatus === 'Completed') {
+
+    // 3. Interview
+    if (index === 3) {
+      const match = appRounds?.find(r => r.name.toLowerCase().includes("interview") && !r.name.toLowerCase().includes("hr"));
+      if (match) {
+        if (match.result === 'Passed') return 'Completed';
+        if (match.result === 'Failed' || match.result === 'Rejected') return 'Failed';
+        return 'Active';
+      }
+
+      if (currentStatus === 'Interview') {
+        return 'Active';
+      }
+
+      if (getStepStatus(2) !== 'Completed') return 'Disabled';
+
+      if (currentStatus === 'Rejected') {
+        const failedMatch = appRounds?.find(r => r.name.toLowerCase().includes("interview") && !r.name.toLowerCase().includes("hr") && (r.result === 'Failed' || r.result === 'Rejected'));
+        if (failedMatch) return 'Failed';
+        const laterRoundsExist = appRounds?.some(r => r.name.toLowerCase().includes("hr") && r.result !== "Pending");
+        if (laterRoundsExist) return 'Completed';
+        return 'Active';
+      }
+
+      if (currentStatus === 'Under Review' || currentStatus === 'Shortlisted' || currentStatus === 'Assessment') {
+        return 'Disabled';
+      }
+
+      return 'Completed';
+    }
+
+    // 4. HR Round
+    if (index === 4) {
+      const match = appRounds?.find(r => r.name.toLowerCase().includes("hr") || r.name.toLowerCase().includes("managerial"));
+      if (match) {
+        if (match.result === 'Passed' || match.result === 'Selected') return 'Completed';
+        if (match.result === 'Failed' || match.result === 'Rejected') return 'Failed';
+        return 'Active';
+      }
+
+      if (currentStatus === 'HR Round') {
+        return 'Active';
+      }
+
+      if (getStepStatus(3) !== 'Completed') return 'Disabled';
+
+      if (currentStatus === 'Rejected') {
+        const failedMatch = appRounds?.find(r => (r.name.toLowerCase().includes("hr") || r.name.toLowerCase().includes("managerial")) && (r.result === 'Failed' || r.result === 'Rejected'));
+        if (failedMatch) return 'Failed';
+        return 'Active';
+      }
+
+      if (currentStatus === 'Selected') {
+        return 'Completed';
+      }
+
+      return 'Disabled';
+    }
+
+    // 5. Decision
+    if (index === 5) {
+      if (currentStatus === 'Selected') {
+        return 'Completed';
+      }
+      if (currentStatus === 'Rejected') {
         return 'Failed';
+      }
+      if (getStepStatus(4) === 'Completed') {
+        return 'Active';
       }
       return 'Disabled';
     }
 
-    const lastRoundStatus = getStepStatus(index - 1);
-    if (lastRoundStatus === 'Completed') {
-      return 'Active';
-    }
     return 'Disabled';
   };
 
@@ -126,7 +167,6 @@ const Stepper = ({ currentStatus, rounds, appRounds }) => {
           const isCompleted = stepStatus === 'Completed';
           const isActive = stepStatus === 'Active';
           const isFailed = stepStatus === 'Failed';
-          const isDisabled = stepStatus === 'Disabled';
 
           const showLine = index < steps.length - 1;
           const lineCompleted = isCompleted;

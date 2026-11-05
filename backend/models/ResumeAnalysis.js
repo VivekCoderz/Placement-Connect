@@ -23,6 +23,38 @@ const resumeAnalysisSchema = new mongoose.Schema(
       min: 0,
       max: 100,
     },
+    overallScore: {
+      type: Number,
+      default: 0,
+    },
+    recommendation: {
+      type: String,
+      default: "",
+    },
+    educationScore: {
+      type: Number,
+      default: 0,
+    },
+    projectScore: {
+      type: Number,
+      default: 0,
+    },
+    experienceScore: {
+      type: Number,
+      default: 0,
+    },
+    skillScore: {
+      type: Number,
+      default: 0,
+    },
+    finalRankScore: {
+      type: Number,
+      default: 0,
+    },
+    reason: {
+      type: String,
+      default: "",
+    },
     matchPercentage: {
       type: Number,
       default: 0,

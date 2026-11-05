@@ -3,72 +3,16 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, GraduationCap, Building2, Briefcase, FileText, Target,
-  FileCheck2, BarChart3, Megaphone, CalendarDays, Award, Bell,
+  FileCheck2, BarChart3, Megaphone, Award, Bell,
   Settings, Search, Filter, RefreshCw, CheckCircle2, AlertCircle, X, Check,
-  XCircle, Power, ArrowRight, FileSpreadsheet, Plus, Download, Mail, ShieldAlert,
-  Clock, MapPin, Eye, Trash2, Edit3, CheckSquare, PlusCircle, Calendar, Sparkles, 
-  Send, Upload, ChevronRight, ChevronLeft, Lock, UserCheck, MessageSquare, Info,
-  LogOut, Star, User, Sliders, Server, Shield, Sun, Moon
+  XCircle, Power, FileSpreadsheet, Plus, Download, ShieldAlert,
+  Clock, MapPin, Eye, Trash2, CheckSquare, Sparkles, 
+  Upload, ChevronRight, ChevronLeft, Lock, UserCheck, MessageSquare, Info,
+  LogOut, Star, User, Server, Shield, Sun, Moon, Menu
 } from 'lucide-react';
 import api from '../utils/api';
+import { writePrintDocument } from '../utils/sanitize';
 import { clearUser } from '../redux/authSlice';
-
-// Helper component for Company analytics row expansion
-const CompanyTableRow = ({ co }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  return (
-    <React.Fragment>
-      <tr className="border-b border-slate-50 hover:bg-slate-50/50">
-        <td className="py-3 pl-2 font-bold text-slate-800">{co.companyName}</td>
-        <td className="py-3 text-slate-500">{co.industry}</td>
-        <td className="py-3 text-center font-bold text-slate-700">{co.totalDrives}</td>
-        <td className="py-3 text-center font-bold text-slate-700">{co.uniqueAppliedStudents}</td>
-        <td className="py-3 text-center font-bold text-[#6D5EF7]">{co.uniquePlacedStudents}</td>
-        <td className="py-3 text-right font-black text-emerald-600">
-          {co.uniquePlacedStudents > 0 ? `${co.lowestPackage} - ${co.highestPackage}` : 'N/A'}
-        </td>
-        <td className="py-3 pr-2 text-right">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-[10px] font-bold px-2 py-1 rounded bg-[#6D5EF7]/10 text-[#6D5EF7] hover:bg-[#6D5EF7]/20 transition-all cursor-pointer"
-          >
-            {isExpanded ? 'Hide Placements' : 'View Placements'}
-          </button>
-        </td>
-      </tr>
-      {isExpanded && (
-        <tr>
-          <td colSpan="7" className="bg-slate-50/60 p-4 border-b border-slate-100 rounded-lg">
-            <div className="space-y-3">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Placed Students list:</span>
-                <span className="text-[10px] bg-emerald-50 border border-emerald-250 text-emerald-600 px-2 py-0.5 rounded font-black">{co.placedStudentsList.length} placed</span>
-              </div>
-              {co.placedStudentsList.length === 0 ? (
-                <p className="text-[11px] text-slate-400 font-medium">No students placed yet under this recruiter.</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {co.placedStudentsList.map((stud, sIdx) => (
-                    <div key={sIdx} className="bg-white border border-slate-200/60 p-3 rounded-xl flex justify-between items-center shadow-sm">
-                      <div>
-                        <h6 className="font-bold text-slate-800 text-xs">{stud.studentName}</h6>
-                        <p className="text-[10px] text-slate-405 font-mono mt-0.5">{stud.rollNumber} · {stud.branch}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[9px] bg-emerald-50 border border-emerald-200 text-emerald-600 px-2 py-0.5 rounded font-black">{stud.package} LPA</span>
-                        <p className="text-[9px] text-slate-500 font-semibold mt-0.5">{stud.jobTitle}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </td>
-        </tr>
-      )}
-    </React.Fragment>
-  );
-};
 
 const AdminDashboard = () => {
   const user = useSelector((state) => state.auth.user) || { name: 'Admin Coordinator', role: 'admin' };
@@ -78,12 +22,12 @@ const AdminDashboard = () => {
   // Active Tab & Structural Navigation States
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [, setMobileMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
 
   // Notifications and messages panel toggle states
-  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [, setShowNotifPanel] = useState(false);
   const [showMsgPanel, setShowMsgPanel] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
@@ -121,8 +65,7 @@ const AdminDashboard = () => {
   // Modals States
   const [activeModal, setActiveModal] = useState(null); // 'createDrive' | 'addStudent' | 'announcement' | 'report' | 'csvUpload' | 'interview' | 'confirmDelete' | 'viewStudent'
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [selectedRecruiter, setSelectedRecruiter] = useState(null);
-  const [selectedDrive, setSelectedDrive] = useState(null);
+  const [, setSelectedDrive] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'student' | 'recruiter' | 'drive', id: any }
 
   // Form states
@@ -146,11 +89,8 @@ const AdminDashboard = () => {
   });
 
   // Resume Verification feedback state
-  const [feedbackText, setFeedbackText] = useState('');
-  const [resumeVerificationTabId, setResumeVerificationTabId] = useState(1); // active resume ID
 
   // Calendar Date State (Simulating July 2026)
-  const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date(2026, 6, 16));
 
   // --- DATABASE-DRIVEN REAL DATA STATES ---
   const [stats, setStats] = useState({
@@ -173,8 +113,8 @@ const AdminDashboard = () => {
   const [companies, setCompanies] = useState([]);
   const [drives, setDrives] = useState([]);
   const [applications, setApplications] = useState([]);
-  const [resumes, setResumes] = useState([]);
-  const [interviews, setInterviews] = useState([]);
+  const [, setResumes] = useState([]);
+  const [, setInterviews] = useState([]);
   const [shortlists, setShortlists] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [notificationsList, setNotificationsList] = useState([]);
@@ -182,7 +122,9 @@ const AdminDashboard = () => {
   const [recentLogins, setRecentLogins] = useState([]);
   const [detailedStats, setDetailedStats] = useState(null);
   const [analyticsSubTab, setAnalyticsSubTab] = useState('overview'); // overview | companyStats | skills
-  const [analyticsSearchQuery, setAnalyticsSearchQuery] = useState('');
+  const [selectedSkillGapDept, setSelectedSkillGapDept] = useState('CSE');
+  const [companySearch, setCompanySearch] = useState('');
+  const [riskSearch, setRiskSearch] = useState('');
 
   // Settings Configuration states
   const [settingsForm, setSettingsForm] = useState({
@@ -204,7 +146,7 @@ const AdminDashboard = () => {
   const [studentStatusFilter, setStudentStatusFilter] = useState('All');
   const [studentCgpafilter, setStudentCgpafilter] = useState(0);
   const [recruiterSearch, setRecruiterSearch] = useState('');
-  const [driveSearch, setDriveSearch] = useState('');
+  const [driveSearch] = useState('');
   const [companySearchQuery, setCompanySearchQuery] = useState('');
 
   // Pagination for Students
@@ -593,29 +535,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Resume Verification actions
-  const handleApproveResume = (id) => {
-    setStudents(prev => prev.map(s => {
-      const targetResume = resumes.find(r => r.id === id);
-      if (s.name === targetResume?.studentName) {
-        return { ...s, resumeStatus: 'Verified' };
-      }
-      return s;
-    }));
-    addToast('success', 'Resume marked as verified. AI Score registered.');
-  };
-
-  const handleRejectResume = (id) => {
-    setStudents(prev => prev.map(s => {
-      const targetResume = resumes.find(r => r.id === id);
-      if (s.name === targetResume?.studentName) {
-        return { ...s, resumeStatus: 'Rejected' };
-      }
-      return s;
-    }));
-    addToast('danger', 'Resume rejected. Feedback logs dispatched to student.');
-  };
-
   // Modal Submission Forms
   const handleCreateDriveSubmit = (e) => {
     e.preventDefault();
@@ -698,6 +617,226 @@ const AdminDashboard = () => {
     addToast('success', 'Interview scheduled and invite emails sent.');
   };
 
+  const exportIntelligenceCSV = () => {
+    if (!detailedStats) return;
+    
+    // 1. Overview
+    let csv = "--- PLACEMENT INTELLIGENCE SUMMARY ---\n";
+    csv += `Total Students Eligible,${detailedStats.overview.totalStudents}\n`;
+    csv += `Total Students Placed,${detailedStats.overview.placedStudents}\n`;
+    csv += `Placement Percentage,${detailedStats.overview.placementRate}%\n`;
+    csv += `Total Offers Released,${detailedStats.overview.totalOffers}\n`;
+    csv += `Active Drives,${detailedStats.overview.activeDrives}\n`;
+    csv += `Average Package,${detailedStats.overview.averagePackage} LPA\n`;
+    csv += `Median Package,${detailedStats.overview.medianPackage} LPA\n`;
+    csv += `Highest Package,${detailedStats.overview.highestPackage} LPA\n`;
+    csv += `Lowest Package,${detailedStats.overview.lowestPackage} LPA\n\n`;
+
+    // 2. Departments
+    csv += "--- DEPARTMENT PERFORMANCE ---\n";
+    csv += "Department,Total Students,Eligible Students,Placed Students,Unplaced Students,Placement %,Avg Package,Highest Package,Lowest Package,Companies Visited\n";
+    detailedStats.departmentStats.forEach(d => {
+      csv += `"${d.department}",${d.totalStudents},${d.eligibleStudents},${d.placedStudents},${d.unplacedStudents},${d.placementPercentage}%,${d.averagePackage},${d.highestPackage},${d.lowestPackage},${d.companiesVisited}\n`;
+    });
+    csv += "\n";
+
+    // 3. Companies
+    csv += "--- COMPANY PERFORMANCE ---\n";
+    csv += "Company Name,Hires,Avg Package Offered,Highest Package Offered,Selection Ratio,Interview Difficulty,Total Applicants,Total Selected\n";
+    detailedStats.companyAnalytics.forEach(c => {
+      csv += `"${c.companyName}",${c.hires},${c.averagePackageOffered},${c.highestPackageOffered},${c.selectionRatio}%,${c.interviewDifficultyRating}/5,${c.totalApplicants},${c.totalSelected}\n`;
+    });
+    csv += "\n";
+
+    // 4. Risks
+    csv += "--- AT-RISK STUDENTS ---\n";
+    csv += "Student Name,Roll Number,Department,CGPA,ATS Score,Risk Score,Priority,Risk Reasons\n";
+    detailedStats.studentRiskAnalysis.forEach(r => {
+      csv += `"${r.studentName}","${r.rollNumber}","${r.branch}",${r.cgpa},${r.atsScore},${r.riskScore},"${r.priority}","${r.reasons.join('; ')}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Placement_Intelligence_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    addToast('success', 'Placement Intelligence CSV report exported.');
+  };
+
+  const exportIntelligencePDF = () => {
+    if (!detailedStats) return;
+    const printWindow = window.open('', '_blank');
+    const dateStr = new Date().toLocaleDateString();
+    
+    let deptRows = detailedStats.departmentStats.map(d => `
+      <tr>
+        <td><strong>${d.department}</strong></td>
+        <td style="text-align: center;">${d.totalStudents}</td>
+        <td style="text-align: center;">${d.placedStudents}</td>
+        <td style="text-align: center; font-weight: bold; color: #0B3D91;">${d.placementPercentage}%</td>
+        <td style="text-align: center;">${d.averagePackage} LPA</td>
+        <td style="text-align: center;">${d.highestPackage} LPA</td>
+        <td style="text-align: center;">${d.companiesVisited}</td>
+      </tr>
+    `).join('');
+
+    let topPlacementsRows = detailedStats.highestPackages.slice(0, 5).map((p, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td><strong>${p.studentName}</strong></td>
+        <td>${p.department}</td>
+        <td>${p.company}</td>
+        <td>${p.jobRole}</td>
+        <td style="color: #10B981; font-weight: bold;">${p.package} LPA</td>
+      </tr>
+    `).join('');
+
+    let riskRows = detailedStats.studentRiskAnalysis.slice(0, 5).map(r => `
+      <tr>
+        <td><strong>${r.studentName}</strong></td>
+        <td>${r.rollNumber}</td>
+        <td>${r.branch}</td>
+        <td style="text-align: center;">${r.cgpa}</td>
+        <td style="text-align: center;">${r.atsScore}</td>
+        <td style="text-align: center; color: ${r.priority === 'High' ? '#EF4444' : '#F59E0B'}; font-weight: bold;">${r.priority}</td>
+      </tr>
+    `).join('');
+
+    let recsHtml = detailedStats.adminRecommendations.map(r => `
+      <div style="margin-bottom: 12px; padding: 10px; border-left: 4px solid #0B3D91; background: #F8FAFC;">
+        <h5 style="margin: 0; font-size: 13px; font-weight: bold; color: #1E293B;">${r.title} <span style="font-size: 9px; background: #EF4444; color: white; padding: 1px 4px; border-radius: 4px;">${r.priority}</span></h5>
+        <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748B;">${r.description}</p>
+      </div>
+    `).join('');
+
+    writePrintDocument(printWindow, {
+      title: `Placement Intelligence Hub Report`,
+      styles: `
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1E293B; margin: 40px; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0B3D91; padding-bottom: 20px; margin-bottom: 25px; }
+            .logo-section h1 { margin: 0; font-size: 22px; color: #0F172A; }
+            .logo-section p { margin: 4px 0 0 0; font-size: 11px; color: #64748B; font-weight: bold; text-transform: uppercase; }
+            .report-info { text-align: right; font-size: 11px; color: #64748B; }
+            .report-title { text-align: center; margin-bottom: 25px; }
+            .report-title h2 { margin: 0; font-size: 18px; color: #1E293B; text-transform: uppercase; letter-spacing: 1px; }
+            
+            .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+            .kpi-card { border: 1px solid #E2E8F0; padding: 12px; border-radius: 8px; text-align: center; background: #FAFAFA; }
+            .kpi-card span { font-size: 9px; color: #64748B; text-transform: uppercase; font-weight: bold; }
+            .kpi-card h3 { margin: 5px 0 0 0; font-size: 18px; color: #0F172A; }
+            
+            h3.section-title { font-size: 14px; text-transform: uppercase; border-bottom: 1px solid #CBD5E1; padding-bottom: 6px; color: #0F172A; margin-top: 25px; margin-bottom: 12px; }
+            
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 11px; }
+            th { background-color: #F8FAFC; color: #475569; font-weight: bold; padding: 8px 10px; border-bottom: 2px solid #E2E8F0; text-align: left; text-transform: uppercase; }
+            td { padding: 8px 10px; border-bottom: 1px solid #E2E8F0; color: #334155; }
+            
+            .footer { margin-top: 40px; display: flex; justify-content: space-between; font-size: 10px; color: #94A3B8; border-top: 1px solid #E2E8F0; padding-top: 15px; }
+          `,
+      body: `
+          <div class="header">
+            <div class="logo-section">
+              <h1>PLACEMENT CONNECT</h1>
+              <p>GEETA UNIVERSITY · PLACEMENT INTELLIGENCE HUB</p>
+            </div>
+            <div class="report-info">
+              <p>Date Generated: ${dateStr}</p>
+              <p>Role: System Administrator</p>
+            </div>
+          </div>
+          
+          <div class="report-title">
+            <h2>Executive Intelligence & Diagnostics Report</h2>
+          </div>
+          
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span>Placement Rate</span>
+              <h3>${detailedStats.overview.placementRate}%</h3>
+            </div>
+            <div class="kpi-card">
+              <span>Placed / Eligible</span>
+              <h3>${detailedStats.overview.placedStudents} / ${detailedStats.overview.totalStudents}</h3>
+            </div>
+            <div class="kpi-card">
+              <span>Avg Package</span>
+              <h3>${detailedStats.overview.averagePackage} LPA</h3>
+            </div>
+            <div class="kpi-card">
+              <span>Highest Package</span>
+              <h3>${detailedStats.overview.highestPackage} LPA</h3>
+            </div>
+          </div>
+          
+          <h3 class="section-title">Department Wise Analysis</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Department</th>
+                <th style="text-align: center;">Total Students</th>
+                <th style="text-align: center;">Placed Students</th>
+                <th style="text-align: center;">Placement Rate</th>
+                <th style="text-align: center;">Avg Package</th>
+                <th style="text-align: center;">Highest Package</th>
+                <th style="text-align: center;">Companies Visited</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${deptRows}
+            </tbody>
+          </table>
+          
+          <h3 class="section-title">Dream Placement Leaderboard (Top 5)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Student Name</th>
+                <th>Branch</th>
+                <th>Company</th>
+                <th>Job Role</th>
+                <th>CTC Package</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${topPlacementsRows}
+            </tbody>
+          </table>
+          
+          <h3 class="section-title">Student Placements Risk (Top 5 High Priority)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Student Name</th>
+                <th>Roll Number</th>
+                <th>Department</th>
+                <th style="text-align: center;">CGPA</th>
+                <th style="text-align: center;">ATS Score</th>
+                <th style="text-align: center;">Risk Priority</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${riskRows}
+            </tbody>
+          </table>
+          
+          <h3 class="section-title">AI Actionable Recommendations</h3>
+          <div>
+            ${recsHtml}
+          </div>
+          
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} Geeta University Training & Placement Cell. Confidential Document.</p>
+            <p>Authorized Signature: _______________________</p>
+          </div>`,
+    });
+    addToast('success', 'Placement Intelligence PDF report exported.');
+  };
+
   const handleReportSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -746,13 +885,11 @@ const AdminDashboard = () => {
           </tr>
         `).join('');
 
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>${title}</title>
-              <style>
+        writePrintDocument(printWindow, {
+      title: `${title}`,
+      styles: `
                 body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748; margin: 40px; }
-                .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #6D5EF7; padding-bottom: 20px; margin-bottom: 30px; }
+                .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0B3D91; padding-bottom: 20px; margin-bottom: 30px; }
                 .logo-section h1 { margin: 0; font-size: 24px; color: #1A202C; }
                 .logo-section p { margin: 5px 0 0 0; font-size: 12px; color: #718096; font-weight: bold; }
                 .report-info { text-align: right; font-size: 12px; color: #718096; }
@@ -762,9 +899,8 @@ const AdminDashboard = () => {
                 th { background-color: #F7FAFC; color: #4A5568; font-weight: bold; padding: 12px 10px; border-bottom: 2px solid #E2E8F0; text-align: left; text-transform: uppercase; }
                 td { padding: 12px 10px; border-bottom: 1px solid #E2E8F0; color: #4A5568; }
                 .footer { margin-top: 50px; display: flex; justify-content: space-between; font-size: 11px; color: #A0AEC0; border-top: 1px solid #E2E8F0; padding-top: 20px; }
-              </style>
-            </head>
-            <body>
+              `,
+      body: `
               <div class="header">
                 <div class="logo-section">
                   <h1>GEETA UNIVERSITY</h1>
@@ -796,19 +932,8 @@ const AdminDashboard = () => {
               <div class="footer">
                 <p>© ${new Date().getFullYear()} Geeta University. Confidential.</p>
                 <p>Authorized Signature: _______________________</p>
-              </div>
-              <script>
-                window.onload = function() {
-                  window.print();
-                  window.onafterprint = function() {
-                    window.close();
-                  };
-                }
-              </script>
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
+              </div>`,
+    });
         addToast('success', `PDF report generated successfully.`);
       }
     }, 1000);
@@ -919,55 +1044,6 @@ const AdminDashboard = () => {
     return { branch: branchName, total, placed, pct };
   });
 
-  const companyCounts = {};
-  applications.forEach(app => {
-    if (app.status === 'Selected') {
-      const co = app.company || 'Other';
-      companyCounts[co] = (companyCounts[co] || 0) + 1;
-    }
-  });
-  const companyHiring = Object.entries(companyCounts).map(([name, count]) => ({
-    name,
-    count
-  })).sort((a, b) => b.count - a.count).slice(0, 5);
-
-  const totalSelections = companyHiring.reduce((sum, c) => sum + c.count, 0);
-
-  const selectionsByMonth = [0, 0, 0, 0, 0, 0, 0]; // Jan to Jul
-  applications.forEach(app => {
-    if (app.status === 'Selected' && app.appliedDate) {
-      const dateParts = app.appliedDate.split('-');
-      if (dateParts.length >= 2) {
-        const monthNum = parseInt(dateParts[1]);
-        if (monthNum >= 1 && monthNum <= 7) {
-          selectionsByMonth[monthNum - 1]++;
-        }
-      }
-    }
-  });
-
-  const maxPlacementsInMonth = Math.max(...selectionsByMonth, 1);
-  const monthlyPoints = selectionsByMonth.map((count, idx) => {
-    const x = 20 + idx * 76.6;
-    const y = 180 - (count / maxPlacementsInMonth) * 140;
-    return { x, y };
-  });
-
-  let monthlyPathD = `M ${monthlyPoints[0].x} ${monthlyPoints[0].y}`;
-  for (let i = 1; i < monthlyPoints.length; i++) {
-    monthlyPathD += ` L ${monthlyPoints[i].x} ${monthlyPoints[i].y}`;
-  }
-  const monthlyAreaD = `${monthlyPathD} L ${monthlyPoints[monthlyPoints.length - 1].x} 180 L ${monthlyPoints[0].x} 180 Z`;
-
-  const topDrives = [...drives]
-    .filter(d => d.ctc && d.ctc !== 'N/A')
-    .map(d => ({
-      companyName: d.company,
-      ctcVal: parseFloat(d.ctc) || 0,
-      ctcStr: d.ctc
-    }))
-    .sort((a, b) => b.ctcVal - a.ctcVal)
-    .slice(0, 3);
 
   // Helper arrays
   const sidebarItems = [
@@ -1016,15 +1092,15 @@ const AdminDashboard = () => {
           {/* Logo Branding */}
           <div className="h-16 px-6 border-b border-[#E2E8F0]/60 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#6D5EF7] to-[#8175F9] flex items-center justify-center shadow-md shadow-[#6D5EF7]/20">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#0B3D91] to-[#3B6FD1] flex items-center justify-center shadow-md shadow-[#0B3D91]/20">
                 <GraduationCap className="w-5 h-5 text-white" />
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-slate-800 text-sm tracking-tight leading-none">PlacementConnect</span>
-                <span className="text-[10px] text-slate-450 font-semibold uppercase tracking-wider mt-0.5">GEETA UNIVERSITY</span>
+                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">GEETA UNIVERSITY</span>
               </div>
             </div>
-            <button className="md:hidden p-1.5 hover:bg-slate-50 rounded-lg" onClick={() => setSidebarOpen(false)}>
+            <button type="button" aria-label="Close navigation" className="md:hidden p-1.5 hover:bg-slate-50 rounded-lg" onClick={() => setSidebarOpen(false)}>
               <X className="w-4 h-4 text-slate-400" />
             </button>
           </div>
@@ -1043,12 +1119,12 @@ const AdminDashboard = () => {
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-sm font-semibold transition-all duration-200 ${
                     isActive 
-                      ? 'bg-[#6D5EF7]/8 text-[#6D5EF7] border border-[#6D5EF7]/10' 
+                      ? 'bg-[#0B3D91]/8 text-[#0B3D91] border border-[#0B3D91]/10' 
                       : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50/80 border border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <IconComp className={`w-4 h-4 ${isActive ? 'text-[#6D5EF7]' : 'text-slate-400 group-hover:text-slate-500'}`} />
+                    <IconComp className={`w-4 h-4 ${isActive ? 'text-[#0B3D91]' : 'text-slate-400 group-hover:text-slate-500'}`} />
                     <span>{item.label}</span>
                   </div>
                   {item.count > 0 && (
@@ -1064,7 +1140,7 @@ const AdminDashboard = () => {
           {/* Admin Profile & Logout footer */}
           <div className="p-4 border-t border-[#E2E8F0]/60 bg-slate-50/50">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#6D5EF7] to-indigo-400 flex items-center justify-center font-bold text-white text-xs">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#0B3D91] to-indigo-400 flex items-center justify-center font-bold text-white text-xs">
                 {user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
               </div>
               <div className="flex-1 overflow-hidden">
@@ -1088,22 +1164,24 @@ const AdminDashboard = () => {
       <div className="flex-1 md:pl-64 flex flex-col min-w-0">
 
         {/* ---------------- NAVBAR ---------------- */}
-        <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-[#E2E8F0]/60 px-6 sm:px-8 h-16 flex items-center justify-between">
+        <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-[#E2E8F0]/60 px-3 sm:px-8 h-16 flex items-center justify-between gap-2">
           
           <div className="flex items-center gap-3">
-            <button 
+            <button
+              type="button"
               onClick={() => setSidebarOpen(true)}
+              aria-label="Open navigation"
               className="md:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
             >
-              <PlusCircle className="w-5 h-5 rotate-45" />
+              <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-sm sm:text-base font-bold text-slate-800 capitalize">
+            <h1 className="text-sm sm:text-base font-bold text-slate-800 capitalize truncate">
               {activeTab === 'dashboard' ? 'Placement Dashboard' : activeTab.replace(/([A-Z])/g, ' $1')}
             </h1>
           </div>
 
-          <div className="flex items-center gap-4">
-            
+          <div className="flex items-center gap-1.5 sm:gap-4 flex-shrink-0">
+
             {/* Search Bar */}
             <div className="hidden sm:flex items-center gap-2 bg-[#F8FAFC] border border-slate-200/80 rounded-xl px-3 py-1.5 w-64 hover:border-slate-300 transition-colors">
               <Search className="w-3.5 h-3.5 text-slate-400" />
@@ -1154,7 +1232,7 @@ const AdminDashboard = () => {
                 <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-[18px] shadow-lg py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="px-4 pb-2 border-b border-slate-100 flex items-center justify-between">
                     <h3 className="text-xs font-bold text-slate-800">Recruiter Messages</h3>
-                    <button className="text-[10px] text-[#6D5EF7] font-semibold hover:underline">View inbox</button>
+                    <button className="text-[10px] text-[#0B3D91] font-semibold hover:underline">View inbox</button>
                   </div>
                   <div className="max-h-64 overflow-y-auto px-2 mt-2 space-y-1">
                     {messagesList.map(m => (
@@ -1170,7 +1248,7 @@ const AdminDashboard = () => {
                           <p className="text-slate-500 truncate leading-tight">{m.preview}</p>
                         </div>
                         {m.unread && (
-                          <span className="w-2 h-2 bg-[#6D5EF7] rounded-full mt-2.5 shrink-0" />
+                          <span className="w-2 h-2 bg-[#0B3D91] rounded-full mt-2.5 shrink-0" />
                         )}
                       </div>
                     ))}
@@ -1193,9 +1271,10 @@ const AdminDashboard = () => {
             </button>
 
             {/* Quick Settings Icon */}
-            <button 
+            <button
               onClick={() => setActiveTab('settings')}
-              className="p-2 hover:bg-slate-50 rounded-xl border border-slate-100 transition-colors"
+              aria-label="Settings"
+              className="hidden sm:inline-flex p-2 hover:bg-slate-50 rounded-xl border border-slate-100 transition-colors"
             >
               <Settings className="w-4 h-4 text-slate-500" />
             </button>
@@ -1210,7 +1289,7 @@ const AdminDashboard = () => {
                 }}
                 className="flex items-center gap-2 p-1 pr-3 hover:bg-slate-50 rounded-full border border-slate-100 transition-colors"
               >
-                <div className="w-7 h-7 rounded-full bg-[#6D5EF7] flex items-center justify-center font-bold text-white text-xs">
+                <div className="w-7 h-7 rounded-full bg-[#0B3D91] flex items-center justify-center font-bold text-white text-xs">
                   A
                 </div>
                 <span className="hidden md:inline text-xs font-bold text-slate-700">TPO Cell</span>
@@ -1236,12 +1315,12 @@ const AdminDashboard = () => {
         </header>
 
         {/* ---------------- MAIN CONTENT AREA ---------------- */}
-        <main className="flex-grow p-6 sm:p-8 max-w-7xl w-full mx-auto space-y-6 overflow-y-auto">
+        <main className="flex-grow p-3 sm:p-8 max-w-7xl w-full min-w-0 mx-auto space-y-6 overflow-y-auto">
 
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 space-y-4">
               <div className="relative">
-                <div className="w-12 h-12 rounded-full border-4 border-[#6D5EF7]/20 border-t-[#6D5EF7] animate-spin" />
+                <div className="w-12 h-12 rounded-full border-4 border-[#0B3D91]/20 border-t-[#0B3D91] animate-spin" />
                 <div className="w-12 h-12 rounded-full border-4 border-emerald-500/10 border-b-emerald-500 animate-spin absolute inset-0 rotate-180" />
               </div>
               <p className="text-xs font-bold text-slate-500 dark:text-slate-400 animate-pulse">
@@ -1391,26 +1470,26 @@ const AdminDashboard = () => {
               {/* Quick Actions Panel */}
               <div className="bg-white border border-slate-200/80 rounded-[18px] p-6 shadow-sm">
                 <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#6D5EF7]" /> Quick Operations
+                  <Sparkles className="w-4 h-4 text-[#0B3D91]" /> Quick Operations
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  <button onClick={() => setActiveModal('createDrive')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/5 text-slate-700 hover:text-[#6D5EF7] transition-all duration-200 cursor-pointer">
+                  <button onClick={() => setActiveModal('createDrive')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#0B3D91]/40 hover:bg-[#0B3D91]/5 text-slate-700 hover:text-[#0B3D91] transition-all duration-200 cursor-pointer">
                     <Target className="w-5 h-5 mb-2 shrink-0" />
                     <span className="text-[11px] font-bold text-center">New Drive</span>
                   </button>
-                  <button onClick={() => setActiveModal('addStudent')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/5 text-slate-700 hover:text-[#6D5EF7] transition-all duration-200 cursor-pointer">
+                  <button onClick={() => setActiveModal('addStudent')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#0B3D91]/40 hover:bg-[#0B3D91]/5 text-slate-700 hover:text-[#0B3D91] transition-all duration-200 cursor-pointer">
                     <GraduationCap className="w-5 h-5 mb-2 shrink-0" />
                     <span className="text-[11px] font-bold text-center">Add Student</span>
                   </button>
-                  <button onClick={() => { setActiveTab('recruiters'); addToast('info', 'Verification queue active'); }} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/5 text-slate-700 hover:text-[#6D5EF7] transition-all duration-200 cursor-pointer">
+                  <button onClick={() => { setActiveTab('recruiters'); addToast('info', 'Verification queue active'); }} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#0B3D91]/40 hover:bg-[#0B3D91]/5 text-slate-700 hover:text-[#0B3D91] transition-all duration-200 cursor-pointer">
                     <Building2 className="w-5 h-5 mb-2 shrink-0" />
                     <span className="text-[11px] font-bold text-center">Approve HRs</span>
                   </button>
-                  <button onClick={() => setActiveModal('announcement')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/5 text-slate-700 hover:text-[#6D5EF7] transition-all duration-200 cursor-pointer">
+                  <button onClick={() => setActiveModal('announcement')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#0B3D91]/40 hover:bg-[#0B3D91]/5 text-slate-700 hover:text-[#0B3D91] transition-all duration-200 cursor-pointer">
                     <Megaphone className="w-5 h-5 mb-2 shrink-0" />
                     <span className="text-[11px] font-bold text-center">Broadcast</span>
                   </button>
-                  <button onClick={() => setActiveModal('csvUpload')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/5 text-slate-700 hover:text-[#6D5EF7] transition-all duration-200 cursor-pointer">
+                  <button onClick={() => setActiveModal('csvUpload')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#0B3D91]/40 hover:bg-[#0B3D91]/5 text-slate-700 hover:text-[#0B3D91] transition-all duration-200 cursor-pointer">
                     <FileSpreadsheet className="w-5 h-5 mb-2 shrink-0" />
                     <span className="text-[11px] font-bold text-center">Upload CSV</span>
                   </button>
@@ -1424,7 +1503,7 @@ const AdminDashboard = () => {
                 <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-slate-50">
                     <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">Upcoming Job Drives</h4>
-                    <span className="text-[10px] text-[#6D5EF7] font-bold hover:underline cursor-pointer" onClick={() => setActiveTab('drives')}>View all</span>
+                    <button type="button" className="text-[10px] text-[#0B3D91] font-bold hover:underline cursor-pointer rounded" onClick={() => setActiveTab('drives')}>View all</button>
                   </div>
                   <div className="space-y-4">
                     {drives.slice(0, 3).map(drive => (
@@ -1435,7 +1514,7 @@ const AdminDashboard = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h5 className="text-xs font-bold text-slate-800 truncate">{drive.name}</h5>
-                            <p className="text-[10px] text-slate-450 truncate">{drive.role} • {drive.ctc}</p>
+                            <p className="text-[10px] text-slate-400 truncate">{drive.role} • {drive.ctc}</p>
                           </div>
                           <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${drive.status === 'Open' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-50 text-slate-500'}`}>
                             {drive.status}
@@ -1447,7 +1526,7 @@ const AdminDashboard = () => {
                         </div>
                         <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                           <div 
-                            className="bg-[#6D5EF7] h-full rounded-full" 
+                            className="bg-[#0B3D91] h-full rounded-full" 
                             style={{ width: `${Math.min(100, (drive.registeredCount / 200) * 100)}%` }} 
                           />
                         </div>
@@ -1460,7 +1539,7 @@ const AdminDashboard = () => {
                 <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-slate-50">
                     <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">Top Recruiter Engagement</h4>
-                    <span className="text-[10px] text-[#6D5EF7] font-bold hover:underline cursor-pointer" onClick={() => setActiveTab('companies')}>Details</span>
+                    <button type="button" className="text-[10px] text-[#0B3D91] font-bold hover:underline cursor-pointer rounded" onClick={() => setActiveTab('companies')}>Details</button>
                   </div>
                   <div className="space-y-3.5">
                     {companies.slice(0, 4).map(company => (
@@ -1473,7 +1552,7 @@ const AdminDashboard = () => {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs font-black text-[#6D5EF7]">{company.hiredCount} Placed</p>
+                          <p className="text-xs font-black text-[#0B3D91]">{company.hiredCount} Placed</p>
                           <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 mt-0.5 block">Active Partner</span>
                         </div>
                       </div>
@@ -1485,7 +1564,7 @@ const AdminDashboard = () => {
                 <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-slate-50">
                     <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">Department Tracker</h4>
-                    <span className="text-[10px] text-[#6D5EF7] font-bold hover:underline cursor-pointer" onClick={() => setActiveTab('analytics')}>Analytics</span>
+                    <button type="button" className="text-[10px] text-[#0B3D91] font-bold hover:underline cursor-pointer rounded" onClick={() => setActiveTab('analytics')}>Analytics</button>
                   </div>
                   <div className="space-y-4">
                     {branchPlacements.slice(0, 4).map(bp => {
@@ -1540,8 +1619,8 @@ const AdminDashboard = () => {
                   <div className="space-y-4">
                     {notificationsList.length > 0 ? (
                       notificationsList.slice(0, 3).map(notif => {
-                        let iconBg = "bg-[#6D5EF7]/10";
-                        let iconColor = "text-[#6D5EF7]";
+                        let iconBg = "bg-[#0B3D91]/10";
+                        let iconColor = "text-[#0B3D91]";
                         let IconComponent = CheckCircle2;
 
                         if (notif.type === 'recruiter') {
@@ -1618,10 +1697,10 @@ const AdminDashboard = () => {
               
               {/* Header and Add Student CTA */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Configure Student Profiles & Placement Status</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Configure Student Profiles & Placement Status</p>
                 <button
                   onClick={() => setActiveModal('addStudent')}
-                  className="bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-[#6D5EF7]/10 cursor-pointer"
+                  className="bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-[#0B3D91]/10 cursor-pointer"
                 >
                   <Plus className="w-4 h-4" /> Add Student Record
                 </button>
@@ -1683,7 +1762,7 @@ const AdminDashboard = () => {
                       step="0.5" 
                       value={studentCgpafilter}
                       onChange={(e) => setStudentCgpafilter(parseFloat(e.target.value))}
-                      className="accent-[#6D5EF7] w-20"
+                      className="accent-[#0B3D91] w-20"
                     />
                   </div>
                 </div>
@@ -1736,7 +1815,7 @@ const AdminDashboard = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4">
-                              <span className="bg-indigo-50 text-[#6D5EF7] font-black px-2 py-0.5 rounded text-[11px] border border-indigo-100">
+                              <span className="bg-indigo-50 text-[#0B3D91] font-black px-2 py-0.5 rounded text-[11px] border border-indigo-100">
                                 {student.cgpa.toFixed(2)}
                               </span>
                             </td>
@@ -1753,7 +1832,7 @@ const AdminDashboard = () => {
                               {student.placementStatus === 'Placed' ? (
                                 <div>
                                   <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded text-[10px] font-bold inline-block font-sans">Placed</span>
-                                  <p className="text-[9px] font-bold text-slate-450 mt-1 uppercase">{student.company} • {student.ctc}</p>
+                                  <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase">{student.company} • {student.ctc}</p>
                                 </div>
                               ) : (
                                 <span className="bg-slate-50 text-slate-400 border border-slate-200 px-2 py-0.5 rounded text-[10px] font-bold">Unplaced</span>
@@ -1829,7 +1908,7 @@ const AdminDashboard = () => {
               
               {/* Header description */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Verify Recruiter Agency Registrations & Job Pipelines</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Verify Recruiter Agency Registrations & Job Pipelines</p>
                 <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 w-64 shadow-sm">
                   <Search className="w-3.5 h-3.5 text-slate-400" />
                   <input
@@ -1843,7 +1922,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Recruiters table */}
-              <div className="bg-white border border-slate-200/80 rounded-[18px] overflow-hidden shadow-sm">
+              <div className="bg-white border border-slate-200/80 rounded-[18px] overflow-x-auto shadow-sm">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50/70 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -1933,7 +2012,7 @@ const AdminDashboard = () => {
               
               {/* Header and search */}
               <div className="flex justify-between items-center pb-2 border-b border-slate-105">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Corporate Partners & Hiring metrics</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Corporate Partners & Hiring metrics</p>
                 <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 w-64 shadow-sm">
                   <Search className="w-3.5 h-3.5 text-slate-400" />
                   <input
@@ -1978,7 +2057,7 @@ const AdminDashboard = () => {
                       <p className="text-[10px] text-slate-400 font-bold uppercase">HR Contact Person</p>
                       <div className="flex items-center justify-between text-xs font-semibold text-slate-605">
                         <span>{c.hrName}</span>
-                        <span className="text-[#6D5EF7]">{c.email}</span>
+                        <span className="text-[#0B3D91]">{c.email}</span>
                       </div>
                     </div>
 
@@ -1987,7 +2066,7 @@ const AdminDashboard = () => {
                         <Star className="w-3.5 h-3.5 fill-current" />
                         <span className="font-bold">{c.rating}</span>
                       </div>
-                      <a href={`https://${c.website}`} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-[#6D5EF7] hover:underline font-bold text-[11px]">
+                      <a href={`https://${c.website}`} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-[#0B3D91] hover:underline font-bold text-[11px]">
                         Visit {c.website}
                       </a>
                     </div>
@@ -2006,17 +2085,17 @@ const AdminDashboard = () => {
               
               {/* Header action */}
               <div className="flex justify-between items-center">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Active Placement Operations & Timelines</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Active Placement Operations & Timelines</p>
                 <button
                   onClick={() => setActiveModal('createDrive')}
-                  className="bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-[#6D5EF7]/10 cursor-pointer"
+                  className="bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-[#0B3D91]/10 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" /> Schedule New Drive
                 </button>
               </div>
 
               {/* Drives Table */}
-              <div className="bg-white border border-slate-200/80 rounded-[18px] overflow-hidden shadow-sm">
+              <div className="bg-white border border-slate-200/80 rounded-[18px] overflow-x-auto shadow-sm">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50/70 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -2046,7 +2125,7 @@ const AdminDashboard = () => {
                           <div className="space-y-1">
                             <div className="flex flex-wrap gap-1">
                               {drive.branches.map(b => (
-                                <span key={b} className="bg-indigo-50 text-[#6D5EF7] border border-indigo-100 rounded px-1.5 py-0.5 text-[9px] font-bold">{b}</span>
+                                <span key={b} className="bg-indigo-50 text-[#0B3D91] border border-indigo-100 rounded px-1.5 py-0.5 text-[9px] font-bold">{b}</span>
                               ))}
                             </div>
                             <span className="text-[9px] text-slate-400 block">Mode: {drive.mode} • Venue: {drive.venue}</span>
@@ -2071,7 +2150,7 @@ const AdminDashboard = () => {
                             </button>
                             <button
                               onClick={() => { setSelectedDrive(drive); addToast('info', `Displaying registrations for: ${drive.name}`); }}
-                              className="p-1.5 hover:bg-slate-50 rounded text-slate-500 hover:text-[#6D5EF7] cursor-pointer"
+                              className="p-1.5 hover:bg-slate-50 rounded text-slate-500 hover:text-[#0B3D91] cursor-pointer"
                               title="Applicants view"
                             >
                               <Eye className="w-3.5 h-3.5" />
@@ -2101,7 +2180,7 @@ const AdminDashboard = () => {
             <div className="space-y-6 animate-in fade-in duration-300">
               
               <div className="pb-2 border-b border-slate-100">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Audit Active Corporate Vacancy Postings</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Audit Active Corporate Vacancy Postings</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2110,7 +2189,7 @@ const AdminDashboard = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         <h4 className="text-sm font-bold text-slate-800">{job.role}</h4>
-                        <p className="text-xs font-semibold text-[#6D5EF7]">{job.company}</p>
+                        <p className="text-xs font-semibold text-[#0B3D91]">{job.company}</p>
                       </div>
                       <span className="text-xs font-black text-emerald-600 font-mono bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">{job.ctc}</span>
                     </div>
@@ -2136,7 +2215,7 @@ const AdminDashboard = () => {
                         <button onClick={() => addToast('info', 'Edit Job Specs details Mocked')} className="px-2.5 py-1 text-slate-500 hover:text-slate-750 hover:bg-slate-50 rounded border border-slate-200 font-bold text-[10px] cursor-pointer">
                           Edit Specs
                         </button>
-                        <button onClick={() => addToast('success', 'Vacancy status updated')} className="px-2.5 py-1 bg-[#6D5EF7] text-white rounded font-bold text-[10px] hover:bg-[#5B4EE0] cursor-pointer">
+                        <button onClick={() => addToast('success', 'Vacancy status updated')} className="px-2.5 py-1 bg-[#0B3D91] text-white rounded font-bold text-[10px] hover:bg-[#082F70] cursor-pointer">
                           Promote Listing
                         </button>
                       </div>
@@ -2155,7 +2234,7 @@ const AdminDashboard = () => {
             <div className="space-y-6 animate-in fade-in duration-300">
               
               <div className="pb-2 border-b border-slate-100 flex justify-between items-center">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Candidate Recruitment Pipeline Audits</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Candidate Recruitment Pipeline Audits</p>
                 <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 w-64 shadow-sm">
                   <Search className="w-3.5 h-3.5 text-slate-400" />
                   <input
@@ -2169,7 +2248,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Applications list table */}
-              <div className="bg-white border border-slate-200/80 rounded-[18px] overflow-hidden shadow-sm">
+              <div className="bg-white border border-slate-200/80 rounded-[18px] overflow-x-auto shadow-sm">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50/70 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -2231,7 +2310,7 @@ const AdminDashboard = () => {
                                 }));
                                 addToast('info', 'Advanced candidate to next vetting round.');
                               }}
-                              className="px-2 py-1 bg-indigo-50 hover:bg-indigo-105 text-[#6D5EF7] border border-indigo-100 rounded font-bold text-[10px] cursor-pointer"
+                              className="px-2 py-1 bg-indigo-50 hover:bg-indigo-105 text-[#0B3D91] border border-indigo-100 rounded font-bold text-[10px] cursor-pointer"
                             >
                               Next Round
                             </button>
@@ -2253,10 +2332,10 @@ const AdminDashboard = () => {
             <div className="space-y-6 animate-in fade-in duration-300">
               
               <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Placement Drive Selection Shortlists Logs</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Placement Drive Selection Shortlists Logs</p>
                 <button
                   onClick={() => setActiveModal('csvUpload')}
-                  className="bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer"
+                  className="bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer"
                 >
                   <Upload className="w-4 h-4" /> Upload Shortlist CSV
                 </button>
@@ -2272,7 +2351,7 @@ const AdminDashboard = () => {
                         </div>
                         <div>
                           <h4 className="text-xs font-black text-slate-800">{list.driveName}</h4>
-                          <span className="text-[10px] text-slate-450 font-semibold">{list.companyName}</span>
+                          <span className="text-[10px] text-slate-400 font-semibold">{list.companyName}</span>
                         </div>
                       </div>
                       <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-bold px-2 py-0.5 rounded">
@@ -2293,7 +2372,7 @@ const AdminDashboard = () => {
 
                     <div className="pt-2 flex justify-between items-center text-xs text-slate-400">
                       <span>Uploaded on: {list.publishedDate}</span>
-                      <button onClick={() => addToast('success', 'Shortlist file downloaded')} className="text-[#6D5EF7] hover:underline flex items-center gap-1 font-bold cursor-pointer">
+                      <button onClick={() => addToast('success', 'Shortlist file downloaded')} className="text-[#0B3D91] hover:underline flex items-center gap-1 font-bold cursor-pointer">
                         <Download className="w-3.5 h-3.5" /> Download XLS
                       </button>
                     </div>
@@ -2308,130 +2387,313 @@ const AdminDashboard = () => {
               TAB: ANALYTICS
               ======================================================= */}
           {activeTab === 'analytics' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="space-y-6 animate-in fade-in duration-300 text-slate-800 dark:text-slate-100">
               
-              <div className="pb-2 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              {/* Analytics Hub Header */}
+              <div className="pb-4 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                  <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Placement Metrics charts & projections</p>
-                  <h3 className="text-lg font-bold text-[#111827] mt-0.5">Advanced Analytics Hub</h3>
+                  <span className="text-[10px] bg-[#0B3D91]/10 text-[#0B3D91] border border-[#0B3D91]/20 px-2 py-0.5 rounded font-black tracking-wider uppercase">Institutional BI Suite</span>
+                  <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mt-1 font-sans">Placement Intelligence Dashboard</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Real-time statistics, predictive forecasting, risk analysis, and automated insights</p>
                 </div>
-                
-                {/* Subtabs toggles */}
-                <div className="flex bg-slate-100 p-1 rounded-xl self-start sm:self-center">
+                <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => setAnalyticsSubTab('overview')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${analyticsSubTab === 'overview' ? 'bg-white text-[#6D5EF7] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                    onClick={() => {
+                      loadBackendData();
+                      addToast('info', 'Syncing data with database...');
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-xs font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer shadow-sm"
                   >
-                    Overview & Charts
+                    <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+                    Sync Data
                   </button>
                   <button
-                    onClick={() => setAnalyticsSubTab('companyStats')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${analyticsSubTab === 'companyStats' ? 'bg-white text-[#6D5EF7] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                    onClick={exportIntelligenceCSV}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-xs font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer shadow-sm"
                   >
-                    Company & Drives
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
+                    Export CSV
                   </button>
                   <button
-                    onClick={() => setAnalyticsSubTab('skills')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${analyticsSubTab === 'skills' ? 'bg-white text-[#6D5EF7] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                    onClick={exportIntelligencePDF}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0B3D91] hover:bg-[#082F70] text-xs font-bold text-white transition-all cursor-pointer shadow-sm shadow-[#0B3D91]/20"
                   >
-                    Compensation & Skills
+                    <Download className="w-3.5 h-3.5" />
+                    Export PDF Report
                   </button>
                 </div>
               </div>
 
+              {/* Sub-Navigation Toggles */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 bg-slate-105 dark:bg-slate-900 p-1.5 rounded-2xl">
+                <button
+                  onClick={() => setAnalyticsSubTab('overview')}
+                  className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-2 cursor-pointer ${
+                    analyticsSubTab === 'overview'
+                      ? 'bg-white dark:bg-slate-800 text-[#0B3D91] dark:text-[#3B6FD1] shadow-md shadow-slate-200/50 dark:shadow-none'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 hover:bg-white/40 dark:hover:bg-slate-850/40'
+                  }`}
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  <span>Executive Overview</span>
+                </button>
+                <button
+                  onClick={() => setAnalyticsSubTab('departments')}
+                  className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-2 cursor-pointer ${
+                    analyticsSubTab === 'departments'
+                      ? 'bg-white dark:bg-slate-800 text-[#0B3D91] dark:text-[#3B6FD1] shadow-md shadow-slate-200/50 dark:shadow-none'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 hover:bg-white/40 dark:hover:bg-slate-850/40'
+                  }`}
+                >
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  <span>Department Deep-Dive</span>
+                </button>
+                <button
+                  onClick={() => setAnalyticsSubTab('companies')}
+                  className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-2 cursor-pointer ${
+                    analyticsSubTab === 'companies'
+                      ? 'bg-white dark:bg-slate-800 text-[#0B3D91] dark:text-[#3B6FD1] shadow-md shadow-slate-200/50 dark:shadow-none'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 hover:bg-white/40 dark:hover:bg-slate-850/40'
+                  }`}
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>Company & Recruiters</span>
+                </button>
+                <button
+                  onClick={() => setAnalyticsSubTab('riskATS')}
+                  className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-2 cursor-pointer ${
+                    analyticsSubTab === 'riskATS'
+                      ? 'bg-white dark:bg-slate-800 text-[#0B3D91] dark:text-[#3B6FD1] shadow-md shadow-slate-200/50 dark:shadow-none'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 hover:bg-white/40 dark:hover:bg-slate-850/40'
+                  }`}
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>Risk & ATS Audit</span>
+                </button>
+                <button
+                  onClick={() => setAnalyticsSubTab('trendsPrediction')}
+                  className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-2 cursor-pointer ${
+                    analyticsSubTab === 'trendsPrediction'
+                      ? 'bg-white dark:bg-slate-800 text-[#0B3D91] dark:text-[#3B6FD1] shadow-md shadow-slate-200/50 dark:shadow-none'
+                      : 'text-slate-550 dark:text-slate-400 hover:text-slate-800 hover:bg-white/40 dark:hover:bg-slate-850/40'
+                  }`}
+                >
+                  <BarChart3 className="w-3.5 h-3.5" />
+                  <span>Funnel & Predictions</span>
+                </button>
+              </div>
+
               {!detailedStats ? (
-                <div className="bg-white border border-slate-200 rounded-[18px] p-12 text-center flex flex-col items-center justify-center space-y-4">
-                  <RefreshCw className="w-8 h-8 text-[#6D5EF7] animate-spin" />
-                  <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Loading detailed placement analytics...</p>
+                <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[20px] p-12 text-center flex flex-col items-center justify-center space-y-4">
+                  <RefreshCw className="w-8 h-8 text-[#0B3D91] animate-spin" />
+                  <p className="text-slate-550 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Compiling institutional data intelligence...</p>
                 </div>
               ) : (
-                <>
-                  {/* Overview Cards Grid */}
+                <div className="space-y-6">
+                  
+                  {/* ==================== SUBTAB: EXECUTIVE OVERVIEW ==================== */}
                   {analyticsSubTab === 'overview' && (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="bg-white border border-slate-200/80 rounded-[18px] p-4 shadow-sm flex flex-col justify-between">
-                        <span className="text-[10px] text-slate-450 font-bold uppercase">Placement Success Index</span>
-                        <div className="mt-2 flex items-baseline gap-2">
-                          <span className="text-2xl font-black text-[#6D5EF7]">{detailedStats.overview.placementRate}%</span>
-                          <span className="text-[10px] font-bold text-emerald-600">({detailedStats.overview.placedStudents}/{detailedStats.overview.totalStudents})</span>
+                    <div className="space-y-6 animate-in fade-in duration-300">
+                      
+                      {/* Overview Cards Grid */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase">Placement Success Rate</span>
+                          <div className="mt-2 flex items-baseline gap-2">
+                            <span className="text-2xl font-extrabold text-[#0B3D91] dark:text-[#3B6FD1]">{detailedStats.overview.placementRate}%</span>
+                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500">({detailedStats.overview.placedStudents}/{detailedStats.overview.totalStudents})</span>
+                          </div>
+                          <div className="w-full bg-slate-105 dark:bg-slate-700 h-1.5 rounded-full mt-3 overflow-hidden">
+                            <div className="bg-gradient-to-r from-[#0B3D91] to-indigo-400 h-full rounded-full" style={{ width: `${detailedStats.overview.placementRate}%` }} />
+                          </div>
                         </div>
-                      </div>
-                      <div className="bg-white border border-slate-200/80 rounded-[18px] p-4 shadow-sm flex flex-col justify-between">
-                        <span className="text-[10px] text-slate-455 font-bold uppercase">Total Participating Recruiters</span>
-                        <div className="mt-2 flex items-baseline gap-2">
-                          <span className="text-2xl font-black text-slate-800">{detailedStats.overview.totalCompanies}</span>
-                          <span className="text-[10px] font-bold text-slate-400">Companies Active</span>
-                        </div>
-                      </div>
-                      <div className="bg-white border border-slate-200/80 rounded-[18px] p-4 shadow-sm flex flex-col justify-between">
-                        <span className="text-[10px] text-slate-455 font-bold uppercase">Average Compensation package</span>
-                        <div className="mt-2 flex items-baseline gap-2">
-                          <span className="text-2xl font-black text-emerald-600">{detailedStats.overview.averagePackage} LPA</span>
-                          <span className="text-[10px] font-bold text-slate-400">Average CTC</span>
-                        </div>
-                      </div>
-                      <div className="bg-white border border-slate-200/80 rounded-[18px] p-4 shadow-sm flex flex-col justify-between">
-                        <span className="text-[10px] text-slate-455 font-bold uppercase">Highest CTC Grabbed</span>
-                        <div className="mt-2 flex items-baseline gap-2">
-                          <span className="text-2xl font-black text-indigo-600">{detailedStats.overview.highestPackage} LPA</span>
-                          <span className="text-[10px] font-bold text-[#6D5EF7]">{detailedStats.packageBreakdown.highestPlaced[0]?.companyName || 'Google'}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
-                  {/* Subtab Content: Overview (Charts) */}
-                  {analyticsSubTab === 'overview' && (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase">Total Offers Released</span>
+                          <div className="mt-2 flex items-baseline gap-2">
+                            <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">{detailedStats.overview.totalOffers} Selections</span>
+                            <span className="text-[10px] font-bold text-slate-400">Campaign Total</span>
+                          </div>
+                          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase mt-3">Across {detailedStats.overview.totalCompanies} recruiters</div>
+                        </div>
+
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+                          <span className="text-[10px] text-slate-455 dark:text-slate-400 font-bold uppercase">Average & Median Salary</span>
+                          <div className="mt-2 flex flex-col">
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-500">{detailedStats.overview.averagePackage} LPA</span>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase">AVG</span>
+                            </div>
+                            <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1">
+                              Median Package: <span className="text-emerald-600 dark:text-emerald-500 font-extrabold">{detailedStats.overview.medianPackage} LPA</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+                          <span className="text-[10px] text-slate-455 dark:text-slate-400 font-bold uppercase">Salary Package Range</span>
+                          <div className="mt-2 flex flex-col">
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-2xl font-extrabold text-indigo-650 dark:text-indigo-400">{detailedStats.overview.highestPackage} LPA</span>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase">MAX</span>
+                            </div>
+                            <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1">
+                              Lowest Package: <span className="text-rose-500 font-extrabold">{detailedStats.overview.lowestPackage} LPA</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Executive Summary & AI Recommendations */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         
-                        {/* 1. Branch Placement rate chart */}
-                        <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
-                          <h4 className="text-xs font-black uppercase text-slate-750 tracking-wider">Branch Placement Performance</h4>
-                          <div className="pt-2 relative h-48 w-full flex items-end justify-between px-2 border-b border-slate-200 pb-2">
-                            {detailedStats.branchStats.map(bp => (
-                              <div key={bp.branch} className="flex flex-col items-center gap-2 w-12 group">
-                                <div className="w-full flex items-end gap-1 h-36">
-                                  <div 
-                                    className="bg-[#6D5EF7]/10 w-4 rounded-t-sm" 
-                                    style={{ height: '100%' }}
-                                    title={`Total: ${bp.totalStudents}`}
-                                  />
-                                  <div 
-                                    className="bg-[#6D5EF7] w-4 rounded-t-sm transition-all duration-500" 
-                                    style={{ height: `${bp.placementRate}%` }}
-                                    title={`Placed: ${bp.placedStudents} (${bp.placementRate}%)`}
-                                  />
-                                </div>
-                                <span className="text-[10px] font-bold text-slate-500">{bp.branch.split(' ')[0]}</span>
+                        {/* Executive Summary */}
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
+                          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-700">
+                            <Award className="w-5 h-5 text-indigo-500" />
+                            <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Executive Insight Summary</h4>
+                          </div>
+                          <div className="space-y-3 pt-1">
+                            {detailedStats.executiveSummary.map((item, idx) => (
+                              <div key={idx} className="flex items-start gap-3">
+                                <span className="w-5 h-5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-450 shrink-0 font-extrabold text-xs">✓</span>
+                                <p className="text-xs text-slate-650 dark:text-slate-300 font-semibold leading-relaxed mt-0.5">{item}</p>
                               </div>
                             ))}
                           </div>
-                          <div className="flex gap-4 items-center justify-center text-[10px] text-slate-450 font-bold uppercase pt-2">
-                            <div className="flex items-center gap-1">
-                              <span className="w-2.5 h-2.5 bg-[#6D5EF7]/10 rounded" /> Total Students
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <span className="w-2.5 h-2.5 bg-[#6D5EF7] rounded" /> Placement Rate %
-                            </div>
-                          </div>
                         </div>
 
-                        {/* 2. CTC Ranges Distribution custom chart */}
-                        <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
-                          <h4 className="text-xs font-black uppercase text-slate-750 tracking-wider">CTC Distribution Range (LPA)</h4>
-                          <div className="space-y-3.5 pt-2">
-                            {detailedStats.packageBreakdown.ranges.map((rg, idx) => {
-                              const maxVal = Math.max(...detailedStats.packageBreakdown.ranges.map(r => r.count), 1);
-                              const pctWidth = Math.round((rg.count / maxVal) * 100);
+                        {/* AI Recommendations */}
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
+                          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-700">
+                            <Sparkles className="w-5 h-5 text-[#0B3D91]" />
+                            <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">AI Diagnostic Recommendations</h4>
+                          </div>
+                          <div className="space-y-3.5 pt-1">
+                            {detailedStats.adminRecommendations.map((rec, idx) => (
+                              <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 rounded-xl relative overflow-hidden group">
+                                <div className="flex justify-between items-center mb-1">
+                                  <h6 className="font-extrabold text-slate-800 dark:text-slate-250 text-xs">{rec.title}</h6>
+                                  <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${
+                                    rec.priority === 'High' ? 'bg-rose-50 text-rose-500 border border-rose-100 dark:bg-rose-950/20 dark:text-rose-400' : 'bg-amber-50 text-amber-500 border border-amber-100 dark:bg-amber-950/20'
+                                  }`}>
+                                    {rec.priority} Priority
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">{rec.description}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Top 10 Highest Packages */}
+                      <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl shadow-sm overflow-hidden p-5">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700 mb-4">
+                          <div className="flex items-center gap-2">
+                            <Award className="w-5 h-5 text-amber-500" />
+                            <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">Dream Offers Leaderboard (Top 10 Highest Packages)</h4>
+                          </div>
+                          <span className="text-[9px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-350 px-2 py-0.5 rounded font-bold uppercase">CTC Performance Desk</span>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                              <tr className="border-b border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-400 font-bold uppercase text-[9px] tracking-wider">
+                                <th className="pb-3 pl-2">Rank</th>
+                                <th className="pb-3">Student Name</th>
+                                <th className="pb-3">Department</th>
+                                <th className="pb-3">Recruiter Company</th>
+                                <th className="pb-3">Job Role</th>
+                                <th className="pb-3 text-right">Package Offered</th>
+                                <th className="pb-3 pr-2 text-right">Placement Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {detailedStats.highestPackages.map((p, idx) => (
+                                <tr key={idx} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+                                  <td className="py-3 pl-2 font-bold text-slate-400">#{idx + 1}</td>
+                                  <td className="py-3 font-bold text-slate-850 dark:text-slate-200">{p.studentName}</td>
+                                  <td className="py-3 font-medium text-slate-550 dark:text-slate-400">
+                                    <span className="px-2 py-0.5 bg-indigo-50/60 dark:bg-indigo-950/20 text-[#0B3D91] dark:text-[#3B6FD1] border border-indigo-100/40 rounded text-[10px] font-bold">
+                                      {p.department}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 font-bold text-slate-700 dark:text-slate-300">{p.company}</td>
+                                  <td className="py-3 text-slate-550 dark:text-slate-400 font-semibold">{p.jobRole}</td>
+                                  <td className="py-3 text-right font-black text-emerald-600 dark:text-emerald-500 text-sm">{p.package} LPA</td>
+                                  <td className="py-3 pr-2 text-right text-slate-400 font-mono text-[10px]">{p.placementDate}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* ==================== SUBTAB: DEPARTMENTS ==================== */}
+                  {analyticsSubTab === 'departments' && (
+                    <div className="space-y-6 animate-in fade-in duration-300">
+                      
+                      {/* Department Comparison Table */}
+                      <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl shadow-sm overflow-hidden p-5">
+                        <div className="pb-3 border-b border-slate-100 dark:border-slate-700 mb-4">
+                          <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">Department Wise Placement Performance Matrix</h4>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                              <tr className="border-b border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-400 font-bold uppercase text-[9px] tracking-wider">
+                                <th className="pb-3 pl-2">Department / Branch</th>
+                                <th className="pb-3 text-center">Total Students</th>
+                                <th className="pb-3 text-center">Eligible Students</th>
+                                <th className="pb-3 text-center">Placed Students</th>
+                                <th className="pb-3 text-center">Unplaced Students</th>
+                                <th className="pb-3 text-center">Placement Success</th>
+                                <th className="pb-3 text-center">Avg Package</th>
+                                <th className="pb-3 text-center">Package Range (Lowest - Highest)</th>
+                                <th className="pb-3 pr-2 text-right">Drives Visited</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {detailedStats.departmentStats.map((d, idx) => (
+                                <tr key={idx} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+                                  <td className="py-3.5 pl-2 font-extrabold text-slate-800 dark:text-slate-200">{d.department}</td>
+                                  <td className="py-3.5 text-center font-bold text-slate-600 dark:text-slate-400">{d.totalStudents}</td>
+                                  <td className="py-3.5 text-center font-bold text-slate-600 dark:text-slate-400">{d.eligibleStudents}</td>
+                                  <td className="py-3.5 text-center font-bold text-emerald-600 dark:text-emerald-500">{d.placedStudents}</td>
+                                  <td className="py-3.5 text-center font-bold text-rose-500">{d.unplacedStudents}</td>
+                                  <td className="py-3.5 text-center font-black text-[#0B3D91] dark:text-[#3B6FD1]">{d.placementPercentage}%</td>
+                                  <td className="py-3.5 text-center font-bold text-slate-700 dark:text-slate-350">{d.averagePackage} LPA</td>
+                                  <td className="py-3.5 text-center font-semibold text-emerald-600 dark:text-emerald-450">{d.lowestPackage} - {d.highestPackage} LPA</td>
+                                  <td className="py-3.5 pr-2 text-right font-bold text-slate-600 dark:text-slate-400">{d.companiesVisited} Drives</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* Department average and Skills gap */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        {/* Average Package by Department custom visualization */}
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
+                          <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">Salary Package index by Department (Average LPA)</h4>
+                          <div className="space-y-4 pt-2">
+                            {detailedStats.departmentStats.map((d, idx) => {
+                              const maxAvg = Math.max(...detailedStats.departmentStats.map(dep => dep.averagePackage), 1);
+                              const pctWidth = Math.round((d.averagePackage / maxAvg) * 100);
                               return (
-                                <div key={idx}>
-                                  <div className="flex justify-between text-xs mb-1">
-                                    <span className="font-bold text-slate-600">{rg.range}</span>
-                                    <span className="font-black text-slate-800">{rg.count} students</span>
+                                <div key={idx} className="space-y-1">
+                                  <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                                    <span>{d.department}</span>
+                                    <span className="text-emerald-600 dark:text-emerald-500 font-extrabold">{d.averagePackage} LPA avg</span>
                                   </div>
-                                  <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                    <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${pctWidth}%` }} />
+                                  <div className="w-full bg-slate-105 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
+                                    <div className="bg-[#0B3D91] h-full rounded-full transition-all duration-500" style={{ width: `${pctWidth}%` }} />
                                   </div>
                                 </div>
                               );
@@ -2439,52 +2701,81 @@ const AdminDashboard = () => {
                           </div>
                         </div>
 
-                      </div>
+                        {/* AI Skill Gap Panel */}
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
+                          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-700">
+                            <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">AI Skill Gap Analysis & Training Deck</h4>
+                            <select
+                              value={selectedSkillGapDept}
+                              onChange={(e) => setSelectedSkillGapDept(e.target.value)}
+                              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-extrabold py-1 px-2 focus:outline-none focus:ring-2 focus:ring-[#0B3D91]/10"
+                            >
+                              {departments.map(d => (
+                                <option key={d} value={d}>{d}</option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          {(() => {
+                            const gap = detailedStats.skillGapAnalysis.find(g => g.branch === selectedSkillGapDept) || { demandedSkills: [], recommendedTraining: [] };
+                            return (
+                              <div className="space-y-4 pt-1">
+                                <div>
+                                  <h6 className="text-[10px] font-black text-slate-405 uppercase tracking-wider mb-2.5">Demanded Skills Deficit (Students Missing Skill %)</h6>
+                                  <div className="space-y-3">
+                                    {gap.demandedSkills.map((ds, sIdx) => (
+                                      <div key={sIdx} className="space-y-1">
+                                        <div className="flex justify-between text-xs font-bold">
+                                          <span className="text-slate-700 dark:text-slate-350">{ds.skill}</span>
+                                          <span className={`font-black ${ds.missingPercent > 50 ? 'text-rose-500' : 'text-amber-500'}`}>{ds.missingPercent}% missing</span>
+                                        </div>
+                                        <div className="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                                          <div className={`h-full rounded-full transition-all duration-500 ${ds.missingPercent > 50 ? 'bg-rose-500' : 'bg-amber-500'}`} style={{ width: `${ds.missingPercent}%` }} />
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
 
-                      {/* Line chart timeline */}
-                      <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
-                        <h4 className="text-xs font-black uppercase text-slate-750 tracking-wider">Recruitment Campaign Pipeline Progress</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                          <div className="p-4 bg-indigo-50/20 border border-indigo-100 rounded-xl">
-                            <span className="text-[10px] text-slate-450 uppercase font-black">Total Active Drives</span>
-                            <div className="text-2xl font-black text-indigo-600 mt-1">{detailedStats.overview.totalDrives} Drives</div>
-                            <p className="text-[9px] text-slate-455 font-bold mt-1 uppercase">Currently active and closed recruitment drives</p>
-                          </div>
-                          <div className="p-4 bg-emerald-50/20 border border-emerald-100 rounded-xl">
-                            <span className="text-[10px] text-slate-455 uppercase font-black">Success Ratio</span>
-                            <div className="text-2xl font-black text-emerald-600 mt-1">{(detailedStats.overview.placedStudents / Math.max(detailedStats.overview.totalCompanies, 1)).toFixed(1)} ratio</div>
-                            <p className="text-[9px] text-slate-455 font-bold mt-1 uppercase">Average placed hires per hiring company</p>
-                          </div>
-                          <div className="p-4 bg-amber-50/20 border border-amber-100 rounded-xl">
-                            <span className="text-[10px] text-slate-455 uppercase font-black">Average Bid Index</span>
-                            <div className="text-2xl font-black text-amber-600 mt-1">{(detailedStats.overview.totalApplications / Math.max(detailedStats.overview.totalStudents, 1)).toFixed(1)} applies</div>
-                            <p className="text-[9px] text-slate-455 font-bold mt-1 uppercase">Average job applications submitted per student</p>
-                          </div>
+                                <div className="pt-2 border-t border-slate-100 dark:border-slate-700">
+                                  <h6 className="text-[10px] font-black text-slate-405 uppercase tracking-wider mb-2">Recommended Training Interventions</h6>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {gap.recommendedTraining.map((rt, rIdx) => (
+                                      <span key={rIdx} className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450 border border-emerald-100 dark:border-emerald-900/30 text-[10px] font-extrabold">
+                                        💡 {rt}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
+
                     </div>
                   )}
 
-                  {/* Subtab Content: Company & Drive Analyser */}
-                  {analyticsSubTab === 'companyStats' && (
-                    <div className="space-y-6">
+                  {/* ==================== SUBTAB: COMPANIES ==================== */}
+                  {analyticsSubTab === 'companies' && (
+                    <div className="space-y-6 animate-in fade-in duration-300">
                       
-                      {/* Search and filter */}
-                      <div className="flex gap-4 items-center bg-white border border-slate-200/80 p-4 rounded-2xl shadow-sm">
+                      {/* Search company input */}
+                      <div className="flex gap-4 items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl shadow-sm">
                         <div className="relative flex-1">
                           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                           <input
                             type="text"
-                            placeholder="Filter by Company or Role/Job title..."
-                            value={analyticsSearchQuery}
-                            onChange={(e) => setAnalyticsSearchQuery(e.target.value)}
-                            className="w-full pl-9 block py-1.5 px-3 bg-slate-50 border border-[#E5E7EB] rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] font-medium text-[#111827]"
+                            placeholder="Filter by Recruiter Company name..."
+                            value={companySearch}
+                            onChange={(e) => setCompanySearch(e.target.value)}
+                            className="w-full pl-9 block py-1.5 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-250 dark:border-slate-700 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] font-medium text-[#111827] dark:text-slate-100"
                           />
                         </div>
-                        {analyticsSearchQuery && (
+                        {companySearch && (
                           <button
-                            onClick={() => setAnalyticsSearchQuery('')}
-                            className="text-xs text-slate-405 hover:text-slate-600 font-bold"
+                            onClick={() => setCompanySearch('')}
+                            className="text-xs text-slate-400 hover:text-slate-650 font-bold"
                           >
                             Clear
                           </button>
@@ -2492,65 +2783,188 @@ const AdminDashboard = () => {
                       </div>
 
                       {/* Company Table */}
-                      <div className="bg-white border border-slate-200/80 rounded-[18px] shadow-sm overflow-hidden space-y-4 p-5">
-                        <h4 className="text-xs font-black uppercase text-slate-750 tracking-wider">Recruiter Company Analytics</h4>
+                      <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl shadow-sm overflow-hidden p-5">
+                        <div className="pb-3 border-b border-slate-100 dark:border-slate-700 mb-4">
+                          <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">Recruiter Selections & Difficulty matrix</h4>
+                        </div>
                         <div className="overflow-x-auto">
                           <table className="w-full text-left border-collapse text-xs">
                             <thead>
-                              <tr className="border-b border-slate-100 text-slate-450 font-bold uppercase text-[9px] tracking-wider">
+                              <tr className="border-b border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-400 font-bold uppercase text-[9px] tracking-wider">
                                 <th className="pb-3 pl-2">Company Name</th>
-                                <th className="pb-3">Industry</th>
-                                <th className="pb-3 text-center">Drives</th>
-                                <th className="pb-3 text-center">Unique Applied</th>
-                                <th className="pb-3 text-center">Unique Placed</th>
-                                <th className="pb-3 text-right">Package Range (LPA)</th>
-                                <th className="pb-3 pr-2 text-right">Action</th>
+                                <th className="pb-3 text-center">Placed Student Hires</th>
+                                <th className="pb-3 text-center">Avg Package Offered</th>
+                                <th className="pb-3 text-center">Highest Offer Package</th>
+                                <th className="pb-3 text-center">Applicants Selection %</th>
+                                <th className="pb-3 text-center">Interview Difficulty Rating</th>
+                                <th className="pb-3 pr-2 text-right">Job Funnel (Selected / Total Applicants)</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {detailedStats.companyStats
-                                .filter(co => co.companyName.toLowerCase().includes(analyticsSearchQuery.toLowerCase()))
-                                .map((co, idx) => {
-                                  // Local state handles expansion per row safely
-                                  return <CompanyTableRow key={co.companyId} co={co} />;
-                                })}
+                              {detailedStats.companyAnalytics
+                                .filter(c => c.companyName.toLowerCase().includes(companySearch.toLowerCase()))
+                                .map((co, idx) => (
+                                  <tr key={idx} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+                                    <td className="py-3 pl-2 font-extrabold text-slate-850 dark:text-slate-250">{co.companyName}</td>
+                                    <td className="py-3 text-center font-extrabold text-slate-800 dark:text-slate-200">{co.hires} Hires</td>
+                                    <td className="py-3 text-center font-bold text-emerald-600 dark:text-emerald-450">{co.averagePackageOffered} LPA</td>
+                                    <td className="py-3 text-center font-extrabold text-emerald-600 dark:text-emerald-450">{co.highestPackageOffered} LPA</td>
+                                    <td className="py-3 text-center font-bold text-[#0B3D91] dark:text-[#3B6FD1]">{co.selectionRatio}%</td>
+                                    <td className="py-3 text-center">
+                                      <span className="font-extrabold text-amber-500">{co.interviewDifficultyRating}</span>
+                                      <span className="text-[10px] text-slate-400"> / 5.0</span>
+                                    </td>
+                                    <td className="py-3 pr-2 text-right font-extrabold text-slate-650 dark:text-slate-455">{co.totalSelected} / {co.totalApplicants}</td>
+                                  </tr>
+                                ))}
                             </tbody>
                           </table>
                         </div>
                       </div>
 
-                      {/* Drive Table */}
-                      <div className="bg-white border border-slate-200/80 rounded-[18px] shadow-sm overflow-hidden space-y-4 p-5">
-                        <h4 className="text-xs font-black uppercase text-slate-750 tracking-wider">Placement Drive (Job-wise) Analysis</h4>
+                      {/* Recruiter Activity & response times */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        {/* Recruiter Insights */}
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
+                          <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">Active Recruiter Accounts Status</h4>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs border-collapse">
+                              <thead>
+                                <tr className="border-b border-slate-100 dark:border-slate-700 text-slate-400 uppercase text-[9px] font-bold tracking-wider">
+                                  <th className="pb-2.5">Recruiter Company</th>
+                                  <th className="pb-2.5">Account Handler</th>
+                                  <th className="pb-2.5 text-center">Active Jobs</th>
+                                  <th className="pb-2.5 text-center">Hiring Count</th>
+                                  <th className="pb-2.5 text-center">Pending Reviews</th>
+                                  <th className="pb-2.5 pr-1 text-right">Response Time</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {detailedStats.recruiterInsights.map((ri, idx) => (
+                                  <tr key={idx} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+                                    <td className="py-3 font-bold text-slate-800 dark:text-slate-200">{ri.companyName}</td>
+                                    <td className="py-3 font-semibold text-slate-500 dark:text-slate-400">{ri.recruiterName}</td>
+                                    <td className="py-3 text-center font-bold text-slate-700 dark:text-slate-350">{ri.activeDrives}</td>
+                                    <td className="py-3 text-center font-bold text-emerald-600">{ri.hiringCount}</td>
+                                    <td className="py-3 text-center font-bold text-amber-500">{ri.pendingActions}</td>
+                                    <td className="py-3 pr-1 text-right text-slate-500 dark:text-slate-400 font-mono text-[10px]">{ri.responseTime}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        {/* Drive Performance Registered Appeared Selected */}
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
+                          <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">Active Drive Funnel Conversion Rates</h4>
+                          <div className="space-y-3 max-h-[300px] overflow-y-auto scrollbar-thin">
+                            {detailedStats.drivePerformance.map((drive, idx) => (
+                              <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl">
+                                <div className="flex justify-between items-center mb-1">
+                                  <h6 className="font-extrabold text-slate-800 dark:text-slate-250 text-xs truncate max-w-[70%]">{drive.driveName}</h6>
+                                  <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-450">{drive.conversionRate}% Selection</span>
+                                </div>
+                                <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium pt-1">
+                                  <span>Applied: {drive.registered}</span>
+                                  <span>Appeared: {drive.appeared}</span>
+                                  <span>Qualified: {drive.qualified}</span>
+                                  <span className="font-bold text-slate-750 dark:text-slate-200">Selected: {drive.selected}</span>
+                                </div>
+                                <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 mt-2.5 rounded-full overflow-hidden flex">
+                                  <div className="bg-[#0B3D91]/40 h-full" style={{ width: `${(drive.appeared/drive.registered)*100}%` }} title="Appeared" />
+                                  <div className="bg-amber-400 h-full" style={{ width: `${(drive.qualified/drive.registered)*100}%` }} title="Qualified" />
+                                  <div className="bg-emerald-500 h-full" style={{ width: `${(drive.selected/drive.registered)*100}%` }} title="Selected" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* ==================== SUBTAB: RISK & ATS AUDIT ==================== */}
+                  {analyticsSubTab === 'riskATS' && (
+                    <div className="space-y-6 animate-in fade-in duration-300">
+                      
+                      {/* Risk filter input */}
+                      <div className="flex gap-4 items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl shadow-sm">
+                        <div className="relative flex-1">
+                          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                          <input
+                            type="text"
+                            placeholder="Search students in risk desk by name or roll number..."
+                            value={riskSearch}
+                            onChange={(e) => setRiskSearch(e.target.value)}
+                            className="w-full pl-9 block py-1.5 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-250 dark:border-slate-700 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] font-medium text-[#111827] dark:text-slate-100"
+                          />
+                        </div>
+                        {riskSearch && (
+                          <button
+                            onClick={() => setRiskSearch('')}
+                            className="text-xs text-slate-400 hover:text-slate-650 font-bold"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Student Risk List */}
+                      <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl shadow-sm overflow-hidden p-5">
+                        <div className="pb-3 border-b border-slate-100 dark:border-slate-700 mb-4 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <ShieldAlert className="w-5 h-5 text-rose-500" />
+                            <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">Institutional Student Placement Risk Register</h4>
+                          </div>
+                          <span className="text-[9px] bg-rose-50 border border-rose-200 text-rose-500 font-extrabold px-2 py-0.5 rounded uppercase">Critical Action Desk</span>
+                        </div>
                         <div className="overflow-x-auto">
                           <table className="w-full text-left border-collapse text-xs">
                             <thead>
-                              <tr className="border-b border-slate-100 text-slate-450 font-bold uppercase text-[9px] tracking-wider">
-                                <th className="pb-3 pl-2">Drive/Job Title</th>
-                                <th className="pb-3">Company</th>
-                                <th className="pb-3 text-center">Package (LPA)</th>
-                                <th className="pb-3 text-center">Applied</th>
-                                <th className="pb-3 text-center">Shortlisted</th>
-                                <th className="pb-3 text-center">Placed</th>
-                                <th className="pb-3 text-center">Rejected</th>
-                                <th className="pb-3 pr-2 text-right">Status</th>
+                              <tr className="border-b border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-400 font-bold uppercase text-[9px] tracking-wider">
+                                <th className="pb-3 pl-2">Student Name</th>
+                                <th className="pb-3">Roll Number</th>
+                                <th className="pb-3">Department</th>
+                                <th className="pb-3 text-center">CGPA</th>
+                                <th className="pb-3 text-center">ATS Score</th>
+                                <th className="pb-3">Risk Factor Breakdown</th>
+                                <th className="pb-3 text-center">Risk Score Index</th>
+                                <th className="pb-3 pr-2 text-right">Action Priority</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {detailedStats.driveStats
-                                .filter(dr => dr.jobTitle.toLowerCase().includes(analyticsSearchQuery.toLowerCase()) || dr.companyName.toLowerCase().includes(analyticsSearchQuery.toLowerCase()))
-                                .map((dr) => (
-                                  <tr key={dr.jobId} className="border-b border-slate-50 hover:bg-slate-50/50">
-                                    <td className="py-3 pl-2 font-bold text-slate-850">{dr.jobTitle}</td>
-                                    <td className="py-3 font-semibold text-slate-650">{dr.companyName}</td>
-                                    <td className="py-3 text-center font-black text-emerald-600">{dr.package} LPA</td>
-                                    <td className="py-3 text-center font-bold text-slate-700">{dr.uniqueApplied}</td>
-                                    <td className="py-3 text-center font-bold text-amber-500">{dr.uniqueShortlisted}</td>
-                                    <td className="py-3 text-center font-bold text-emerald-600">{dr.uniqueSelected}</td>
-                                    <td className="py-3 text-center font-semibold text-rose-500">{dr.uniqueRejected}</td>
+                              {detailedStats.studentRiskAnalysis
+                                .filter(s => s.studentName.toLowerCase().includes(riskSearch.toLowerCase()) || s.rollNumber.toLowerCase().includes(riskSearch.toLowerCase()))
+                                .map((r, idx) => (
+                                  <tr key={idx} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+                                    <td className="py-3 pl-2 font-bold text-slate-800 dark:text-slate-100">{r.studentName}</td>
+                                    <td className="py-3 font-mono text-slate-500 dark:text-slate-400 text-[10px]">{r.rollNumber}</td>
+                                    <td className="py-3 font-semibold text-slate-650 dark:text-slate-400">{r.branch}</td>
+                                    <td className="py-3 text-center font-bold text-slate-700 dark:text-slate-300">{r.cgpa}</td>
+                                    <td className="py-3 text-center font-bold font-mono text-indigo-500">{r.atsScore}</td>
+                                    <td className="py-3">
+                                      <div className="flex flex-wrap gap-1">
+                                        {r.reasons.map((re, reIdx) => (
+                                          <span key={reIdx} className="px-1.5 py-0.5 rounded text-[8px] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 font-bold">
+                                            {re}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </td>
+                                    <td className="py-3 text-center">
+                                      <div className="w-16 bg-slate-105 dark:bg-slate-700 h-2 rounded-full overflow-hidden inline-block align-middle mr-1.5">
+                                        <div className={`h-full rounded-full ${r.riskScore > 70 ? 'bg-rose-500' : 'bg-amber-400'}`} style={{ width: `${r.riskScore}%` }} />
+                                      </div>
+                                      <span className="font-extrabold text-[10px]">{r.riskScore}%</span>
+                                    </td>
                                     <td className="py-3 pr-2 text-right">
-                                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${dr.status === 'active' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-50 text-slate-450 border border-slate-200'}`}>
-                                        {dr.status === 'active' ? 'Active' : 'Closed'}
+                                      <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase ${
+                                        r.priority === 'High' ? 'bg-rose-50 text-rose-600 border border-rose-250 dark:bg-rose-950/20 dark:text-rose-455' : 'bg-amber-50 text-amber-600 border border-amber-250 dark:bg-amber-950/20'
+                                      }`}>
+                                        {r.priority}
                                       </span>
                                     </td>
                                   </tr>
@@ -2560,128 +2974,274 @@ const AdminDashboard = () => {
                         </div>
                       </div>
 
+                      {/* ATS diagnostics and Skills indexing */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        {/* ATS Distribution ranges */}
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
+                          <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">Candidate ATS Scores distribution metrics</h4>
+                          <div className="space-y-3.5 pt-2">
+                            {[
+                              { label: "Elite Candidate (85 - 100 ATS)", count: 8, pct: 25, color: "bg-emerald-500" },
+                              { label: "Highly Qualified (70 - 85 ATS)", count: 18, pct: 45, color: "bg-teal-500" },
+                              { label: "Borderline Profile (60 - 70 ATS)", count: 12, pct: 20, color: "bg-amber-400" },
+                              { label: "Deficient ATS Score (Below 60 ATS)", count: 4, pct: 10, color: "bg-rose-500" }
+                            ].map((bin, bIdx) => (
+                              <div key={bIdx} className="space-y-1">
+                                <div className="flex justify-between text-xs font-bold text-slate-750 dark:text-slate-350">
+                                  <span>{bin.label}</span>
+                                  <span>{bin.count} students ({bin.pct}%)</span>
+                                </div>
+                                <div className="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                                  <div className={`h-full rounded-full ${bin.color}`} style={{ width: `${bin.pct}%` }} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Top ATS Leaders student listings */}
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
+                          <h4 className="text-xs font-black uppercase text-[#0B3D91] tracking-wider">Sleek Profile ATS Leaderboard</h4>
+                          <div className="space-y-2.5 pt-1">
+                            {detailedStats.leaderboards.students.bestATSScore.map((st, idx) => (
+                              <div key={idx} className="flex justify-between items-center p-2.5 bg-slate-50 dark:bg-slate-905 border border-slate-100 dark:border-slate-800 rounded-xl hover:shadow-sm transition-all">
+                                <div className="flex items-center gap-2.5">
+                                  <span className="w-5 h-5 rounded bg-indigo-50 dark:bg-indigo-950/20 text-[#0B3D91] flex items-center justify-center font-bold text-xs">#{idx+1}</span>
+                                  <div>
+                                    <h6 className="font-extrabold text-slate-850 dark:text-slate-200 text-xs">{st.name}</h6>
+                                    <p className="text-[9px] text-slate-400 uppercase mt-0.5">{st.detail}</p>
+                                  </div>
+                                </div>
+                                <span className="font-black text-indigo-600 dark:text-indigo-400 text-xs bg-indigo-50 dark:bg-indigo-950/30 px-2.5 py-1 rounded-lg border border-indigo-100/45">{st.score}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
                     </div>
                   )}
 
-                  {/* Subtab Content: Compensation & Skills */}
-                  {analyticsSubTab === 'skills' && (
-                    <div className="space-y-6">
+                  {/* ==================== SUBTAB: FUNNEL & PREDICTIONS ==================== */}
+                  {analyticsSubTab === 'trendsPrediction' && (
+                    <div className="space-y-6 animate-in fade-in duration-300">
                       
-                      {/* Extremes (Highest and Lowest Packages) */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
-                        {/* Highest Placements */}
-                        <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
-                          <h4 className="text-xs font-black uppercase text-indigo-650 tracking-wider flex items-center gap-1.5">
-                            <Sparkles className="w-4 h-4 text-indigo-500" /> Dream Packages (Highest Placements)
-                          </h4>
-                          <div className="space-y-3">
-                            {detailedStats.packageBreakdown.highestPlaced.length === 0 ? (
-                              <p className="text-xs text-slate-400 font-medium py-4 text-center">No successful selections recorded yet.</p>
-                            ) : (
-                              detailedStats.packageBreakdown.highestPlaced.map((hp, idx) => (
-                                <div key={idx} className="bg-indigo-50/20 border border-indigo-100 p-4 rounded-2xl flex justify-between items-center shadow-sm">
-                                  <div>
-                                    <h5 className="font-bold text-slate-800 text-sm">{hp.studentName}</h5>
-                                    <p className="text-[10px] text-slate-500 font-mono mt-0.5">{hp.rollNumber} · {hp.branch}</p>
-                                    <div className="text-[10px] text-slate-500 font-bold mt-1.5 uppercase flex items-center gap-1">
-                                      <Building2 className="w-3.5 h-3.5 text-[#6D5EF7]" /> {hp.companyName} ({hp.jobTitle})
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className="text-xl font-black text-indigo-600">{hp.package}</span>
-                                    <span className="text-[10px] text-slate-400 font-bold uppercase block">LPA CTC</span>
-                                  </div>
-                                </div>
-                              ))
-                            )}
+                      {/* AI predictions panel expected stats */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="p-5 bg-gradient-to-br from-indigo-50/50 to-indigo-100/20 dark:from-indigo-950/20 dark:to-indigo-900/10 border border-indigo-150/40 rounded-2xl flex flex-col justify-between">
+                          <div>
+                            <span className="text-[10px] text-indigo-500 font-black uppercase tracking-wider font-mono">AI Expected Placement Rate</span>
+                            <div className="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-2">{detailedStats.placementPrediction.expectedPlacementPercentage}%</div>
                           </div>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal mt-3 font-sans">Statistical forecast calculated based on historical conversion trends and recruiter pipeline size.</p>
                         </div>
 
-                        {/* Lowest Placements */}
-                        <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
-                          <h4 className="text-xs font-black uppercase text-rose-500 tracking-wider flex items-center gap-1.5">
-                            <Info className="w-4 h-4 text-rose-450" /> Starter Packages (Lowest Placements)
-                          </h4>
-                          <div className="space-y-3">
-                            {detailedStats.packageBreakdown.lowestPlaced.length === 0 ? (
-                              <p className="text-xs text-slate-400 font-medium py-4 text-center">No successful selections recorded yet.</p>
-                            ) : (
-                              detailedStats.packageBreakdown.lowestPlaced.map((lp, idx) => (
-                                <div key={idx} className="bg-rose-50/10 border border-rose-100 p-4 rounded-2xl flex justify-between items-center shadow-sm">
-                                  <div>
-                                    <h5 className="font-bold text-slate-800 text-sm">{lp.studentName}</h5>
-                                    <p className="text-[10px] text-slate-500 font-mono mt-0.5">{lp.rollNumber} · {lp.branch}</p>
-                                    <div className="text-[10px] text-slate-500 font-bold mt-1.5 uppercase flex items-center gap-1">
-                                      <Building2 className="w-3.5 h-3.5 text-rose-400" /> {lp.companyName} ({lp.jobTitle})
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className="text-xl font-black text-rose-500">{lp.package}</span>
-                                    <span className="text-[10px] text-slate-405 font-bold uppercase block">LPA CTC</span>
-                                  </div>
-                                </div>
-                              ))
-                            )}
+                        <div className="p-5 bg-gradient-to-br from-emerald-50/50 to-emerald-100/20 dark:from-emerald-950/20 dark:to-emerald-900/10 border border-emerald-150/40 rounded-2xl flex flex-col justify-between">
+                          <div>
+                            <span className="text-[10px] text-emerald-600 font-black uppercase tracking-wider font-mono">Expected Candidates Placed</span>
+                            <div className="text-3xl font-extrabold text-emerald-600 mt-2">{detailedStats.placementPrediction.studentsLikelyToGetPlacedCount} Students</div>
                           </div>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal mt-3 font-sans">Number of eligible students predicted to secure offers before the end of the campaign.</p>
                         </div>
 
+                        <div className="p-5 bg-gradient-to-br from-rose-50/50 to-rose-100/20 dark:from-rose-950/20 dark:to-rose-900/10 border border-rose-150/40 rounded-2xl flex flex-col justify-between">
+                          <div>
+                            <span className="text-[10px] text-rose-500 font-black uppercase tracking-wider font-mono">High Placement Risk Profiles</span>
+                            <div className="text-3xl font-extrabold text-rose-500 mt-2">{detailedStats.placementPrediction.studentsAtRiskCount} Students</div>
+                          </div>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal mt-3 font-sans">Students requiring direct placement cell intervention due to eligibility deficits or lack of resume profile.</p>
+                        </div>
                       </div>
 
-                      {/* Skill Package Rankings */}
-                      <div className="bg-white border border-slate-200/80 rounded-[18px] shadow-sm overflow-hidden space-y-4 p-5">
-                        <h4 className="text-xs font-black uppercase text-slate-750 tracking-wider">Technology Skill Package Index</h4>
-                        <p className="text-[11px] text-slate-500 font-semibold -mt-2">Aggregated salary packages offered to placed students grouped by their technical skills profile.</p>
+                      {/* SVG line chart and package distributions */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left border-collapse text-xs">
-                            <thead>
-                              <tr className="border-b border-slate-100 text-slate-450 font-bold uppercase text-[9px] tracking-wider">
-                                <th className="pb-3 pl-2">Skill / Tech Stack</th>
-                                <th className="pb-3 text-center">Placed Students Count</th>
-                                <th className="pb-3 text-center">Lowest Package (LPA)</th>
-                                <th className="pb-3 text-center">Average Package (LPA)</th>
-                                <th className="pb-3 text-center">Highest Package (LPA)</th>
-                                <th className="pb-3 pr-2 text-right">Compensation index</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {detailedStats.skillStats.length === 0 ? (
-                                <tr>
-                                  <td colSpan="6" className="text-center py-6 text-slate-400 font-bold">No placements with skills registered yet.</td>
-                                </tr>
-                              ) : (
-                                detailedStats.skillStats.map((sk) => {
-                                  const maxAvgPkg = Math.max(...detailedStats.skillStats.map(s => s.averagePackage), 1);
-                                  const barPct = Math.min(Math.round((sk.averagePackage / maxAvgPkg) * 100), 100);
-                                  return (
-                                    <tr key={sk.skill} className="border-b border-slate-50 hover:bg-slate-50/50">
-                                      <td className="py-3 pl-2 font-bold text-slate-800">
-                                        <span className="px-2.5 py-1 bg-[#6D5EF7]/5 text-[#6D5EF7] border border-[#6D5EF7]/10 rounded-lg text-[11px]">
-                                          {sk.skill}
-                                        </span>
-                                      </td>
-                                      <td className="py-3 text-center font-bold text-slate-700">{sk.placedCount} placed</td>
-                                      <td className="py-3 text-center font-semibold text-rose-500">{sk.lowestPackage} LPA</td>
-                                      <td className="py-3 text-center font-black text-[#6D5EF7]">{sk.averagePackage} LPA</td>
-                                      <td className="py-3 text-center font-bold text-emerald-600">{sk.highestPackage} LPA</td>
-                                      <td className="py-3 pr-2 text-right w-44">
-                                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden inline-block align-middle mr-2">
-                                          <div className="bg-[#6D5EF7] h-full rounded-full transition-all duration-500" style={{ width: `${barPct}%` }} />
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  );
-                                })
-                              )}
-                            </tbody>
-                          </table>
+                        {/* Monthly placement area chart */}
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
+                          <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">Monthly Successful Placements Trend (Cumulative Hires)</h4>
+                          <div className="pt-2 relative h-48 w-full flex items-end justify-between px-2 border-b border-slate-200 dark:border-slate-700 pb-2">
+                            {detailedStats.placementTrends.monthlyPlacements.map((pt, idx) => {
+                              const maxHires = Math.max(...detailedStats.placementTrends.monthlyPlacements.map(t => t.placed), 1);
+                              const barHeight = Math.round((pt.placed / maxHires) * 120);
+                              return (
+                                <div key={idx} className="flex flex-col items-center gap-2 group w-8">
+                                  <div className="text-[9px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1">{pt.placed} placed</div>
+                                  <div className="bg-[#0B3D91]/10 dark:bg-[#0B3D91]/20 w-5 rounded-t-sm" style={{ height: `${barHeight}px` }}>
+                                    <div className="bg-[#0B3D91] h-full w-full rounded-t-sm opacity-80 group-hover:opacity-100 transition-opacity" />
+                                  </div>
+                                  <span className="text-[10px] font-bold text-slate-550 dark:text-slate-400">{pt.month}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <span className="text-[9px] text-slate-400 block text-center uppercase tracking-wider font-semibold">Continuous hiring upward speed trajectory</span>
+                        </div>
+
+                        {/* Package distributions */}
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
+                          <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">Salary CTC Ranges Distribution (LPA)</h4>
+                          <div className="space-y-3 pt-2">
+                            {detailedStats.packageAnalytics.packageDistribution.map((rg, idx) => {
+                              const maxVal = Math.max(...detailedStats.packageAnalytics.packageDistribution.map(r => r.count), 1);
+                              const pctWidth = Math.round((rg.count / maxVal) * 100);
+                              return (
+                                <div key={idx} className="space-y-1">
+                                  <div className="flex justify-between text-xs font-bold text-slate-755 dark:text-slate-350">
+                                    <span>{rg.range}</span>
+                                    <span>{rg.count} students placed</span>
+                                  </div>
+                                  <div className="w-full bg-slate-105 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
+                                    <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${pctWidth}%` }} />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Year-over-Year salary growth */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
+                          <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">Average Salary Growth (Year-over-Year)</h4>
+                          <div className="pt-2 relative h-40 w-full flex items-end justify-around border-b border-slate-200 dark:border-slate-700 pb-2">
+                            {detailedStats.packageAnalytics.salaryGrowthYoY.map((y, idx) => {
+                              const maxSalary = Math.max(...detailedStats.packageAnalytics.salaryGrowthYoY.map(s => s.avgSalary), 1);
+                              const barHeight = Math.round((y.avgSalary / maxSalary) * 100);
+                              return (
+                                <div key={idx} className="flex flex-col items-center gap-1.5 w-16">
+                                  <span className="text-xs font-bold text-slate-700 dark:text-slate-350">{y.avgSalary} LPA</span>
+                                  <div className="bg-gradient-to-t from-[#0B3D91] to-indigo-400 w-8 rounded-t-sm" style={{ height: `${barHeight}px` }} />
+                                  <span className="text-[10px] font-extrabold text-slate-500">{y.year} Batch</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Forecast predictions details list */}
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
+                          <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">Department Placement Forecast Predictions</h4>
+                          <div className="space-y-3 pt-2">
+                            {detailedStats.placementPrediction.departmentPlacementForecast.map((forecast, idx) => (
+                              <div key={idx} className="flex justify-between items-center text-xs font-bold">
+                                <span className="text-slate-755 dark:text-slate-300">{forecast.department}</span>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-24 bg-slate-105 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                    <div className="bg-[#0B3D91] h-full rounded-full" style={{ width: `${forecast.forecastRate}%` }} />
+                                  </div>
+                                  <span className="text-[#0B3D91] dark:text-[#3B6FD1] font-extrabold">{forecast.forecastRate}% forecast</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
 
                     </div>
                   )}
-                </>
+
+                  {/* ==================== SUBTAB: LEADERBOARDS ==================== */}
+                  {analyticsSubTab === 'overview' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                      
+                      {/* Top Students Leaderboard */}
+                      <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
+                        <div className="pb-2 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                          <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">Top Students Placement Leaderboard</h4>
+                          <span className="text-[9px] bg-slate-100 dark:bg-slate-700 text-slate-500 font-extrabold px-1.5 py-0.5 rounded">Students</span>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <div>
+                            <h6 className="text-[10px] font-black text-slate-405 uppercase tracking-wider mb-2">Highest Package Grabbed</h6>
+                            <div className="space-y-2">
+                              {detailedStats.leaderboards.students.highestPackage.map((item, idx) => (
+                                <div key={idx} className="flex justify-between text-xs font-semibold">
+                                  <span className="text-slate-700 dark:text-slate-350">{idx+1}. {item.name} ({item.detail})</span>
+                                  <span className="text-emerald-600 dark:text-emerald-500 font-extrabold">{item.score}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
+                            <h6 className="text-[10px] font-black text-slate-405 uppercase tracking-wider mb-2">Most Applications Submitted</h6>
+                            <div className="space-y-2">
+                              {detailedStats.leaderboards.students.mostApplications.map((item, idx) => (
+                                <div key={idx} className="flex justify-between text-xs font-semibold">
+                                  <span className="text-slate-700 dark:text-slate-350">{idx+1}. {item.name} ({item.detail})</span>
+                                  <span className="text-indigo-600 dark:text-indigo-400 font-extrabold">{item.score}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
+                            <h6 className="text-[10px] font-black text-slate-405 uppercase tracking-wider mb-2">Best Academic Record (Highest CGPA)</h6>
+                            <div className="space-y-2">
+                              {detailedStats.leaderboards.students.highestCGPA.map((item, idx) => (
+                                <div key={idx} className="flex justify-between text-xs font-semibold">
+                                  <span className="text-slate-700 dark:text-slate-350">{idx+1}. {item.name} ({item.detail})</span>
+                                  <span className="text-amber-500 font-extrabold">{item.score}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Top Companies Leaderboard */}
+                      <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
+                        <div className="pb-2 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                          <h4 className="text-xs font-black uppercase text-slate-750 dark:text-slate-200 tracking-wider">Top Corporate Engagement Leaderboard</h4>
+                          <span className="text-[9px] bg-slate-100 dark:bg-slate-700 text-slate-500 font-extrabold px-1.5 py-0.5 rounded">Recruiters</span>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <div>
+                            <h6 className="text-[10px] font-black text-slate-405 uppercase tracking-wider mb-2">Recruiter Offering Highest Package</h6>
+                            <div className="space-y-2">
+                              {detailedStats.leaderboards.companies.highestPackage.map((item, idx) => (
+                                <div key={idx} className="flex justify-between text-xs font-semibold">
+                                  <span className="text-slate-700 dark:text-slate-350">{idx+1}. {item.name}</span>
+                                  <span className="text-emerald-600 dark:text-emerald-500 font-extrabold">{item.score}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
+                            <h6 className="text-[10px] font-black text-slate-405 uppercase tracking-wider mb-2">Recruiters with Highest Hiring Count</h6>
+                            <div className="space-y-2">
+                              {detailedStats.leaderboards.companies.mostHires.map((item, idx) => (
+                                <div key={idx} className="flex justify-between text-xs font-semibold">
+                                  <span className="text-slate-700 dark:text-slate-350">{idx+1}. {item.name}</span>
+                                  <span className="text-[#0B3D91] dark:text-[#3B6FD1] font-extrabold">{item.score}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
+                            <h6 className="text-[10px] font-black text-slate-405 uppercase tracking-wider mb-2">Highest Funnel Conversion Selection Rate</h6>
+                            <div className="space-y-2">
+                              {detailedStats.leaderboards.companies.bestSelectionRate.map((item, idx) => (
+                                <div key={idx} className="flex justify-between text-xs font-semibold">
+                                  <span className="text-slate-700 dark:text-slate-350">{idx+1}. {item.name}</span>
+                                  <span className="text-amber-500 font-extrabold">{item.score}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
+
+                </div>
               )}
 
             </div>
@@ -2694,10 +3254,10 @@ const AdminDashboard = () => {
             <div className="space-y-6 animate-in fade-in duration-300">
               
               <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Broadcast Notices & placement alerts</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Broadcast Notices & placement alerts</p>
                 <button
                   onClick={() => setActiveModal('announcement')}
-                  className="bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer"
+                  className="bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer"
                 >
                   <Megaphone className="w-3.5 h-3.5" /> Post Announcement
                 </button>
@@ -2720,10 +3280,10 @@ const AdminDashboard = () => {
                     {notice.attachment && (
                       <div className="pt-2 border-t border-slate-50 flex items-center justify-between text-xs">
                         <div className="flex items-center gap-1.5 text-slate-500">
-                          <FileText className="w-4 h-4 text-[#6D5EF7]" />
+                          <FileText className="w-4 h-4 text-[#0B3D91]" />
                           <span className="font-semibold">{notice.attachment}</span>
                         </div>
-                        <button onClick={() => addToast('success', 'Attachment downloaded')} className="text-[#6D5EF7] hover:underline font-bold cursor-pointer">
+                        <button onClick={() => addToast('success', 'Attachment downloaded')} className="text-[#0B3D91] hover:underline font-bold cursor-pointer">
                           Download JD
                         </button>
                       </div>
@@ -2743,12 +3303,12 @@ const AdminDashboard = () => {
               
               <div className="pb-2 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Audit System Alerts & Event logs</p>
+                  <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Audit System Alerts & Event logs</p>
                 </div>
                 {notificationsList.some(n => !n.read) && (
                   <button 
                     onClick={handleMarkAllNotificationsAsRead}
-                    className="text-xs px-3 py-1.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white rounded-xl font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="text-xs px-3 py-1.5 bg-[#0B3D91] hover:bg-[#082F70] text-white rounded-xl font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <CheckSquare className="w-3.5 h-3.5" />
                     <span>Mark All Read</span>
@@ -2771,7 +3331,7 @@ const AdminDashboard = () => {
                       onClick={() => setNotifFilter(filterVal)}
                       className={`text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
                         isActive 
-                          ? 'bg-[#6D5EF7] text-white border-[#6D5EF7]' 
+                          ? 'bg-[#0B3D91] text-white border-[#0B3D91]' 
                           : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                       }`}
                     >
@@ -2792,7 +3352,7 @@ const AdminDashboard = () => {
                         onClick={() => isUnread && handleMarkNotificationAsRead(n.id)}
                         className={`flex gap-4 p-4 rounded-xl text-xs border transition-all ${
                           isUnread 
-                            ? 'bg-[#6D5EF7]/5 border-[#6D5EF7]/20 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/10 cursor-pointer shadow-sm' 
+                            ? 'bg-[#0B3D91]/5 border-[#0B3D91]/20 hover:border-[#0B3D91]/40 hover:bg-[#0B3D91]/10 cursor-pointer shadow-sm' 
                             : 'bg-slate-50/50 border-slate-100 text-slate-505'
                         }`}
                       >
@@ -2804,13 +3364,13 @@ const AdminDashboard = () => {
                         </div>
                         <div className="flex-1">
                           <p className={`text-slate-700 font-medium ${isUnread ? 'font-bold text-slate-900' : ''}`}>{n.text}</p>
-                          <span className="text-[10px] text-slate-450 block mt-1">{n.time}</span>
+                          <span className="text-[10px] text-slate-400 block mt-1">{n.time}</span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {isUnread && (
-                            <span className="w-2 h-2 bg-[#6D5EF7] rounded-full" title="Unread" />
+                            <span className="w-2 h-2 bg-[#0B3D91] rounded-full" title="Unread" />
                           )}
-                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${isUnread ? 'bg-[#6D5EF7]/10 text-[#6D5EF7]' : 'bg-slate-100 text-slate-400'}`}>
+                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${isUnread ? 'bg-[#0B3D91]/10 text-[#0B3D91]' : 'bg-slate-100 text-slate-400'}`}>
                             {isUnread ? 'New' : 'Read'}
                           </span>
                         </div>
@@ -2836,7 +3396,7 @@ const AdminDashboard = () => {
             <div className="space-y-6 animate-in fade-in duration-300">
               
               <div className="pb-2 border-b border-slate-100">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Configure System credentials & notifications</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Configure System credentials & notifications</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -2847,39 +3407,39 @@ const AdminDashboard = () => {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                     <div className="space-y-1.5">
-                      <label className="block font-bold text-slate-600">Cell/Office Name</label>
-                      <input 
+                      <label htmlFor="admindas-field-1" className="block font-bold text-slate-600">Cell/Office Name</label>
+                      <input id="admindas-field-1" 
                         type="text" 
                         value={settingsForm.name} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, name: e.target.value })}
-                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7] text-slate-707" 
+                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#0B3D91] text-slate-707" 
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="block font-bold text-slate-600">Primary Contact Email</label>
-                      <input 
+                      <label htmlFor="admindas-field-2" className="block font-bold text-slate-600">Primary Contact Email</label>
+                      <input id="admindas-field-2" 
                         type="email" 
                         value={settingsForm.email} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, email: e.target.value })}
-                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7] text-slate-707" 
+                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#0B3D91] text-slate-707" 
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="block font-bold text-slate-600">Office Location / Address</label>
-                      <input 
+                      <label htmlFor="admindas-field-3" className="block font-bold text-slate-600">Office Location / Address</label>
+                      <input id="admindas-field-3" 
                         type="text" 
                         value={settingsForm.address} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, address: e.target.value })}
-                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7] text-slate-707" 
+                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#0B3D91] text-slate-707" 
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="block font-bold text-slate-600">Contact Number</label>
-                      <input 
+                      <label htmlFor="admindas-field-4" className="block font-bold text-slate-600">Contact Number</label>
+                      <input id="admindas-field-4" 
                         type="text" 
                         value={settingsForm.phone} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, phone: e.target.value })}
-                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7] text-slate-707" 
+                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#0B3D91] text-slate-707" 
                       />
                     </div>
                   </div>
@@ -2887,7 +3447,7 @@ const AdminDashboard = () => {
                   <div className="pt-3 border-t border-slate-50">
                     <button 
                       onClick={() => addToast('success', 'Profile details updated.')}
-                      className="px-4 py-2 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold rounded-xl shadow-sm cursor-pointer"
+                      className="px-4 py-2 bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-bold rounded-xl shadow-sm cursor-pointer"
                     >
                       Save Configuration
                     </button>
@@ -2897,35 +3457,35 @@ const AdminDashboard = () => {
                 {/* 2. SMTP Configurations */}
                 <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
                   <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider pb-2 border-b border-slate-50 flex items-center gap-1.5">
-                    <Server className="w-4 h-4 text-[#6D5EF7]" /> SMTP Email setup
+                    <Server className="w-4 h-4 text-[#0B3D91]" /> SMTP Email setup
                   </h3>
                   
                   <div className="space-y-3.5 text-xs">
                     <div className="space-y-1">
-                      <label className="block font-bold text-slate-600">SMTP Server Host</label>
-                      <input 
+                      <label htmlFor="admindas-field-5" className="block font-bold text-slate-600">SMTP Server Host</label>
+                      <input id="admindas-field-5" 
                         type="text" 
                         value={settingsForm.smtpHost} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, smtpHost: e.target.value })}
-                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7]" 
+                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#0B3D91]" 
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="block font-bold text-slate-600">SMTP Port</label>
-                      <input 
+                      <label htmlFor="admindas-field-6" className="block font-bold text-slate-600">SMTP Port</label>
+                      <input id="admindas-field-6" 
                         type="text" 
                         value={settingsForm.smtpPort} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, smtpPort: e.target.value })}
-                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7]" 
+                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#0B3D91]" 
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="block font-bold text-slate-600">Sender Username</label>
-                      <input 
+                      <label htmlFor="admindas-field-7" className="block font-bold text-slate-600">Sender Username</label>
+                      <input id="admindas-field-7" 
                         type="text" 
                         value={settingsForm.smtpUser} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, smtpUser: e.target.value })}
-                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7]" 
+                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#0B3D91]" 
                       />
                     </div>
 
@@ -2941,7 +3501,7 @@ const AdminDashboard = () => {
                 {/* 3. Granular Permissions Checklist */}
                 <div className="lg:col-span-2 bg-white border border-slate-200/80 rounded-[18px] p-6 shadow-sm space-y-4">
                   <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider pb-2 border-b border-slate-50 flex items-center gap-1.5">
-                    <Shield className="w-4 h-4 text-[#6D5EF7]" /> Placement Cell Permissions Audit
+                    <Shield className="w-4 h-4 text-[#0B3D91]" /> Placement Cell Permissions Audit
                   </h3>
                   
                   <div className="space-y-3.5 text-xs">
@@ -2950,7 +3510,7 @@ const AdminDashboard = () => {
                         type="checkbox" 
                         checked={settingsForm.requireResumeApproval} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, requireResumeApproval: e.target.checked })}
-                        className="accent-[#6D5EF7] w-4 h-4" 
+                        className="accent-[#0B3D91] w-4 h-4" 
                       />
                       <div>
                         <span className="font-bold text-slate-700 block">Require TPO Verification for student resumes</span>
@@ -2963,7 +3523,7 @@ const AdminDashboard = () => {
                         type="checkbox" 
                         checked={settingsForm.allowDualOffers} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, allowDualOffers: e.target.checked })}
-                        className="accent-[#6D5EF7] w-4 h-4" 
+                        className="accent-[#0B3D91] w-4 h-4" 
                       />
                       <div>
                         <span className="font-bold text-slate-700 block">Allow Dual Placement Offers</span>
@@ -2976,7 +3536,7 @@ const AdminDashboard = () => {
                         type="checkbox" 
                         checked={settingsForm.maintenanceMode} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, maintenanceMode: e.target.checked })}
-                        className="accent-[#6D5EF7] w-4 h-4" 
+                        className="accent-[#0B3D91] w-4 h-4" 
                       />
                       <div>
                         <span className="font-bold text-slate-700 block">System Maintenance Mode</span>
@@ -2989,20 +3549,20 @@ const AdminDashboard = () => {
                 {/* 4. Password updates and Theme Lock */}
                 <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
                   <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider pb-2 border-b border-slate-50 flex items-center gap-1.5">
-                    <Lock className="w-4 h-4 text-[#6D5EF7]" /> Password & security
+                    <Lock className="w-4 h-4 text-[#0B3D91]" /> Password & security
                   </h3>
                   <div className="space-y-3.5 text-xs">
                     <div className="space-y-1">
-                      <label className="block font-bold text-slate-655">Current Password</label>
-                      <input type="password" placeholder="••••••••" className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none" />
+                      <label htmlFor="admindas-field-8" className="block font-bold text-slate-655">Current Password</label>
+                      <input id="admindas-field-8" type="password" placeholder="••••••••" className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none" />
                     </div>
                     <div className="space-y-1">
-                      <label className="block font-bold text-slate-655">New Secure Password</label>
-                      <input type="password" placeholder="Min 8 characters" className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none" />
+                      <label htmlFor="admindas-field-9" className="block font-bold text-slate-655">New Secure Password</label>
+                      <input id="admindas-field-9" type="password" placeholder="Min 8 characters" className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none" />
                     </div>
                     <button 
                       onClick={() => addToast('success', 'Security passwords updated.')}
-                      className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold rounded-xl cursor-pointer"
+                      className="w-full py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-xl cursor-pointer"
                     >
                       Update Password
                     </button>
@@ -3062,8 +3622,8 @@ const AdminDashboard = () => {
             {activeModal === 'createDrive' && (
               <form onSubmit={handleCreateDriveSubmit} className="space-y-3.5 text-xs">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-655">Placement Drive Title</label>
-                  <input 
+                  <label htmlFor="admindas-field-10" className="block font-bold text-slate-655">Placement Drive Title</label>
+                  <input id="admindas-field-10" 
                     type="text" 
                     required 
                     placeholder="e.g. Google SDE Recruitment 2026" 
@@ -3074,8 +3634,8 @@ const AdminDashboard = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Company Name</label>
-                    <input 
+                    <label htmlFor="admindas-field-11" className="block font-bold text-slate-655">Company Name</label>
+                    <input id="admindas-field-11" 
                       type="text" 
                       required 
                       placeholder="e.g. Google India" 
@@ -3085,8 +3645,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Target Job Role</label>
-                    <input 
+                    <label htmlFor="admindas-field-12" className="block font-bold text-slate-655">Target Job Role</label>
+                    <input id="admindas-field-12" 
                       type="text" 
                       required 
                       placeholder="e.g. Software Engineer" 
@@ -3098,8 +3658,8 @@ const AdminDashboard = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Offered CTC Package</label>
-                    <input 
+                    <label htmlFor="admindas-field-13" className="block font-bold text-slate-655">Offered CTC Package</label>
+                    <input id="admindas-field-13" 
                       type="text" 
                       required 
                       placeholder="e.g. 24.5 LPA" 
@@ -3109,8 +3669,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Registration Deadline</label>
-                    <input 
+                    <label htmlFor="admindas-field-14" className="block font-bold text-slate-655">Registration Deadline</label>
+                    <input id="admindas-field-14" 
                       type="date" 
                       required 
                       value={driveForm.deadline}
@@ -3122,8 +3682,8 @@ const AdminDashboard = () => {
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Assessment Mode</label>
-                    <select
+                    <label htmlFor="admindas-field-15" className="block font-bold text-slate-655">Assessment Mode</label>
+                    <select id="admindas-field-15"
                       value={driveForm.mode}
                       onChange={(e) => setDriveForm({ ...driveForm, mode: e.target.value })}
                       className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-semibold"
@@ -3133,8 +3693,8 @@ const AdminDashboard = () => {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Location Venue Details</label>
-                    <input 
+                    <label htmlFor="admindas-field-16" className="block font-bold text-slate-655">Location Venue Details</label>
+                    <input id="admindas-field-16" 
                       type="text" 
                       placeholder="e.g. Audit Hall 2" 
                       value={driveForm.venue}
@@ -3163,7 +3723,7 @@ const AdminDashboard = () => {
                           }}
                           className={`px-3 py-1.5 rounded-lg font-bold border transition-colors cursor-pointer ${
                             isSelected 
-                              ? 'bg-[#6D5EF7] text-white border-transparent' 
+                              ? 'bg-[#0B3D91] text-white border-transparent' 
                               : 'bg-[#F8FAFC] text-slate-600 border-slate-200 hover:bg-slate-50'
                           }`}
                         >
@@ -3174,7 +3734,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <button type="submit" className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
+                <button type="submit" className="w-full py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
                   Create Placement Drive
                 </button>
               </form>
@@ -3185,8 +3745,8 @@ const AdminDashboard = () => {
               <form onSubmit={handleAddStudentSubmit} className="space-y-3.5 text-xs">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Student Full Name</label>
-                    <input 
+                    <label htmlFor="admindas-field-17" className="block font-bold text-slate-655">Student Full Name</label>
+                    <input id="admindas-field-17" 
                       type="text" 
                       required 
                       placeholder="e.g. Kabir Malhotra" 
@@ -3196,8 +3756,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">University Roll Number</label>
-                    <input 
+                    <label htmlFor="admindas-field-18" className="block font-bold text-slate-655">University Roll Number</label>
+                    <input id="admindas-field-18" 
                       type="text" 
                       required 
                       placeholder="e.g. GU2022CSE018" 
@@ -3210,8 +3770,8 @@ const AdminDashboard = () => {
 
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Department</label>
-                    <select
+                    <label htmlFor="admindas-field-19" className="block font-bold text-slate-655">Department</label>
+                    <select id="admindas-field-19"
                       value={studentForm.branch}
                       onChange={(e) => setStudentForm({ ...studentForm, branch: e.target.value })}
                       className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-semibold"
@@ -3225,8 +3785,8 @@ const AdminDashboard = () => {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">CGPA</label>
-                    <input 
+                    <label htmlFor="admindas-field-20" className="block font-bold text-slate-655">CGPA</label>
+                    <input id="admindas-field-20" 
                       type="number" 
                       step="0.01" 
                       required 
@@ -3237,8 +3797,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Batch Year</label>
-                    <select
+                    <label htmlFor="admindas-field-21" className="block font-bold text-slate-655">Batch Year</label>
+                    <select id="admindas-field-21"
                       value={studentForm.year}
                       onChange={(e) => setStudentForm({ ...studentForm, year: e.target.value })}
                       className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-semibold"
@@ -3250,8 +3810,8 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-655">Student Email Address</label>
-                  <input 
+                  <label htmlFor="admindas-field-22" className="block font-bold text-slate-655">Student Email Address</label>
+                  <input id="admindas-field-22" 
                     type="email" 
                     required 
                     placeholder="e.g. student@geeta.edu" 
@@ -3263,8 +3823,8 @@ const AdminDashboard = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Resume status</label>
-                    <select
+                    <label htmlFor="admindas-field-23" className="block font-bold text-slate-655">Resume status</label>
+                    <select id="admindas-field-23"
                       value={studentForm.resumeStatus}
                       onChange={(e) => setStudentForm({ ...studentForm, resumeStatus: e.target.value })}
                       className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-semibold"
@@ -3274,8 +3834,8 @@ const AdminDashboard = () => {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Placement Status</label>
-                    <select
+                    <label htmlFor="admindas-field-24" className="block font-bold text-slate-655">Placement Status</label>
+                    <select id="admindas-field-24"
                       value={studentForm.placementStatus}
                       onChange={(e) => setStudentForm({ ...studentForm, placementStatus: e.target.value })}
                       className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-semibold"
@@ -3286,7 +3846,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <button type="submit" className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
+                <button type="submit" className="w-full py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
                   Add Student Profile
                 </button>
               </form>
@@ -3296,8 +3856,8 @@ const AdminDashboard = () => {
             {activeModal === 'announcement' && (
               <form onSubmit={handleAnnouncementSubmit} className="space-y-3.5 text-xs">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-655">Notice Topic / Title</label>
-                  <input 
+                  <label htmlFor="admindas-field-25" className="block font-bold text-slate-655">Notice Topic / Title</label>
+                  <input id="admindas-field-25" 
                     type="text" 
                     required 
                     placeholder="e.g. TCS Assessment Guidelines" 
@@ -3314,7 +3874,7 @@ const AdminDashboard = () => {
                     <div className="flex gap-1.5 border-b border-slate-200 px-3 py-1.5 bg-slate-50">
                       <button type="button" className="p-1 hover:bg-slate-200 rounded font-black text-slate-700 font-mono text-[10px] cursor-pointer">B</button>
                       <button type="button" className="p-1 hover:bg-slate-200 rounded font-bold text-slate-700 italic font-mono text-[10px] cursor-pointer">I</button>
-                      <button type="button" className="p-1 hover:bg-slate-200 rounded font-bold text-[#6D5EF7] underline text-[9px] cursor-pointer">Link</button>
+                      <button type="button" className="p-1 hover:bg-slate-200 rounded font-bold text-[#0B3D91] underline text-[9px] cursor-pointer">Link</button>
                       <button type="button" className="p-1 hover:bg-slate-200 rounded font-bold text-slate-700 text-[9px] cursor-pointer">• List</button>
                     </div>
                     <textarea 
@@ -3329,8 +3889,8 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-655">Target Student Audience</label>
-                  <select
+                  <label htmlFor="admindas-field-26" className="block font-bold text-slate-655">Target Student Audience</label>
+                  <select id="admindas-field-26"
                     value={noticeForm.targetAudience}
                     onChange={(e) => setNoticeForm({ ...noticeForm, targetAudience: e.target.value })}
                     className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-semibold"
@@ -3361,7 +3921,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <button type="submit" className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
+                <button type="submit" className="w-full py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
                   Broadcast notice
                 </button>
               </form>
@@ -3371,8 +3931,8 @@ const AdminDashboard = () => {
             {activeModal === 'interview' && (
               <form onSubmit={handleInterviewSubmit} className="space-y-3.5 text-xs">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-655">Candidate Student Name</label>
-                  <select
+                  <label htmlFor="admindas-field-27" className="block font-bold text-slate-655">Candidate Student Name</label>
+                  <select id="admindas-field-27"
                     required
                     value={interviewForm.candidate}
                     onChange={(e) => setInterviewForm({ ...interviewForm, candidate: e.target.value })}
@@ -3387,8 +3947,8 @@ const AdminDashboard = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Company Name</label>
-                    <input 
+                    <label htmlFor="admindas-field-28" className="block font-bold text-slate-655">Company Name</label>
+                    <input id="admindas-field-28" 
                       type="text" 
                       required 
                       placeholder="e.g. Google India" 
@@ -3398,8 +3958,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Interviewer Panel / HR</label>
-                    <input 
+                    <label htmlFor="admindas-field-29" className="block font-bold text-slate-655">Interviewer Panel / HR</label>
+                    <input id="admindas-field-29" 
                       type="text" 
                       required 
                       placeholder="e.g. Siddharth Roy" 
@@ -3412,8 +3972,8 @@ const AdminDashboard = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Interview Date</label>
-                    <input 
+                    <label htmlFor="admindas-field-30" className="block font-bold text-slate-655">Interview Date</label>
+                    <input id="admindas-field-30" 
                       type="date" 
                       required 
                       value={interviewForm.date}
@@ -3422,8 +3982,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Interview Time</label>
-                    <input 
+                    <label htmlFor="admindas-field-31" className="block font-bold text-slate-655">Interview Time</label>
+                    <input id="admindas-field-31" 
                       type="time" 
                       required 
                       value={interviewForm.time}
@@ -3435,8 +3995,8 @@ const AdminDashboard = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Vetting Mode</label>
-                    <select
+                    <label htmlFor="admindas-field-32" className="block font-bold text-slate-655">Vetting Mode</label>
+                    <select id="admindas-field-32"
                       value={interviewForm.mode}
                       onChange={(e) => setInterviewForm({ ...interviewForm, mode: e.target.value })}
                       className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-semibold"
@@ -3446,8 +4006,8 @@ const AdminDashboard = () => {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Meeting Room / Link details</label>
-                    <input 
+                    <label htmlFor="admindas-field-33" className="block font-bold text-slate-655">Meeting Room / Link details</label>
+                    <input id="admindas-field-33" 
                       type="text" 
                       placeholder="e.g. Teams Panel C" 
                       value={interviewForm.roomNumber}
@@ -3457,7 +4017,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <button type="submit" className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
+                <button type="submit" className="w-full py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
                   Schedule Panel Invite
                 </button>
               </form>
@@ -3467,8 +4027,8 @@ const AdminDashboard = () => {
             {activeModal === 'report' && (
               <form onSubmit={handleReportSubmit} className="space-y-4 text-xs">
                 <div className="space-y-1.5">
-                  <label className="block font-bold text-slate-655">Report category</label>
-                  <select
+                  <label htmlFor="admindas-field-34" className="block font-bold text-slate-655">Report category</label>
+                  <select id="admindas-field-34"
                     className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none font-semibold text-slate-700"
                     value={reportForm.type}
                     onChange={(e) => setReportForm({ ...reportForm, type: e.target.value })}
@@ -3487,14 +4047,14 @@ const AdminDashboard = () => {
                           type="radio" 
                           checked={reportForm.format === fmt} 
                           onChange={() => setReportForm({ ...reportForm, format: fmt })}
-                          className="accent-[#6D5EF7]"
+                          className="accent-[#0B3D91]"
                         />
                         <span>{fmt} Document</span>
                       </label>
                     ))}
                   </div>
                 </div>
-                <button type="submit" className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
+                <button type="submit" className="w-full py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
                   Compile report
                 </button>
               </form>
@@ -3504,8 +4064,8 @@ const AdminDashboard = () => {
             {activeModal === 'csvUpload' && (
               <form onSubmit={handleCsvUploadSubmit} className="space-y-3.5 text-xs">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-655">Associate with Placement Drive</label>
-                  <select
+                  <label htmlFor="admindas-field-35" className="block font-bold text-slate-655">Associate with Placement Drive</label>
+                  <select id="admindas-field-35"
                     required
                     value={csvUploadData.driveId}
                     onChange={(e) => setCsvUploadData({ ...csvUploadData, driveId: e.target.value })}
@@ -3532,12 +4092,12 @@ const AdminDashboard = () => {
                     }}
                     className="border-2 border-dashed border-slate-200 bg-[#F8FAFC] hover:bg-slate-50 transition-all rounded-xl p-6 text-center cursor-pointer space-y-2"
                   >
-                    <FileSpreadsheet className="w-8 h-8 text-[#6D5EF7] mx-auto" />
+                    <FileSpreadsheet className="w-8 h-8 text-[#0B3D91] mx-auto" />
                     <div className="text-xs font-semibold text-slate-655">
                       {csvUploadData.fileName ? (
                         <span className="text-slate-800 font-bold block">{csvUploadData.fileName}</span>
                       ) : (
-                        <span>Drag & drop student shortlist CSV or <span className="text-[#6D5EF7] underline">Browse</span></span>
+                        <span>Drag & drop student shortlist CSV or <span className="text-[#0B3D91] underline">Browse</span></span>
                       )}
                     </div>
                     <span className="block text-[10px] text-slate-400">Accepted formats: .csv, .xlsx • Max 5MB</span>
@@ -3550,7 +4110,7 @@ const AdminDashboard = () => {
                   </div>
                 )}
 
-                <button type="submit" className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
+                <button type="submit" className="w-full py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
                   Register Shortlist File
                 </button>
               </form>
@@ -3564,7 +4124,7 @@ const AdminDashboard = () => {
                 </div>
                 <div className="space-y-1">
                   <h4 className="font-bold text-slate-800 text-sm">Are you absolutely sure?</h4>
-                  <p className="text-xs text-slate-450 leading-relaxed">
+                  <p className="text-xs text-slate-400 leading-relaxed">
                     This action is final and will permanently modify database configurations. Candidate logs and drive registers will be cleared.
                   </p>
                 </div>
@@ -3620,7 +4180,7 @@ const AdminDashboard = () => {
                   {selectedStudent.placementStatus === 'Placed' ? (
                     <div className="text-xs">
                       <span className="text-emerald-755 font-bold block">Placed at {selectedStudent.company}</span>
-                      <span className="text-[10px] text-slate-450 block mt-0.5">Package CTC: {selectedStudent.ctc}</span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">Package CTC: {selectedStudent.ctc}</span>
                     </div>
                   ) : (
                     <span className="text-slate-455 font-bold text-xs">Unplaced / Active in Drive Pools</span>

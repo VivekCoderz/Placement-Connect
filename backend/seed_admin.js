@@ -1,45 +1,48 @@
+// Create the first admin account safely.
+//
+// Usage (credentials come from the environment, never from this file):
+//   ADMIN_EMAIL=you@geetauniversity.edu.in ADMIN_PASSWORD='a-long-unique-password' \
+//   ADMIN_NAME="System Administrator" npm run seed:admin
+//
+// The script only creates the account if no user with that email exists; it never
+// overwrites or deletes data. Further staff accounts (admin / placementCell) are created
+// from the app by an admin via POST /api/admin/users.
+require("dotenv").config();
 const mongoose = require("mongoose");
 const User = require("./models/User");
-require("dotenv").config();
+const { assertSafeTarget } = require("./scripts/guard");
 
 const run = async () => {
-  const uri = process.env.mongoURI;
-  await mongoose.connect(uri);
-  console.log("Connected to database...");
+  const uri = assertSafeTarget({ scriptName: "seed_admin", destructive: false });
 
-  // Check if admin already exists
-  const existingAdmin = await User.findOne({ email: "admin@placementconnect.com" });
-  if (!existingAdmin) {
-    const admin = new User({
-      name: "System Administrator",
-      email: "admin@placementconnect.com",
-      password: "admin123",
-      role: "admin",
-      isActive: true
-    });
-    await admin.save();
-    console.log("Admin account created: admin@placementconnect.com / admin123");
-  } else {
-    console.log("Admin account already exists");
+  const email = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD || "";
+  const name = (process.env.ADMIN_NAME || "System Administrator").trim();
+
+  if (!email || !password) {
+    console.error("ADMIN_EMAIL and ADMIN_PASSWORD must be set (see README).");
+    process.exit(1);
+  }
+  if (password.length < 12) {
+    console.error("ADMIN_PASSWORD must be at least 12 characters.");
+    process.exit(1);
   }
 
-  // Check if placement cell already existsf
-  const existingCell = await User.findOne({ email: "placementcell@placementconnect.com" });
-  if (!existingCell) {
-    const cell = new User({
-      name: "Placement Cell Coordinator",
-      email: "placementcell@placementconnect.com",
-      password: "cell123",
-      role: "placementCell",
-      isActive: true
-    });
-    await cell.save();
-    console.log("Placement Cell account created: placementcell@placementconnect.com / cell123");
+  await mongoose.connect(uri);
+
+  const existing = await User.findOne({ email });
+  if (existing) {
+    console.log(`A user with email ${email} already exists (role: ${existing.role}). Nothing changed.`);
   } else {
-    console.log("Placement Cell already exists");
+    await User.create({ name, email, password, role: "admin", isActive: true, isApproved: true });
+    console.log(`Admin account created for ${email}.`);
   }
 
   await mongoose.disconnect();
 };
 
-run().catch(console.error);
+run().catch(async (err) => {
+  console.error("seed_admin failed:", err.message);
+  await mongoose.disconnect().catch(() => {});
+  process.exit(1);
+});

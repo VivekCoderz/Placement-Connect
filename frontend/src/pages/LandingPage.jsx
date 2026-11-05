@@ -3,12 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { 
   GraduationCap, 
-  Briefcase, 
   Building2, 
-  ShieldCheck, 
-  TrendingUp, 
   FileText, 
-  Calendar, 
   Clock, 
   ArrowRight, 
   CheckCircle2, 
@@ -17,7 +13,6 @@ import {
   Users, 
   Zap, 
   Sparkles, 
-  ChevronRight,
   Menu,
   X
 } from 'lucide-react';
@@ -57,38 +52,38 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#1E293B] text-[#F8FAFC] font-sans selection:bg-[#FF9933] selection:text-white relative overflow-hidden">
+    <div className="min-h-screen bg-[#06204D] text-[#F8FAFC] font-sans selection:bg-[#F5A623] selection:text-white relative overflow-hidden">
       
       {/* Decorative Background Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#FF9933]/12 blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#138808]/10 blur-[150px] pointer-events-none"></div>
-      <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 w-[800px] h-[300px] rounded-full bg-[#138808]/8 blur-[120px] pointer-events-none"></div>
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#F5A623]/12 blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#3B82F6]/10 blur-[150px] pointer-events-none"></div>
+      <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 w-[800px] h-[300px] rounded-full bg-[#3B82F6]/8 blur-[120px] pointer-events-none"></div>
 
       {/* Grid Pattern Overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-25 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0b3d91_1px,transparent_1px),linear-gradient(to_bottom,#0b3d91_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-25 pointer-events-none"></div>
 
       {/* Header/Navbar */}
-      <nav className="relative z-50 border-b border-[#334155]/60 bg-[#1E293B]/85 backdrop-blur-md sticky top-0">
+      <nav className="relative z-50 border-b border-[#1E3F7A]/60 bg-[#0B2A5E]/85 backdrop-blur-md sticky top-0">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <div className="flex items-center">
               <Link to="/" className="flex items-center space-x-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-[#FF9933] to-[#E67E22] flex items-center justify-center shadow-lg">
+                <div className="h-10 w-10 rounded-xl bg-[#F5A623] flex items-center justify-center shadow-lg">
                   <GraduationCap className="w-5 h-5 text-white" />
                 </div>
                 <span className="font-extrabold text-xl tracking-tight text-white">
-                  Placement<span className="text-[#FF9933]">Connect</span>
+                  Placement<span className="text-[#F5A623]">Connect</span>
                 </span>
               </Link>
             </div>
 
             {/* Desktop Navigation Links */}
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-sm text-[#94A3B8] hover:text-[#FF9933] transition-colors font-semibold">Why Us?</a>
-              <a href="#roles" className="text-sm text-slate-355 hover:text-[#FF9933] transition-colors font-semibold">User Modules</a>
-              <a href="#simulator" className="text-sm text-[#94A3B8] hover:text-[#FF9933] transition-colors font-semibold">Simulators</a>
-              <a href="#faq" className="text-sm text-[#94A3B8] hover:text-[#FF9933] transition-colors font-semibold">FAQ</a>
+              <a href="#features" className="text-sm text-[#94A3B8] hover:text-[#F5A623] transition-colors font-semibold">Why Us?</a>
+              <a href="#roles" className="text-sm text-slate-300 hover:text-[#F5A623] transition-colors font-semibold">User Modules</a>
+              <a href="#simulator" className="text-sm text-[#94A3B8] hover:text-[#F5A623] transition-colors font-semibold">Simulators</a>
+              <a href="#faq" className="text-sm text-[#94A3B8] hover:text-[#F5A623] transition-colors font-semibold">FAQ</a>
             </div>
 
             {/* CTAs */}
@@ -101,7 +96,7 @@ const LandingPage = () => {
               </Link>
               <Link
                 to="/signup"
-                className="text-sm font-semibold bg-gradient-to-r from-[#FF9933] to-[#E67E22] hover:from-[#E67E22] hover:to-[#C67E14] text-white px-6 py-2.5 rounded-xl transition-all duration-200 shadow-md shadow-amber-500/10 hover:shadow-amber-500/20 active:scale-[0.98]"
+                className="text-sm font-semibold bg-[#F5A623] hover:bg-[#E0921B] text-[#0B1F44] px-6 py-2.5 rounded-xl transition-all duration-200 shadow-md shadow-amber-500/10 hover:shadow-amber-500/20 active:scale-[0.98]"
               >
                 Get Started
               </Link>
@@ -110,8 +105,11 @@ const LandingPage = () => {
             {/* Mobile menu button */}
             <div className="md:hidden">
               <button
+                type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-xl text-[#CBD5E1] hover:text-white hover:bg-[#1E293B] transition-colors"
+                aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={mobileMenuOpen}
+                className="p-2 rounded-xl text-[#CBD5E1] hover:text-white hover:bg-[#0B2A5E] transition-colors"
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -121,47 +119,47 @@ const LandingPage = () => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-[#1E293B] border-b border-[#334155] px-6 py-6 space-y-4 animate-in slide-in-from-top-4 duration-200">
+          <div className="md:hidden bg-[#0B2A5E] border-b border-[#1E3F7A] px-6 py-6 space-y-4 animate-in slide-in-from-top-4 duration-200">
             <a 
               href="#features" 
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-base text-[#CBD5E1] hover:text-[#FF9933]"
+              className="block text-base text-[#CBD5E1] hover:text-[#F5A623]"
             >
               Why Us?
             </a>
             <a 
               href="#roles" 
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-base text-[#CBD5E1] hover:text-[#FF9933]"
+              className="block text-base text-[#CBD5E1] hover:text-[#F5A623]"
             >
               User Modules
             </a>
             <a 
               href="#simulator" 
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-base text-[#CBD5E1] hover:text-[#FF9933]"
+              className="block text-base text-[#CBD5E1] hover:text-[#F5A623]"
             >
               Simulators
             </a>
             <a 
               href="#faq" 
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-base text-[#CBD5E1] hover:text-[#FF9933]"
+              className="block text-base text-[#CBD5E1] hover:text-[#F5A623]"
             >
               FAQ
             </a>
-            <div className="border-t border-[#334155] pt-4 flex flex-col gap-3">
+            <div className="border-t border-[#1E3F7A] pt-4 flex flex-col gap-3">
               <Link
                 to="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-center py-2.5 text-sm font-semibold text-[#CBD5E1] hover:text-white border border-[#334155] rounded-xl"
+                className="text-center py-2.5 text-sm font-semibold text-[#CBD5E1] hover:text-white border border-[#1E3F7A] rounded-xl"
               >
                 Sign In
               </Link>
               <Link
                 to="/signup"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-center py-2.5 text-sm font-semibold bg-[#FF9933] text-white rounded-xl"
+                className="text-center py-2.5 text-sm font-semibold bg-[#F5A623] text-[#0B1F44] rounded-xl"
               >
                 Get Started
               </Link>
@@ -176,19 +174,19 @@ const LandingPage = () => {
           
           {/* Left Text Column */}
           <div className="lg:col-span-7 space-y-8 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 bg-[#FF9933]/10 border border-[#FF9933]/25 px-4 py-1.5 rounded-full text-xs font-semibold text-[#FF9933]">
+            <div className="inline-flex items-center gap-2 bg-[#F5A623]/10 border border-[#F5A623]/25 px-4 py-1.5 rounded-full text-xs font-semibold text-[#F5A623]">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Smart Placement Ecosystem</span>
             </div>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
               Bridge the Gap Between <br className="hidden sm:inline" />
-              <span className="bg-gradient-to-r from-blue-400 via-[#FF9933] to-[#E67E22] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-400 via-[#F5A623] to-[#E0921B] bg-clip-text text-transparent">
                 Talent and Opportunity
               </span>
             </h1>
             
-            <p className="text-slate-305 text-base sm:text-lg max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+            <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto lg:mx-0 leading-relaxed">
               PlacementConnect is the official campus hiring portal of <strong>Geeta University</strong>. 
               We replace outdated Excel tracking systems and fragmented emails with a unified, 
               real-time portal where students, recruiters, and placement officers interact seamlessly.
@@ -198,54 +196,57 @@ const LandingPage = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
               <Link
                 to="/signup"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF9933] to-[#E67E22] hover:from-[#E67E22] hover:to-[#C67E14] text-white font-bold px-8 py-4 rounded-xl shadow-lg shadow-amber-500/15 hover:shadow-amber-500/25 transition-all text-sm active:scale-[0.98]"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#F5A623] hover:bg-[#E0921B] text-[#0B1F44] font-bold px-8 py-4 rounded-xl shadow-lg shadow-amber-500/15 hover:shadow-amber-500/25 transition-all text-sm active:scale-[0.98]"
               >
                 Register as Student <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 to="/recruiter/signup"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#1E293B] hover:bg-[#1E293B] text-[#CBD5E1] hover:text-white border border-[#334155] hover:border-[#334155] font-bold px-8 py-4 rounded-xl transition-all text-sm active:scale-[0.98]"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#0B2A5E] hover:bg-[#0B2A5E] text-[#CBD5E1] hover:text-white border border-[#1E3F7A] hover:border-[#1E3F7A] font-bold px-8 py-4 rounded-xl transition-all text-sm active:scale-[0.98]"
               >
                 <Building2 className="w-4 h-4" /> Recruiter Sign Up
               </Link>
             </div>
 
-            {/* Micro Stats */}
-            <div className="grid grid-cols-3 gap-6 pt-6 max-w-md mx-auto lg:mx-0 border-t border-[#334155]/80">
-              <div>
-                <p className="text-2xl sm:text-3xl font-extrabold text-white">95%</p>
-                <p className="text-xs text-slate-450 mt-1">Placement Rate</p>
-              </div>
-              <div>
-                <p className="text-2xl sm:text-3xl font-extrabold text-white">18 LPA</p>
-                <p className="text-xs text-slate-455 mt-1">Max package</p>
-              </div>
-              <div>
-                <p className="text-2xl sm:text-3xl font-extrabold text-white">150+</p>
-                <p className="text-xs text-slate-450 mt-1">Recruiter Partners</p>
-              </div>
-            </div>
+            {/* Value props per role */}
+            <ul className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-[#1E3F7A]/80 text-left">
+              {[
+                { icon: GraduationCap, title: 'Students', text: 'See eligible drives, apply in one click and track every round.', to: '/signup', cta: 'Create account' },
+                { icon: Building2, title: 'Recruiters', text: 'Post drives, shortlist candidates and schedule rounds.', to: '/recruiter/signup', cta: 'Register company' },
+                { icon: BarChart3, title: 'Placement Cell', text: 'Approve recruiters, verify students and export reports.', to: '/login', cta: 'Officer sign in' },
+              ].map(({ icon: Icon, title, text, to, cta }) => (
+                <li key={title} className="rounded-2xl border border-[#1E3F7A] bg-[#0B2A5E]/70 p-4 flex flex-col gap-2">
+                  <span className="flex items-center gap-2 text-sm font-bold text-white">
+                    <Icon className="w-4 h-4 text-[#F5A623]" aria-hidden="true" /> {title}
+                  </span>
+                  <span className="text-xs leading-relaxed text-slate-300">{text}</span>
+                  <Link to={to} className="mt-auto inline-flex items-center gap-1 rounded text-xs font-semibold text-[#F5A623] hover:underline">
+                    {cta} <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Right Showcase Column (Floating Dashboard Cards Visual mockup) */}
           <div className="lg:col-span-5 relative w-full flex justify-center">
-            <div className="relative w-full max-w-[450px] aspect-[9/10] bg-[#1E293B]/70 rounded-3xl border border-[#334155]/85 p-6 shadow-2xl backdrop-blur-sm overflow-hidden flex flex-col justify-between">
+            <div className="relative w-full max-w-[450px] aspect-[9/10] bg-[#0B2A5E]/70 rounded-3xl border border-[#1E3F7A]/85 p-6 shadow-2xl backdrop-blur-sm overflow-hidden flex flex-col justify-between">
               
               {/* Card Header */}
-              <div className="flex items-center justify-between border-b border-[#334155]/80 pb-4">
+              <div className="flex items-center justify-between border-b border-[#1E3F7A]/80 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="h-2.5 w-2.5 rounded-full bg-red-500"></div>
                   <div className="h-2.5 w-2.5 rounded-full bg-yellow-500"></div>
                   <div className="h-2.5 w-2.5 rounded-full bg-green-500"></div>
                 </div>
-                <div className="h-5 w-40 bg-[#1E293B] rounded-full animate-pulse"></div>
+                <div className="h-5 w-40 bg-[#0B2A5E] rounded-full animate-pulse"></div>
               </div>
 
               {/* Mock Student Card */}
               <div className="my-auto space-y-4 relative z-10">
-                <div className="bg-[#1E293B]/80 border border-[#334155] p-4 rounded-2xl flex items-center justify-between shadow-md">
+                <div className="bg-[#0B2A5E]/80 border border-[#1E3F7A] p-4 rounded-2xl flex items-center justify-between shadow-md">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-amber-500/20 text-[#FF9933] flex items-center justify-center font-bold text-sm">
+                    <div className="h-10 w-10 rounded-full bg-amber-500/20 text-[#F5A623] flex items-center justify-center font-bold text-sm">
                       JD
                     </div>
                     <div>
@@ -253,29 +254,29 @@ const LandingPage = () => {
                       <p className="text-[10px] text-emerald-400 font-mono mt-0.5">Eligibility: CGPA &ge; 8.0</p>
                     </div>
                   </div>
-                  <span className="text-[10px] bg-[#1E293B] px-2 py-1 rounded-md text-[#CBD5E1] font-bold">18.5 LPA</span>
+                  <span className="text-[10px] bg-[#0B2A5E] px-2 py-1 rounded-md text-[#CBD5E1] font-bold">18.5 LPA</span>
                 </div>
 
                 {/* Mock Application Timeline visual */}
-                <div className="bg-[#1E293B]/80 border border-[#334155] p-4 rounded-2xl space-y-3 shadow-md">
+                <div className="bg-[#0B2A5E]/80 border border-[#1E3F7A] p-4 rounded-2xl space-y-3 shadow-md">
                   <div className="flex justify-between items-center text-[10px]">
                     <span className="font-bold text-[#CBD5E1]">My Application Tracker</span>
-                    <span className="text-[#FF9933] font-bold">In-Progress</span>
+                    <span className="text-[#F5A623] font-bold">In-Progress</span>
                   </div>
                   <div className="flex items-center justify-between gap-1">
                     <div className="h-1 flex-grow bg-emerald-500 rounded-full"></div>
                     <div className="h-1 flex-grow bg-emerald-500 rounded-full"></div>
                     <div className="h-1 flex-grow bg-emerald-500 rounded-full"></div>
                     <div className="h-1 flex-grow bg-amber-500 rounded-full"></div>
-                    <div className="h-1 flex-grow bg-[#1E293B] rounded-full"></div>
+                    <div className="h-1 flex-grow bg-[#0B2A5E] rounded-full"></div>
                   </div>
                   <p className="text-[9px] text-slate-400 text-center">Current Round: Technical Interview Scheduled</p>
                 </div>
 
                 {/* Mock Placement cell Analytics SVG */}
-                <div className="bg-[#1E293B]/80 border border-[#FF9933]/25 p-4 rounded-2xl space-y-2 shadow-md">
+                <div className="bg-[#0B2A5E]/80 border border-[#F5A623]/25 p-4 rounded-2xl space-y-2 shadow-md">
                   <div className="flex justify-between items-center text-[10px]">
-                    <span className="font-bold text-[#FF9933] flex items-center gap-1">
+                    <span className="font-bold text-[#F5A623] flex items-center gap-1">
                       <BarChart3 className="w-3.5 h-3.5" /> Branch Hires 2026
                     </span>
                     <span className="text-slate-400">Real-time stats</span>
@@ -285,7 +286,7 @@ const LandingPage = () => {
                       <span>CSE</span>
                       <span>94% Placed</span>
                     </div>
-                    <div className="h-2 w-full bg-[#1E293B] rounded-full overflow-hidden">
+                    <div className="h-2 w-full bg-[#0B2A5E] rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full" style={{ width: '94%' }}></div>
                     </div>
                   </div>
@@ -293,7 +294,7 @@ const LandingPage = () => {
               </div>
 
               {/* Floating badges */}
-              <div className="absolute top-10 right-4 bg-[#1E293B]/95 border border-[#334155] px-3.5 py-2 rounded-xl flex items-center gap-2 shadow-lg animate-float-slow">
+              <div className="absolute top-10 right-4 bg-[#0B2A5E]/95 border border-[#1E3F7A] px-3.5 py-2 rounded-xl flex items-center gap-2 shadow-lg animate-float-slow">
                 <div className="h-6 w-6 rounded-full bg-emerald-500/25 flex items-center justify-center">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 </div>
@@ -303,7 +304,7 @@ const LandingPage = () => {
                 </div>
               </div>
 
-              <div className="absolute bottom-12 left-4 bg-[#1E293B]/95 border border-[#334155] px-3.5 py-2 rounded-xl flex items-center gap-2 shadow-lg animate-float-medium">
+              <div className="absolute bottom-12 left-4 bg-[#0B2A5E]/95 border border-[#1E3F7A] px-3.5 py-2 rounded-xl flex items-center gap-2 shadow-lg animate-float-medium">
                 <div className="h-6 w-6 rounded-full bg-blue-500/25 flex items-center justify-center">
                   <FileText className="w-4 h-4 text-blue-400" />
                 </div>
@@ -320,11 +321,11 @@ const LandingPage = () => {
       </section>
 
       {/* Section 1: The Problem vs Solution (Kyu aur Kaise Useful Hai?) */}
-      <section id="features" className="py-20 border-t border-[#334155] bg-[#1E293B]/30 relative">
+      <section id="features" className="py-20 border-t border-[#1E3F7A] bg-[#0B2A5E]/30 relative">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
           
           <div className="text-center space-y-4 max-w-3xl mx-auto mb-16">
-            <h2 className="text-xs font-bold tracking-widest text-[#FF9933] uppercase">Why PlacementConnect?</h2>
+            <h2 className="text-xs font-bold tracking-widest text-[#F5A623] uppercase">Why PlacementConnect?</h2>
             <h3 className="text-3xl sm:text-4xl font-extrabold text-white">
               Why university campuses need a dedicated placement system
             </h3>
@@ -336,7 +337,7 @@ const LandingPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
             
             {/* The Manual Pain Points Card */}
-            <div className="bg-[#1E293B]/50 border border-red-500/10 rounded-3xl p-8 space-y-6 flex flex-col justify-between hover:border-red-500/20 transition-all duration-300">
+            <div className="bg-[#0B2A5E]/50 border border-red-500/10 rounded-3xl p-8 space-y-6 flex flex-col justify-between hover:border-red-500/20 transition-all duration-300">
               <div>
                 <div className="inline-flex items-center gap-2 bg-red-500/10 text-red-400 px-3 py-1 rounded-full text-xs font-semibold mb-6">
                   ✕ Outdated Manual System
@@ -361,13 +362,13 @@ const LandingPage = () => {
                   </li>
                 </ul>
               </div>
-              <div className="border-t border-[#334155] pt-6 text-xs text-red-500/60 font-semibold italic">
+              <div className="border-t border-[#1E3F7A] pt-6 text-xs text-red-500/60 font-semibold italic">
                 Resulting in missed opportunities and delayed operations.
               </div>
             </div>
 
             {/* The Smart Solution Card */}
-            <div className="bg-[#1E293B]/50 border border-emerald-500/20 rounded-3xl p-8 space-y-6 flex flex-col justify-between hover:border-emerald-500/40 transition-all duration-300 shadow-xl shadow-emerald-500/5">
+            <div className="bg-[#0B2A5E]/50 border border-emerald-500/20 rounded-3xl p-8 space-y-6 flex flex-col justify-between hover:border-emerald-500/40 transition-all duration-300 shadow-xl shadow-emerald-500/5">
               <div>
                 <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-semibold mb-6">
                   ✓ The PlacementConnect System
@@ -388,12 +389,12 @@ const LandingPage = () => {
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="text-emerald-400 font-bold mt-0.5">✔</span>
-                    <span><strong>University PDF Resume Builder:</strong> Automatically compiles student academic scores and skills into a standard university-approved PDF format.</span>
+                    <span><strong>One Profile, One Resume:</strong> Students upload their resume once and keep skills, projects and certifications in a single profile recruiters can review.</span>
                   </li>
                 </ul>
               </div>
-              <div className="border-t border-[#334155] pt-6 text-xs text-emerald-400/80 font-semibold italic">
-                Ensures 100% transparency and speeds up campus recruitment cycle by 3x.
+              <div className="border-t border-[#1E3F7A] pt-6 text-xs text-emerald-400/80 font-semibold italic">
+                One shared, transparent record for every drive, from application to offer.
               </div>
             </div>
 
@@ -404,7 +405,7 @@ const LandingPage = () => {
       {/* Section 2: Who is it for? Interactive Roles & Benefits */}
       <section id="roles" className="py-20 max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 relative">
         <div className="text-center space-y-4 max-w-3xl mx-auto mb-12">
-          <h2 className="text-xs font-bold tracking-widest text-[#FF9933] uppercase">Target Users</h2>
+          <h2 className="text-xs font-bold tracking-widest text-[#F5A623] uppercase">Target Users</h2>
           <h3 className="text-3xl sm:text-4xl font-extrabold text-white">
             Designed for the entire university ecosystem
           </h3>
@@ -415,12 +416,12 @@ const LandingPage = () => {
 
         {/* Role Tabs */}
         <div className="flex justify-center mb-10">
-          <div className="inline-flex bg-[#1E293B] p-1.5 rounded-2xl border border-[#334155]">
+          <div className="inline-flex bg-[#0B2A5E] p-1.5 rounded-2xl border border-[#1E3F7A]">
             <button
               onClick={() => setActiveTab('student')}
               className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                 activeTab === 'student'
-                  ? 'bg-gradient-to-r from-[#FF9933] to-[#E67E22] text-white shadow-md'
+                  ? 'bg-gradient-to-r from-[#F5A623] to-[#E0921B] text-white shadow-md'
                   : 'text-slate-400 hover:text-[#CBD5E1]'
               }`}
             >
@@ -430,7 +431,7 @@ const LandingPage = () => {
               onClick={() => setActiveTab('recruiter')}
               className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                 activeTab === 'recruiter'
-                  ? 'bg-gradient-to-r from-[#FF9933] to-[#E67E22] text-white shadow-md'
+                  ? 'bg-gradient-to-r from-[#F5A623] to-[#E0921B] text-white shadow-md'
                   : 'text-slate-400 hover:text-[#CBD5E1]'
               }`}
             >
@@ -440,7 +441,7 @@ const LandingPage = () => {
               onClick={() => setActiveTab('officer')}
               className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                 activeTab === 'officer'
-                  ? 'bg-gradient-to-r from-[#FF9933] to-[#E67E22] text-white shadow-md'
+                  ? 'bg-gradient-to-r from-[#F5A623] to-[#E0921B] text-white shadow-md'
                   : 'text-slate-400 hover:text-[#CBD5E1]'
               }`}
             >
@@ -450,41 +451,41 @@ const LandingPage = () => {
         </div>
 
         {/* Tab Content Display */}
-        <div className="bg-[#1E293B]/40 border border-[#334155] rounded-3xl p-8 sm:p-10 shadow-xl backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="bg-[#0B2A5E]/40 border border-[#1E3F7A] rounded-3xl p-8 sm:p-10 shadow-xl backdrop-blur-sm animate-in fade-in duration-300">
           {activeTab === 'student' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
               <div className="space-y-6">
-                <div className="h-12 w-12 rounded-xl bg-amber-500/10 text-[#FF9933] flex items-center justify-center font-bold">
+                <div className="h-12 w-12 rounded-xl bg-amber-500/10 text-[#F5A623] flex items-center justify-center font-bold">
                   <Users className="w-6 h-6" />
                 </div>
                 <h4 className="text-2xl font-bold text-white">Empower students to showcase their absolute best</h4>
                 <p className="text-[#94A3B8] leading-relaxed text-sm">
-                  PlacementConnect gives students a secure profile workspace where they enter their CGPA, upload skills, outline projects, and host certification details.
+                  PlacementConnect gives students a secure profile workspace with their Placement-Cell-verified academics, plus skills, projects, certifications and an uploaded resume.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex gap-2.5">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-[#FF9933] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4.5 h-4.5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs font-bold text-white">Resume Generator</p>
-                      <p className="text-[11px] text-slate-400">Generate university formatted print-ready PDF resume instantly.</p>
+                      <p className="text-xs font-bold text-white">Resume Upload</p>
+                      <p className="text-[11px] text-slate-400">Upload your resume once and reuse it for every drive you apply to.</p>
                     </div>
                   </div>
                   <div className="flex gap-2.5">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-[#FF9933] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4.5 h-4.5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs font-bold text-white">Eligibility Guard</p>
                       <p className="text-[11px] text-slate-400">Never get rejected post-apply. Only apply to eligible drives matching CGPA.</p>
                     </div>
                   </div>
                   <div className="flex gap-2.5">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-[#FF9933] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4.5 h-4.5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs font-bold text-white">Stage Simulators</p>
-                      <p className="text-[11px] text-slate-400">Watch your application state progress as recruiters complete hiring rounds.</p>
+                      <p className="text-xs font-bold text-white">Application Tracker</p>
+                      <p className="text-[11px] text-slate-400">Track each application round by round as recruiters complete hiring stages.</p>
                     </div>
                   </div>
                   <div className="flex gap-2.5">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-[#FF9933] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4.5 h-4.5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs font-bold text-white">Real-Time Alerts</p>
                       <p className="text-[11px] text-slate-400">Receive calendar invitations and stage status changes on Socket and email.</p>
@@ -492,8 +493,8 @@ const LandingPage = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-[#1E293B]/80 border border-[#334155] rounded-2xl p-6 space-y-4">
-                <div className="flex justify-between items-center pb-3 border-b border-[#334155]">
+              <div className="bg-[#0B2A5E]/80 border border-[#1E3F7A] rounded-2xl p-6 space-y-4">
+                <div className="flex justify-between items-center pb-3 border-b border-[#1E3F7A]">
                   <span className="text-xs font-bold text-white">My Academic Profile Card</span>
                   <span className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-bold">Verified</span>
                 </div>
@@ -508,14 +509,14 @@ const LandingPage = () => {
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-400">Skills</span>
-                    <span className="text-[#FF9933] font-bold">React, Node.js, MongoDB, Git</span>
+                    <span className="text-[#F5A623] font-bold">React, Node.js, MongoDB, Git</span>
                   </div>
                 </div>
                 <div className="bg-[#0B3D91]/15 border border-[#0B3D91]/30 p-3.5 rounded-xl text-center space-y-2">
-                  <p className="text-[10px] text-[#CBD5E1]">Profile data compiles automatically to generate print resume PDF</p>
-                  <button className="text-[10px] bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold px-3.5 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1">
-                    <FileText className="w-3.5 h-3.5" /> Export PDF Resume
-                  </button>
+                  <p className="text-[10px] text-[#CBD5E1]">Recruiters see verified academics alongside the student&apos;s uploaded resume</p>
+                  <span className="text-[10px] bg-[#0B3D91] text-white font-bold px-3.5 py-1.5 rounded-lg inline-flex items-center gap-1">
+                    <FileText className="w-3.5 h-3.5" aria-hidden="true" /> resume.pdf uploaded
+                  </span>
                 </div>
               </div>
             </div>
@@ -524,7 +525,7 @@ const LandingPage = () => {
           {activeTab === 'recruiter' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
               <div className="space-y-6">
-                <div className="h-12 w-12 rounded-xl bg-amber-500/10 text-[#FF9933] flex items-center justify-center font-bold">
+                <div className="h-12 w-12 rounded-xl bg-amber-500/10 text-[#F5A623] flex items-center justify-center font-bold">
                   <Building2 className="w-6 h-6" />
                 </div>
                 <h4 className="text-2xl font-bold text-white">Fast-track recruitment and shortlist management</h4>
@@ -533,28 +534,28 @@ const LandingPage = () => {
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex gap-2.5">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-[#FF9933] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4.5 h-4.5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs font-bold text-white">CSV Shortlist Upload</p>
                       <p className="text-[11px] text-slate-400">Upload round-wise qualified candidates easily using standard spreadsheet files.</p>
                     </div>
                   </div>
                   <div className="flex gap-2.5">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-[#FF9933] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4.5 h-4.5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs font-bold text-white">Custom Criteria Filter</p>
                       <p className="text-[11px] text-slate-400">Specify exactly which CGPA, branch, or batch year are eligible to apply.</p>
                     </div>
                   </div>
                   <div className="flex gap-2.5">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-[#FF9933] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4.5 h-4.5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs font-bold text-white">Direct PDF Downloads</p>
                       <p className="text-[11px] text-slate-400">Bulk review standardized student portfolios and download resumes in one click.</p>
                     </div>
                   </div>
                   <div className="flex gap-2.5">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-[#FF9933] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4.5 h-4.5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs font-bold text-white">Instant Selection Declares</p>
                       <p className="text-[11px] text-slate-400">Publish selection details and upload offer letters directly for verified applicants.</p>
@@ -562,23 +563,23 @@ const LandingPage = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-[#1E293B]/80 border border-[#334155] rounded-2xl p-6 space-y-4">
-                <div className="flex justify-between items-center pb-3 border-b border-[#334155]">
+              <div className="bg-[#0B2A5E]/80 border border-[#1E3F7A] rounded-2xl p-6 space-y-4">
+                <div className="flex justify-between items-center pb-3 border-b border-[#1E3F7A]">
                   <span className="text-xs font-bold text-white">Recruiter Control Dashboard</span>
                   <span className="text-xs text-slate-400 font-mono">Google LLC</span>
                 </div>
                 <div className="space-y-3">
-                  <div className="bg-[#1E293B] p-3.5 rounded-xl border border-[#334155]">
-                    <p className="text-[10px] text-[#FF9933] font-bold uppercase tracking-wider">CSV shortlisting</p>
+                  <div className="bg-[#0B2A5E] p-3.5 rounded-xl border border-[#1E3F7A]">
+                    <p className="text-[10px] text-[#F5A623] font-bold uppercase tracking-wider">CSV shortlisting</p>
                     <p className="text-xs text-white font-semibold mt-1">Upload Round 1 (Aptitude) Shortlist</p>
-                    <div className="mt-2.5 border border-dashed border-[#334155] hover:border-[#FF9933]/40 rounded-lg p-3 text-center cursor-pointer transition-colors bg-[#1E293B]">
+                    <div className="mt-2.5 border border-dashed border-[#1E3F7A] hover:border-[#F5A623]/40 rounded-lg p-3 text-center cursor-pointer transition-colors bg-[#0B2A5E]">
                       <FileSpreadsheet className="w-5 h-5 text-slate-400 mx-auto mb-1" />
                       <p className="text-[9px] text-slate-400">Drag & drop shortlists.csv or click to upload</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-xs bg-[#1E293B] px-3 py-2 rounded-lg border border-[#334155]">
+                  <div className="flex items-center justify-between text-xs bg-[#0B2A5E] px-3 py-2 rounded-lg border border-[#1E3F7A]">
                     <span className="text-slate-400">Applicants Recieved</span>
-                    <span className="text-[#FF9933] font-bold font-mono">142 Students</span>
+                    <span className="text-[#F5A623] font-bold font-mono">142 Students</span>
                   </div>
                 </div>
               </div>
@@ -588,7 +589,7 @@ const LandingPage = () => {
           {activeTab === 'officer' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
               <div className="space-y-6">
-                <div className="h-12 w-12 rounded-xl bg-amber-500/10 text-[#FF9933] flex items-center justify-center font-bold">
+                <div className="h-12 w-12 rounded-xl bg-amber-500/10 text-[#F5A623] flex items-center justify-center font-bold">
                   <GraduationCap className="w-6 h-6" />
                 </div>
                 <h4 className="text-2xl font-bold text-white">Full administrative control & placement analytics</h4>
@@ -597,28 +598,28 @@ const LandingPage = () => {
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex gap-2.5">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-[#FF9933] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4.5 h-4.5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs font-bold text-white">Company Verification</p>
                       <p className="text-[11px] text-slate-400">Approve or reject registering recruiters securely to prevent spam drives.</p>
                     </div>
                   </div>
                   <div className="flex gap-2.5">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-[#FF9933] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4.5 h-4.5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs font-bold text-white">Analytics Hub</p>
                       <p className="text-[11px] text-slate-400">Track branch-wise, package-wise, and company-wise performance in detail.</p>
                     </div>
                   </div>
                   <div className="flex gap-2.5">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-[#FF9933] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4.5 h-4.5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs font-bold text-white">Interview Scheduler</p>
                       <p className="text-[11px] text-slate-400">Instantly generate standard ICS calendar invites and mail details to students.</p>
                     </div>
                   </div>
                   <div className="flex gap-2.5">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-[#FF9933] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4.5 h-4.5 text-[#F5A623] flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs font-bold text-white">Drive Moderation</p>
                       <p className="text-[11px] text-slate-400">Add, edit, or extend registration deadlines for active campus drives.</p>
@@ -626,31 +627,31 @@ const LandingPage = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-[#1E293B]/80 border border-[#334155] rounded-2xl p-6 space-y-4">
-                <div className="flex justify-between items-center pb-3 border-b border-[#334155]">
+              <div className="bg-[#0B2A5E]/80 border border-[#1E3F7A] rounded-2xl p-6 space-y-4">
+                <div className="flex justify-between items-center pb-3 border-b border-[#1E3F7A]">
                   <span className="text-xs font-bold text-white">Placement Admin Console</span>
-                  <span className="text-xs text-[#FF9933] font-bold">Live Control</span>
+                  <span className="text-xs text-[#F5A623] font-bold">Live Control</span>
                 </div>
                 <div className="space-y-2 text-xs">
                   <p className="text-[10px] text-slate-400 font-semibold mb-1">Pending Approvals</p>
-                  <div className="bg-[#1E293B] border border-[#334155] p-3 rounded-xl flex items-center justify-between">
+                  <div className="bg-[#0B2A5E] border border-[#1E3F7A] p-3 rounded-xl flex items-center justify-between">
                     <div>
                       <p className="font-bold text-white">Infosys Tech</p>
                       <p className="text-[10px] text-slate-400">infosys.com/careers</p>
                     </div>
                     <div className="flex gap-1.5">
                       <button className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[9px] px-2.5 py-1.5 rounded transition-colors">Approve</button>
-                      <button className="bg-[#1E293B] hover:bg-slate-700 text-[#94A3B8] font-bold text-[9px] px-2.5 py-1.5 rounded transition-colors">Reject</button>
+                      <button className="bg-[#0B2A5E] hover:bg-slate-700 text-[#94A3B8] font-bold text-[9px] px-2.5 py-1.5 rounded transition-colors">Reject</button>
                     </div>
                   </div>
-                  <div className="bg-[#1E293B] border border-[#334155] p-3 rounded-xl flex items-center justify-between">
+                  <div className="bg-[#0B2A5E] border border-[#1E3F7A] p-3 rounded-xl flex items-center justify-between">
                     <div>
                       <p className="font-bold text-white">Wipro Ltd</p>
                       <p className="text-[10px] text-slate-400">wipro.com/recruit</p>
                     </div>
                     <div className="flex gap-1.5">
                       <button className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[9px] px-2.5 py-1.5 rounded transition-colors">Approve</button>
-                      <button className="bg-[#1E293B] hover:bg-slate-700 text-[#94A3B8] font-bold text-[9px] px-2.5 py-1.5 rounded transition-colors">Reject</button>
+                      <button className="bg-[#0B2A5E] hover:bg-slate-700 text-[#94A3B8] font-bold text-[9px] px-2.5 py-1.5 rounded transition-colors">Reject</button>
                     </div>
                   </div>
                 </div>
@@ -661,11 +662,11 @@ const LandingPage = () => {
       </section>
 
       {/* Section 3: Live interactive simulators (Interactive Pipeline) */}
-      <section id="simulator" className="py-20 border-t border-[#334155] bg-[#1E293B]/30 relative">
+      <section id="simulator" className="py-20 border-t border-[#1E3F7A] bg-[#0B2A5E]/30 relative">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
           
           <div className="text-center space-y-4 max-w-3xl mx-auto mb-16">
-            <h2 className="text-xs font-bold tracking-widest text-[#FF9933] uppercase">Interactive Demos</h2>
+            <h2 className="text-xs font-bold tracking-widest text-[#F5A623] uppercase">Interactive Demos</h2>
             <h3 className="text-3xl sm:text-4xl font-extrabold text-white">
               Try the platform simulation features
             </h3>
@@ -677,9 +678,9 @@ const LandingPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             
             {/* Simulation 1: Application pipeline stepper */}
-            <div className="lg:col-span-7 bg-[#1E293B]/70 border border-[#334155] rounded-3xl p-8 flex flex-col justify-between shadow-lg">
+            <div className="lg:col-span-7 bg-[#0B2A5E]/70 border border-[#1E3F7A] rounded-3xl p-8 flex flex-col justify-between shadow-lg">
               <div className="space-y-6">
-                <div className="flex items-center justify-between border-b border-[#334155] pb-4">
+                <div className="flex items-center justify-between border-b border-[#1E3F7A] pb-4">
                   <span className="text-xs font-bold text-white flex items-center gap-1.5">
                     <Clock className="w-4 h-4 text-emerald-400" /> Student Application Stepper
                   </span>
@@ -697,8 +698,8 @@ const LandingPage = () => {
                       onClick={() => setTimelineStep(idx)}
                       className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         timelineStep === idx
-                          ? 'bg-[#0B3D91] text-[#FF9933] border border-[#FF9933]/30 shadow'
-                          : 'bg-[#1E293B] hover:bg-slate-850 text-slate-400 border border-transparent'
+                          ? 'bg-[#0B3D91] text-[#F5A623] border border-[#F5A623]/30 shadow'
+                          : 'bg-[#0B2A5E] hover:bg-[#123a7a] text-slate-400 border border-transparent'
                       }`}
                     >
                       Step {idx + 1}: {step.label.split(' ')[0]}
@@ -707,7 +708,7 @@ const LandingPage = () => {
                 </div>
 
                 {/* Stage Detail display box */}
-                <div className="bg-[#1E293B] border border-[#334155] p-5 rounded-2xl space-y-4">
+                <div className="bg-[#0B2A5E] border border-[#1E3F7A] p-5 rounded-2xl space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-bold text-white uppercase tracking-wider">Status Details</span>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded font-mono ${
@@ -721,35 +722,35 @@ const LandingPage = () => {
                   </p>
                   
                   {/* Notification toast mimic */}
-                  <div className="border-t border-[#334155] pt-3.5 flex items-start gap-2.5 text-[10px] text-slate-400">
+                  <div className="border-t border-[#1E3F7A] pt-3.5 flex items-start gap-2.5 text-[10px] text-slate-400">
                     <Zap className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
                     <div className="w-full overflow-hidden">
                       <p className="font-bold text-[#CBD5E1]">Socket.io Dispatcher Message:</p>
-                      <p className="font-mono mt-0.5 bg-[#1E293B] p-2 rounded border border-[#334155] text-amber-400 overflow-x-auto text-[9px] whitespace-pre sm:whitespace-normal">
+                      <p className="font-mono mt-0.5 bg-[#0B2A5E] p-2 rounded border border-[#1E3F7A] text-amber-400 overflow-x-auto text-[9px] whitespace-pre sm:whitespace-normal">
                         {`{ type: "STATUS_UPDATE", text: "Your Google SDE application is marked as: `}
-                        <span className="font-bold text-[#FF9933]">{simulatedSteps[timelineStep].label}</span>
+                        <span className="font-bold text-[#F5A623]">{simulatedSteps[timelineStep].label}</span>
                         {`" }`}
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="border-t border-[#334155] pt-6 text-[10px] text-slate-400 font-semibold">
+              <div className="border-t border-[#1E3F7A] pt-6 text-[10px] text-slate-400 font-semibold">
                 In-app notification database updates automatically on status change.
               </div>
             </div>
 
             {/* Simulation 2: Real-time aggregated stats bar graphs */}
-            <div className="lg:col-span-5 bg-[#1E293B]/70 border border-[#334155] rounded-3xl p-8 flex flex-col justify-between shadow-lg">
+            <div className="lg:col-span-5 bg-[#0B2A5E]/70 border border-[#1E3F7A] rounded-3xl p-8 flex flex-col justify-between shadow-lg">
               <div className="space-y-6">
-                <div className="flex items-center justify-between border-b border-[#334155] pb-4">
+                <div className="flex items-center justify-between border-b border-[#1E3F7A] pb-4">
                   <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <BarChart3 className="w-4 h-4 text-[#FF9933]" /> Placement Aggregation
+                    <BarChart3 className="w-4 h-4 text-[#F5A623]" /> Placement Aggregation
                   </span>
-                  <span className="text-[10px] text-slate-400 font-mono">Academic Year 2026</span>
+                  <span className="text-[10px] text-slate-400 font-mono">Sample data</span>
                 </div>
                 <p className="text-sm text-[#94A3B8]">
-                  Real-time branch statistics. Higher packages show the average annual salary from recruiters.
+                  Sample data showing how branch-wise placement statistics are aggregated for the Placement Cell.
                 </p>
 
                 {/* Graph bars representation */}
@@ -759,14 +760,14 @@ const LandingPage = () => {
                       <div className="flex justify-between items-center text-xs">
                         <span className="font-bold text-white">{stat.branch} Department</span>
                         <div className="flex items-center gap-2 font-mono text-[11px]">
-                          <span className="text-[#FF9933] font-bold">{stat.package} Avg</span>
+                          <span className="text-[#F5A623] font-bold">{stat.package} Avg</span>
                           <span className="text-slate-400">|</span>
                           <span className="text-emerald-400 font-bold">{stat.percentage}% placed</span>
                         </div>
                       </div>
-                      <div className="h-2.5 w-full bg-[#1E293B] border border-[#334155] rounded-full overflow-hidden">
+                      <div className="h-2.5 w-full bg-[#0B2A5E] border border-[#1E3F7A] rounded-full overflow-hidden">
                         <div 
-                          className="h-full bg-gradient-to-r from-blue-600 via-[#FF9933] to-[#E67E22] rounded-full transition-all duration-1000"
+                          className="h-full bg-gradient-to-r from-blue-600 via-[#F5A623] to-[#E0921B] rounded-full transition-all duration-1000"
                           style={{ width: `${stat.percentage}%` }}
                         ></div>
                       </div>
@@ -774,7 +775,7 @@ const LandingPage = () => {
                   ))}
                 </div>
               </div>
-              <div className="border-t border-[#334155] pt-6 text-[10px] text-slate-400 font-semibold">
+              <div className="border-t border-[#1E3F7A] pt-6 text-[10px] text-slate-400 font-semibold">
                 Aggregated in MongoDB using aggregate frameworks on final job selections.
               </div>
             </div>
@@ -786,7 +787,7 @@ const LandingPage = () => {
       {/* FAQ Section */}
       <section id="faq" className="py-20 max-w-5xl mx-auto px-6 sm:px-8 lg:px-10 relative">
         <div className="text-center space-y-4 max-w-3xl mx-auto mb-16">
-          <h2 className="text-xs font-bold tracking-widest text-[#FF9933] uppercase">Frequently Asked Questions</h2>
+          <h2 className="text-xs font-bold tracking-widest text-[#F5A623] uppercase">Frequently Asked Questions</h2>
           <h3 className="text-3xl sm:text-4xl font-extrabold text-white">
             Answers to common questions
           </h3>
@@ -796,28 +797,28 @@ const LandingPage = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-[#1E293B]/50 border border-[#334155]/80 rounded-2xl p-6">
+          <div className="bg-[#0B2A5E]/50 border border-[#1E3F7A]/80 rounded-2xl p-6">
             <h4 className="text-base font-bold text-white mb-2">How is eligibility filtered?</h4>
             <p className="text-sm text-slate-400 leading-relaxed font-normal">
               When a recruiter posts a drive, they define minimum CGPA, eligible branches, and graduating batch. When students load their Job Drives page, the database matches their profile statistics against active parameters. If a student falls below requirements, the "Apply" button is disabled and replaced by eligibility logs.
             </p>
           </div>
           
-          <div className="bg-[#1E293B]/50 border border-[#334155]/80 rounded-2xl p-6">
-            <h4 className="text-base font-bold text-white mb-2">How does the Resume Builder work?</h4>
+          <div className="bg-[#0B2A5E]/50 border border-[#1E3F7A]/80 rounded-2xl p-6">
+            <h4 className="text-base font-bold text-white mb-2">How do resumes work?</h4>
             <p className="text-sm text-slate-400 leading-relaxed font-normal">
-              Students do not need to upload external Word documents. The app fetches their verified profile fields (Academics, Experience, Projects, Skills) and compiles them into a standard, university-approved format. This can be viewed, customized, and exported as a print-ready PDF instantly.
+              Students upload their resume as a PDF on their profile. Recruiters see it together with the student&apos;s Placement-Cell-verified academics, skills, projects and certifications, so every applicant is reviewed from one consistent record.
             </p>
           </div>
 
-          <div className="bg-[#1E293B]/50 border border-[#334155]/80 rounded-2xl p-6">
+          <div className="bg-[#0B2A5E]/50 border border-[#1E3F7A]/80 rounded-2xl p-6">
             <h4 className="text-base font-bold text-white mb-2">How is security handled for recruiters?</h4>
             <p className="text-sm text-slate-400 leading-relaxed font-normal">
               To prevent external spam, corporate accounts register and enter recruitment officer details. When registered, they remain locked in a pending verification state. Placement Cell Administrators review credentials and approve them manually. Post-approval, companies gain access to post drives and view student profiles.
             </p>
           </div>
 
-          <div className="bg-[#1E293B]/50 border border-[#334155]/80 rounded-2xl p-6">
+          <div className="bg-[#0B2A5E]/50 border border-[#1E3F7A]/80 rounded-2xl p-6">
             <h4 className="text-base font-bold text-white mb-2">Are notifications immediate?</h4>
             <p className="text-sm text-slate-400 leading-relaxed font-normal">
               Yes. The platform is equipped with Socket.io on the client and server. Status updates, new drive postings, and interview schedules trigger instant in-app bells. In addition, automated emails via Nodemailer ensure you get notified even when offline.
@@ -827,7 +828,7 @@ const LandingPage = () => {
       </section>
 
       {/* Call to Action Footer Panel */}
-      <section className="py-16 sm:py-20 border-t border-[#334155] bg-[#1E293B] relative overflow-hidden">
+      <section className="py-16 sm:py-20 border-t border-[#1E3F7A] bg-[#0B2A5E] relative overflow-hidden">
         <div className="max-w-4xl mx-auto text-center px-6 space-y-8 relative z-10">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
             Ready to streamline campus recruitments?
@@ -838,13 +839,13 @@ const LandingPage = () => {
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               to="/login"
-              className="bg-gradient-to-r from-[#FF9933] to-[#E67E22] hover:from-[#E67E22] hover:to-[#C67E14] text-white font-bold px-8 py-3.5 rounded-xl transition-all shadow-md text-sm active:scale-[0.98]"
+              className="bg-[#F5A623] hover:bg-[#E0921B] text-[#0B1F44] font-bold px-8 py-3.5 rounded-xl transition-all shadow-md text-sm active:scale-[0.98]"
             >
               Access Dashboard
             </Link>
             <Link
               to="/signup"
-              className="bg-[#1E293B] hover:bg-[#1E293B] text-[#CBD5E1] hover:text-white border border-[#334155] hover:border-[#334155] font-bold px-8 py-3.5 rounded-xl transition-all text-sm active:scale-[0.98]"
+              className="bg-[#0B2A5E] hover:bg-[#0B2A5E] text-[#CBD5E1] hover:text-white border border-[#1E3F7A] hover:border-[#1E3F7A] font-bold px-8 py-3.5 rounded-xl transition-all text-sm active:scale-[0.98]"
             >
               Student Registration
             </Link>
@@ -853,10 +854,10 @@ const LandingPage = () => {
       </section>
 
       {/* Footer Details */}
-      <footer className="bg-[#1E293B] border-t border-[#334155] py-10 px-6">
+      <footer className="bg-[#0B2A5E] border-t border-[#1E3F7A] py-10 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-400 font-semibold">
           <div className="flex items-center gap-2">
-            <GraduationCap className="w-4 h-4 text-[#FF9933]" />
+            <GraduationCap className="w-4 h-4 text-[#F5A623]" />
             <span>&copy; {new Date().getFullYear()} Geeta University. Department of Computer Science & Engineering.</span>
           </div>
           <div>

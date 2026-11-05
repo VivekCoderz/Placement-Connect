@@ -1,2 +1,8 @@
 backend/node_modules/
 node_modules/
+# secrets
+.env
+**/.env
+
+# build output
+frontend/dist/

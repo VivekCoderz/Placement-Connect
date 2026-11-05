@@ -46,6 +46,9 @@ const studentSchema = new mongoose.Schema(
     resumeUrl: {
       type: String, // Cloudinary link
     },
+    profilePictureUrl: {
+      type: String, // Cloudinary link
+    },
     projects: [
       {
         title: String,

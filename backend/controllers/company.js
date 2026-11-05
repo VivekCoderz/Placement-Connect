@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Job = require("../models/job");
 const Company = require("../models/company");
 const Student = require("../models/student");
@@ -5,6 +6,7 @@ const Application = require("../models/application");
 const Shortlist = require("../models/shortlist");
 const Notification = require("../models/notification");
 const ResultApproval = require("../models/resultApproval");
+const RecruiterAction = require("../models/RecruiterAction");
 const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
 const ResumeAnalysis = require("../models/ResumeAnalysis");
@@ -12,6 +14,13 @@ const Round = require("../models/Round");
 const RoundResult = require("../models/RoundResult");
 const StudentProgress = require("../models/StudentProgress");
 const { processCandidateResult } = require("../services/roundEngine");
+const { sendEmail } = require("../utils/email");
+const { sanitizeHtml } = require("../utils/sanitizeHtml");
+const {
+  assertJobOwner,
+  assertApplicationOwner,
+  assertRoundOwner,
+} = require("../utils/ownership");
 
 function calculateATSScore(student, job) {
   if (!student || !job) return 0;
@@ -156,7 +165,7 @@ module.exports.postJob = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(404, "No registered company found for this recruiter profile");
   }
 
-  if (!company.approved) {
+  if (!company.approved || !req.user.isApproved) {
     throw new ErrorHandler(403, "Access Denied: Recruiter company has not been approved by the Placement Cell yet");
   }
 
@@ -280,15 +289,26 @@ module.exports.getApplications = ErrorWrapper(async (req, res, next) => {
     const progress = progressList.find(p => p.applicationId.toString() === app._id.toString());
     const appObj = app.toObject();
 
+    appObj.pendingStatus = app.pendingStatus || "None";
+    appObj.pendingStatusDetails = app.pendingStatusDetails || null;
+
     if (analysis) {
       appObj.atsScore = analysis.atsScore;
+      appObj.overallScore = analysis.overallScore || analysis.atsScore;
+      appObj.recommendation = analysis.recommendation || (analysis.atsScore >= 80 ? "Recommended" : "Consider");
+      appObj.educationScore = analysis.educationScore || 0;
+      appObj.projectScore = analysis.projectScore || 0;
+      appObj.experienceScore = analysis.experienceScore || 0;
+      appObj.skillScore = analysis.skillScore || 0;
+      appObj.finalRankScore = analysis.finalRankScore || analysis.atsScore;
+      appObj.reason = analysis.reason || "";
       appObj.matchPercentage = analysis.matchPercentage;
       appObj.matchedSkills = analysis.skillsMatch || [];
       appObj.skillsMatch = analysis.skillsMatch || [];
       appObj.missingSkills = analysis.missingSkills || [];
       appObj.matchedKeywords = analysis.matchedKeywords || analysis.skillsMatch || [];
       appObj.missingKeywords = analysis.missingKeywords || analysis.missingSkills || [];
-      appObj.resumeSummary = analysis.aiSummary || "";
+      appObj.resumeSummary = analysis.resumeSummary || analysis.aiSummary || "";
       appObj.aiSummary = analysis.aiSummary || "";
       appObj.strengths = analysis.strengths || [];
       appObj.weaknesses = analysis.weaknesses || [];
@@ -299,6 +319,13 @@ module.exports.getApplications = ErrorWrapper(async (req, res, next) => {
       // Calculate dynamic preview if database analysis record doesn't exist
       const score = calculateATSScore(app.studentId, job);
       appObj.atsScore = score;
+      appObj.overallScore = score;
+      appObj.recommendation = score >= 80 ? "Recommended" : "Consider";
+      appObj.educationScore = 0;
+      appObj.projectScore = 0;
+      appObj.experienceScore = 0;
+      appObj.skillScore = 0;
+      appObj.finalRankScore = score;
       appObj.matchPercentage = score;
       appObj.matchedSkills = app.studentId.skills || [];
       appObj.skillsMatch = app.studentId.skills || [];
@@ -318,6 +345,12 @@ module.exports.getApplications = ErrorWrapper(async (req, res, next) => {
     }
 
     return appObj;
+  });
+
+  // Sort candidates by score descending to calculate their absolute Rank
+  applicationsWithAts.sort((a, b) => (b.atsScore || 0) - (a.atsScore || 0));
+  applicationsWithAts.forEach((app, idx) => {
+    app.rank = idx + 1;
   });
 
   return res.status(200).json({
@@ -340,10 +373,7 @@ module.exports.proposeSchedule = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(404, "Recruiter company details not found");
   }
 
-  const job = await Job.findById(jobId);
-  if (!job) {
-    throw new ErrorHandler(404, "Job drive not found");
-  }
+  const job = await assertJobOwner(req, jobId);
 
   // Find all placement cell users
   const User = require("../models/User");
@@ -382,10 +412,7 @@ module.exports.submitShortlist = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(404, "Recruiter company details not found");
   }
 
-  const job = await Job.findById(jobId);
-  if (!job) {
-    throw new ErrorHandler(404, "Job drive not found");
-  }
+  const job = await assertJobOwner(req, jobId);
 
   // Create shortlist record
   const shortlist = new Shortlist({
@@ -442,7 +469,10 @@ module.exports.updateOfferTemplate = ErrorWrapper(async (req, res, next) => {
   if (!company) {
     throw new ErrorHandler(404, "Recruiter company details not found");
   }
-  company.offerLetterTemplate = offerLetterTemplate;
+  if (typeof offerLetterTemplate !== "string" || offerLetterTemplate.length > 100000) {
+    throw new ErrorHandler(400, "offerLetterTemplate must be a string up to 100000 characters");
+  }
+  company.offerLetterTemplate = sanitizeHtml(offerLetterTemplate);
   await company.save();
   return res.status(200).json({
     message: "Offer letter template updated successfully",
@@ -552,10 +582,8 @@ module.exports.uploadRoundResults = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(403, "Access Denied: You do not own this job posting");
   }
 
-  const round = await Round.findById(roundId);
-  if (!round) {
-    throw new ErrorHandler(404, "Round not found");
-  }
+  // Round must belong to this (owned) job
+  await assertRoundOwner(req, roundId, job._id);
 
   // Parse CSV
   const csvContent = req.file.buffer.toString("utf8");
@@ -656,16 +684,12 @@ module.exports.overrideDecision = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(400, "Invalid status override. Must be Shortlisted or Rejected");
   }
 
-  const app = await Application.findById(appId)
-    .populate("studentId")
-    .populate({
+  const app = await assertApplicationOwner(req, appId, (q) =>
+    q.populate("studentId").populate({
       path: "jobId",
-      populate: { path: "companyId", select: "name" }
-    });
-
-  if (!app) {
-    throw new ErrorHandler(404, "Application not found");
-  }
+      populate: { path: "companyId", select: "name" },
+    }),
+  );
 
   const student = app.studentId;
   const job = app.jobId;
@@ -827,6 +851,10 @@ module.exports.overrideDecision = ErrorWrapper(async (req, res, next) => {
 // Dynamic Round Management: Get rounds
 module.exports.getRounds = ErrorWrapper(async (req, res, next) => {
   const { jobId } = req.params;
+  // Companies only see rounds of their own jobs; students can view any drive's rounds.
+  if (req.user.role !== "student") {
+    await assertJobOwner(req, jobId);
+  }
   const rounds = await Round.find({ jobId }).sort({ sequence: 1 });
   return res.status(200).json({ rounds });
 });
@@ -840,10 +868,7 @@ module.exports.createRound = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(400, "Round name is required");
   }
 
-  const job = await Job.findById(jobId);
-  if (!job) {
-    throw new ErrorHandler(404, "Job drive not found");
-  }
+  const job = await assertJobOwner(req, jobId);
 
   const roundsCount = await Round.countDocuments({ jobId });
 
@@ -887,10 +912,7 @@ module.exports.updateRound = ErrorWrapper(async (req, res, next) => {
   const { roundId } = req.params;
   const { name, description, date, time, mode, meetingLink, platform, instructions } = req.body;
 
-  const round = await Round.findById(roundId);
-  if (!round) {
-    throw new ErrorHandler(404, "Round details not found");
-  }
+  const { round } = await assertRoundOwner(req, roundId);
 
   if (name) round.name = name;
   if (description !== undefined) round.description = description;
@@ -931,10 +953,7 @@ module.exports.updateRound = ErrorWrapper(async (req, res, next) => {
 module.exports.deleteRound = ErrorWrapper(async (req, res, next) => {
   const { roundId } = req.params;
 
-  const round = await Round.findById(roundId);
-  if (!round) {
-    throw new ErrorHandler(404, "Round details not found");
-  }
+  const { round } = await assertRoundOwner(req, roundId);
 
   const jobId = round.jobId;
   await Round.findByIdAndDelete(roundId);
@@ -977,6 +996,9 @@ module.exports.manualRoundResults = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(400, "results array is required and cannot be empty");
   }
 
+  // Job must be owned by the requester and the round must belong to that job
+  await assertRoundOwner(req, roundId, jobId);
+
   for (const resItem of results) {
     await processCandidateResult({
       jobId,
@@ -991,6 +1013,372 @@ module.exports.manualRoundResults = ErrorWrapper(async (req, res, next) => {
 
   return res.status(200).json({
     message: `Successfully processed results for ${results.length} candidates.`
+  });
+});
+
+// Staged recruiter actions (Shortlist, Reject, Assessment, Interview, Email)
+module.exports.bulkAction = ErrorWrapper(async (req, res, next) => {
+  const { jobId, actionType, studentIds, details } = req.body;
+
+  if (!jobId || !actionType || !studentIds || !Array.isArray(studentIds)) {
+    throw new ErrorHandler(400, "jobId, actionType, and studentIds array are required");
+  }
+
+  const company = req.company;
+  if (!company) {
+    throw new ErrorHandler(404, "Recruiter company details not found");
+  }
+
+  const job = await Job.findById(jobId);
+  if (!job) {
+    throw new ErrorHandler(404, "Job drive not found");
+  }
+
+  if (job.companyId.toString() !== company._id.toString()) {
+    throw new ErrorHandler(403, "Access Denied: You do not own this job posting");
+  }
+
+  // Map to pendingStatus on Application schema
+  let pendingStatus = "None";
+  if (actionType === "Shortlist") pendingStatus = "Shortlisted";
+  else if (actionType === "Reject") pendingStatus = "Rejected";
+  else if (actionType === "Send Assessment") pendingStatus = "Assessment";
+  else if (actionType === "Schedule Interview") pendingStatus = "Interview";
+  else if (actionType === "Select") pendingStatus = "Selected";
+
+  const updatedApps = [];
+  for (const studentId of studentIds) {
+    if (!mongoose.isValidObjectId(studentId)) continue;
+    // Always scoped to this (owned) job: an id may be an application id or a student id
+    const app = await Application.findOne({
+      jobId,
+      $or: [{ _id: studentId }, { studentId: studentId }],
+    });
+    if (app) {
+      if (pendingStatus !== "None") {
+        app.pendingStatus = pendingStatus;
+      }
+      app.pendingStatusDetails = { actionType, details };
+      await app.save();
+      updatedApps.push(app._id);
+    }
+  }
+
+  // Create an audit trail log of this recruiter action
+  const newAction = new RecruiterAction({
+    recruiterId: req.user.id,
+    jobId,
+    actionType,
+    studentIds,
+    details,
+    status: "Pending",
+  });
+  await newAction.save();
+
+  return res.status(200).json({
+    message: `Recruiter bulk action '${actionType}' staged successfully for ${updatedApps.length} candidates.`,
+    action: newAction
+  });
+});
+
+// Recruiter approval of selections (sends emails, notifications, and socket events)
+module.exports.approveSelection = ErrorWrapper(async (req, res, next) => {
+  const { jobId } = req.params;
+  const io = req.app.get("socketio");
+  const { sendEmail, generateICS } = require("../utils/email");
+
+  const company = req.company;
+  if (!company) {
+    throw new ErrorHandler(404, "Recruiter company details not found");
+  }
+
+  const job = await Job.findById(jobId);
+  if (!job) {
+    throw new ErrorHandler(404, "Job drive not found");
+  }
+
+  if (job.companyId.toString() !== company._id.toString()) {
+    throw new ErrorHandler(403, "Access Denied: You do not own this job posting");
+  }
+
+  const pendingActions = await RecruiterAction.find({ jobId, status: "Pending" });
+  if (pendingActions.length === 0) {
+    return res.status(200).json({ message: "No pending selections or actions found to approve." });
+  }
+
+  let processedCount = 0;
+
+  for (const action of pendingActions) {
+    const { actionType, studentIds, details } = action;
+
+    for (const studentId of studentIds) {
+      if (!mongoose.isValidObjectId(studentId)) continue;
+      const app = await Application.findOne({
+        jobId,
+        $or: [{ _id: studentId }, { studentId: studentId }],
+      }).populate("studentId");
+      if (!app || !app.studentId) continue;
+
+      const student = app.studentId;
+      let emailSubject = "";
+      let emailHtml = "";
+      let notifMessage = "";
+      let notifType = "application_status";
+      let attachments = [];
+
+      if (actionType === "Shortlist") {
+        app.status = "Shortlisted";
+        
+        const roundIdx = app.rounds.findIndex(r => r.name.toLowerCase() === "resume screening" || r.name.toLowerCase() === "ai screening");
+        if (roundIdx > -1) {
+          app.rounds[roundIdx].result = "Passed";
+          app.rounds[roundIdx].notes = `Shortlisted by recruiter. (ATS Score: ${app.atsScore || 60}%)`;
+        } else {
+          app.rounds.push({
+            name: "Resume Screening",
+            result: "Passed",
+            scheduledAt: new Date(),
+            notes: `Shortlisted by recruiter. (ATS Score: ${app.atsScore || 60}%)`
+          });
+        }
+
+        const firstRound = await Round.findOne({ jobId }).sort({ sequence: 1 });
+        if (firstRound) {
+          const firstRoundIdx = app.rounds.findIndex(r => r.name.toLowerCase() === firstRound.name.toLowerCase());
+          if (firstRoundIdx === -1) {
+            app.rounds.push({
+              name: firstRound.name,
+              result: "Pending",
+              scheduledAt: firstRound.date,
+              roundType: firstRound.mode || "Online",
+              testLink: firstRound.meetingLink || "",
+              venue: firstRound.mode === "Physical" ? (firstRound.meetingLink || "TPO Office") : ""
+            });
+          }
+        }
+
+        await StudentProgress.findOneAndUpdate(
+          { applicationId: app._id },
+          { status: firstRound ? `Round 1: ${firstRound.name}` : "Shortlisted" }
+        );
+
+        notifMessage = `Congratulations! You have been shortlisted by ${company.name} for "${job.title}".`;
+        emailSubject = `Application Shortlisted: ${job.title} at ${company.name}`;
+        emailHtml = `
+          <h3>Dear ${student.name},</h3>
+          <p>Your resume has been successfully screened and you have been <strong>Shortlisted</strong> by the recruiter for the <strong>${job.title}</strong> role at <strong>${company.name}</strong>!</p>
+          <p>Please log in to Geeta University Placement Connect to view schedule details.</p>
+        `;
+      } 
+      else if (actionType === "Reject") {
+        app.status = "Rejected";
+        
+        const roundIdx = app.rounds.findIndex(r => r.result === "Pending");
+        if (roundIdx > -1) {
+          app.rounds[roundIdx].result = "Failed";
+          app.rounds[roundIdx].notes = details?.notes || "Not selected by recruiter review.";
+        } else {
+          app.rounds.push({
+            name: "Resume Screening",
+            result: "Failed",
+            scheduledAt: new Date(),
+            notes: details?.notes || "Not selected by recruiter review."
+          });
+        }
+
+        await StudentProgress.findOneAndUpdate(
+          { applicationId: app._id },
+          { status: "Rejected" }
+        );
+
+        notifMessage = `Application Update: You were not shortlisted for the ${job.title} drive at ${company.name}.`;
+        emailSubject = `Application Status Update: ${job.title} at ${company.name}`;
+        emailHtml = `
+          <p>Dear ${student.name},</p>
+          <p>Thank you for applying to the <strong>${job.title}</strong> role at <strong>${company.name}</strong>.</p>
+          <p>Unfortunately, your application was not selected to advance further at this time.</p>
+          ${details?.notes ? `<p><strong>Feedback:</strong> ${details.notes}</p>` : ""}
+          <p>We appreciate your interest and wish you the best of luck for future drives.</p>
+        `;
+      }
+      else if (actionType === "Send Assessment") {
+        app.status = "Assessment";
+        
+        const roundName = details?.roundName || "Assessment";
+        const roundIdx = app.rounds.findIndex(r => r.name.toLowerCase() === roundName.toLowerCase());
+        
+        const roundData = {
+          name: roundName,
+          result: "Pending",
+          scheduledAt: new Date(),
+          roundType: "Online",
+          testLink: details?.testLink || "",
+          notes: details?.notes || "Online assessment instructions."
+        };
+
+        if (roundIdx > -1) {
+          app.rounds[roundIdx] = roundData;
+        } else {
+          app.rounds.push(roundData);
+        }
+
+        await StudentProgress.findOneAndUpdate(
+          { applicationId: app._id },
+          { status: "Assessment" }
+        );
+
+        notifMessage = `Assessment Scheduled: ${roundName} for ${job.title} at ${company.name}. Link: ${details?.testLink || "Check dashboard"}`;
+        emailSubject = `Action Required: Assessment Scheduled for ${job.title} - ${company.name}`;
+        emailHtml = `
+          <h3>Dear ${student.name},</h3>
+          <p>An online assessment has been scheduled for your application to the <strong>${job.title}</strong> role at <strong>${company.name}</strong>.</p>
+          <p><strong>Test Link:</strong> <a href="${details?.testLink}">${details?.testLink}</a></p>
+          ${details?.notes ? `<p><strong>Instructions:</strong> ${details.notes}</p>` : ""}
+          <p>Good luck!</p>
+        `;
+      }
+      else if (actionType === "Schedule Interview") {
+        app.status = "Interview";
+        
+        const roundName = details?.roundName || "Interview";
+        const roundIdx = app.rounds.findIndex(r => r.name.toLowerCase() === roundName.toLowerCase());
+        const start = new Date(details?.scheduledAt || new Date());
+        const end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour default
+        const isOnline = details?.roundType === "Online";
+
+        const roundData = {
+          name: roundName,
+          result: "Pending",
+          scheduledAt: start,
+          roundType: details?.roundType || "Online",
+          testLink: isOnline ? (details?.testLink || "") : "",
+          venue: !isOnline ? (details?.venue || "Placement Cell") : "",
+          notes: details?.notes || ""
+        };
+
+        if (roundIdx > -1) {
+          app.rounds[roundIdx] = roundData;
+        } else {
+          app.rounds.push(roundData);
+        }
+
+        await StudentProgress.findOneAndUpdate(
+          { applicationId: app._id },
+          { status: `Interview: ${roundName}` }
+        );
+
+        const icsContent = generateICS({
+          start,
+          end,
+          summary: `${roundName} Interview: ${job.title} at ${company.name}`,
+          description: `Scheduled round: ${roundName} for ${job.title}.\nNotes: ${details?.notes || "None"}`,
+          location: isOnline ? (details?.testLink || "Online") : (details?.venue || "Campus"),
+          studentName: student.name,
+          studentEmail: student.email,
+        });
+
+        attachments.push({
+          filename: "invite.ics",
+          content: icsContent,
+          contentType: "text/calendar",
+        });
+
+        notifMessage = `Interview Scheduled: ${roundName} for ${job.title} at ${company.name} on ${start.toLocaleString()}.`;
+        notifType = "interview_scheduled";
+
+        emailSubject = `Interview Scheduled: ${roundName} - ${job.title} at ${company.name}`;
+        emailHtml = `
+          <h3>Dear ${student.name},</h3>
+          <p>Your interview for the <strong>${roundName}</strong> round of <strong>${job.title}</strong> at <strong>${company.name}</strong> has been scheduled.</p>
+          <p><strong>Time:</strong> ${start.toLocaleString()}</p>
+          <p><strong>Round Type:</strong> ${details?.roundType || "Online"}</p>
+          ${isOnline ? `<p><strong>Meeting Link:</strong> <a href="${details?.testLink}">${details?.testLink}</a></p>` : `<p><strong>Venue:</strong> ${details?.venue || "Placement Cell"}</p>`}
+          ${details?.notes ? `<p><strong>Notes:</strong> ${details.notes}</p>` : ""}
+          <p>We've attached a calendar invitation to this email.</p>
+        `;
+      }
+      else if (actionType === "Send Email") {
+        emailSubject = details?.subject || `Update from ${company.name}`;
+        emailHtml = details?.body
+          ? sanitizeHtml(details.body)
+          : `<p>Dear ${student.name}, you have a new message from the recruiter.</p>`;
+        notifMessage = `New email from ${company.name} recruiter: ${emailSubject.substring(0, 30)}...`;
+        notifType = "general";
+      }
+      else if (actionType === "Select") {
+        app.status = "Selected";
+        student.isPlaced = true;
+        await student.save();
+
+        const roundIdx = app.rounds.findIndex(r => r.name.toLowerCase() === "hr round" || r.name.toLowerCase() === "hr");
+        if (roundIdx > -1) {
+          app.rounds[roundIdx].result = "Passed";
+        }
+        
+        app.rounds.push({
+          name: "Selected",
+          result: "Selected",
+          scheduledAt: new Date(),
+          notes: "Congratulations! You have cleared all rounds and secured an offer!"
+        });
+
+        await StudentProgress.findOneAndUpdate(
+          { applicationId: app._id },
+          { status: "Selected" }
+        );
+
+        notifMessage = `Congratulations! You have been selected for ${job.title} at ${company.name}!`;
+        emailSubject = `Congratulations! Selection Offer: ${job.title} at ${company.name}`;
+        emailHtml = `
+          <h3>Dear ${student.name},</h3>
+          <p>We are delighted to congratulate you on your selection for the position of <strong>${job.title}</strong> at <strong>${company.name}</strong>!</p>
+          <p><strong>Package:</strong> ${job.package} LPA</p>
+          <p>Please log in to the portal to view next steps. We wish you all the best in your professional journey!</p>
+        `;
+      }
+
+      // 1. Create and save MongoDB Notification
+      const notif = new Notification({
+        userId: student.userId,
+        message: notifMessage,
+        type: notifType,
+      });
+      await notif.save();
+
+      // 2. Dispatch Email
+      if (emailSubject && emailHtml) {
+        sendEmail({
+          to: student.email,
+          subject: emailSubject,
+          html: emailHtml,
+          attachments
+        }).catch(err => console.error(`Email delivery failed to ${student.email}:`, err));
+      }
+
+      // 3. Emit Socket.io
+      if (io && student.userId) {
+        io.to(student.userId.toString()).emit("application_status_update", {
+          applicationId: app._id,
+          status: app.status,
+          message: notifMessage,
+          notification: notif
+        });
+      }
+
+      // 4. Reset staging fields
+      app.pendingStatus = "None";
+      app.pendingStatusDetails = null;
+      app.markModified("rounds");
+      await app.save();
+    }
+
+    action.status = "Approved";
+    await action.save();
+    processedCount++;
+  }
+
+  return res.status(200).json({
+    message: `Successfully approved and processed ${processedCount} staged actions/selections.`,
   });
 });
 

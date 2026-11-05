@@ -1,9 +1,3 @@
-const cloudinary = require("cloudinary").v2
-cloudinary.config({
-    api_key : process.env.api_key,
-    cloud_name : process.env.cloud_name,
-    api_secret : process.env.api_secret
-})
-
-module.exports = cloudinary
-
+// Single Cloudinary configuration lives in config/cloudinary.js
+// (reads CLOUDINARY_* or the legacy lowercase cloud_name/api_key/api_secret).
+module.exports = require("../config/cloudinary");
