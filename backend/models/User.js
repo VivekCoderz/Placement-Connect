@@ -87,7 +87,7 @@ userSchema.methods.generateToken = function () {
       id: this._id,
       role: this.role,
     },
-    process.env.JWT_SECRET || "GeetaUniversityPlacementConnect",
+    process.env.JWT_SECRET,
     {
       expiresIn: process.env.JWT_EXPIRE || "1d",
     }
