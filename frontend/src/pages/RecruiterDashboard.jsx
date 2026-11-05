@@ -785,8 +785,22 @@ const RecruiterDashboard = () => {
     }
   };
 
+  const isPendingApproval = user?.isApproved === false || user?.approved === false;
+
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8 font-sans px-4 sm:px-6 py-6 text-[#4B5563]">
+    <div className="w-full max-w-7xl mx-auto space-y-8 font-sans px-0 sm:px-6 py-2 sm:py-6 text-[#4B5563]">
+      {isPendingApproval && (
+        <div className="pc-alert-warning" role="status">
+          <span className="font-bold" aria-hidden="true">!</span>
+          <div>
+            <p className="font-semibold">Your company account is pending admin approval</p>
+            <p className="mt-1 text-xs">
+              You can review your profile, but posting drives and evaluating candidates unlock once the
+              Placement Cell approves your registration.
+            </p>
+          </div>
+        </div>
+      )}
       
       {/* Recruiter Welcome Header - High Fidelity Emerald Dashboard Card */}
       <div className="bg-[#4C1D95] text-white rounded-2xl p-8 md:p-10 border border-[#5B21B6] shadow-xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative overflow-hidden">

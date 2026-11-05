@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, Mail, Lock, User, Globe, Phone, MapPin, Briefcase, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Building2, Mail, Lock, User, Globe, Phone, MapPin, Briefcase, AlertCircle, ArrowRight, CheckCircle2, Clock } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from '../redux/authSlice';
-import api from '../utils/api';
+import api, { getErrorMessage } from '../utils/api';
 
 const RecruiterSignup = () => {
   const dispatch = useDispatch();
@@ -23,6 +23,8 @@ const RecruiterSignup = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  // false when the backend holds new companies for admin approval (login returns 403)
+  const [isApproved, setIsApproved] = useState(true);
 
   useEffect(() => {
     if (authenticatedUser) {
@@ -35,13 +37,13 @@ const RecruiterSignup = () => {
   }, [authenticatedUser, navigate]);
 
   useEffect(() => {
-    if (isSuccess) {
+    if (isSuccess && isApproved) {
       const timer = setTimeout(() => {
         navigate('/recruiter/dashboard');
       }, 2500);
       return () => clearTimeout(timer);
     }
-  }, [isSuccess, navigate]);
+  }, [isSuccess, isApproved, navigate]);
 
   const handleChange = (e) => {
     setFormData({
@@ -75,7 +77,9 @@ const RecruiterSignup = () => {
         address
       });
 
-      // Automatically log in since account is auto-approved by placement cell
+      // Try to sign in straight away. If the company still needs admin
+      // approval the backend answers 403 and we show a pending screen.
+      let approved = true;
       try {
         const loginResponse = await api.post('/api/auth/login', { email, password });
         const loginRes = loginResponse.data;
@@ -94,12 +98,18 @@ const RecruiterSignup = () => {
         localStorage.setItem('user', JSON.stringify(combinedUser));
         dispatch(setUser(combinedUser));
       } catch (loginErr) {
-        console.error('Auto-login error after registration:', loginErr);
+        localStorage.removeItem('token');
+        if (loginErr?.response?.status === 403) {
+          approved = false;
+        } else {
+          console.error('Auto-login error after registration:', loginErr);
+        }
       }
 
+      setIsApproved(approved);
       setIsSuccess(true);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Company registration failed');
+      setError(getErrorMessage(err, 'Company registration failed'));
     } finally {
       setIsLoading(false);
     }
@@ -114,17 +124,36 @@ const RecruiterSignup = () => {
       {/* Main Glassmorphic Panel */}
       <div className="max-w-2xl w-full space-y-8 bg-white border border-[#E5E7EB] p-8 sm:p-12 rounded-2xl shadow-xl relative z-10 animate-slide-up">
         
-        {isSuccess ? (
+        {isSuccess && !isApproved ? (
+          <div className="text-center space-y-6 py-6 font-sans" role="status">
+            <div className="mx-auto h-16 w-16 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-600">
+              <Clock className="h-9 w-9" aria-hidden="true" />
+            </div>
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-[#111827] tracking-tight">Registration received</h2>
+              <p className="text-sm text-[#4B5563] max-w-md mx-auto leading-relaxed">
+                Thanks for registering <strong className="text-[#111827]">{formData.companyName}</strong>.
+                Your recruiter account is <strong>pending admin approval</strong>. We'll email{' '}
+                <strong className="text-[#111827]">{formData.email}</strong> once it has been reviewed, and you can sign in after that.
+              </p>
+            </div>
+            <div className="pt-2 flex justify-center">
+              <Link to="/login" className="pc-btn-primary w-full sm:w-auto">
+                Back to sign in <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+        ) : isSuccess ? (
           <div className="text-center space-y-6 py-6 font-sans">
             <div className="mx-auto h-16 w-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-sm animate-bounce">
               <CheckCircle2 className="h-9 w-9" />
             </div>
             <div className="space-y-3">
               <h2 className="text-2xl font-bold text-[#111827] tracking-tight">
-                Account Approved & Verified!
+                Account approved
               </h2>
               <p className="text-sm font-semibold text-[#4B5563] max-w-md mx-auto leading-relaxed">
-                Welcome to PlacementConnect! Your recruiter profile for <strong className="text-[#111827]">{formData.companyName}</strong> has been auto-approved by the Placement Cell.
+                Welcome to PlacementConnect! Your recruiter profile for <strong className="text-[#111827]">{formData.companyName}</strong> is approved and ready to use.
               </p>
             </div>
             <div className="bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl p-5 text-left text-xs font-semibold text-[#4B5563] space-y-2.5 max-w-md mx-auto">
