@@ -119,7 +119,7 @@ const RecruiterSignup = () => {
     <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center py-20 px-4 sm:px-6 relative overflow-hidden font-sans text-[#4B5563]">
       {/* Floating ambient shapes - matches Student signup page */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-[#22C55E]/10 blur-[100px] pointer-events-none z-0 animate-float-slow" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-[#7C3AED]/8 blur-[100px] pointer-events-none z-0 animate-float-medium" />
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-[#0B3D91]/8 blur-[100px] pointer-events-none z-0 animate-float-medium" />
 
       {/* Main Glassmorphic Panel */}
       <div className="max-w-2xl w-full space-y-8 bg-white border border-[#E5E7EB] p-5 sm:p-8 sm:p-12 rounded-2xl shadow-xl relative z-10 animate-slide-up">
@@ -208,8 +208,8 @@ const RecruiterSignup = () => {
               {/* Section 1: Recruiter Profile */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 border-b border-[#E5E7EB] pb-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#7C3AED]" />
-                  <h3 className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest">Recruiter Details</h3>
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#0B3D91]" />
+                  <h3 className="text-xs font-bold text-[#0B3D91] uppercase tracking-widest">Recruiter Details</h3>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -226,7 +226,7 @@ const RecruiterSignup = () => {
                         required
                         value={formData.name}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="e.g. John Doe"
                       />
                     </div>
@@ -245,7 +245,7 @@ const RecruiterSignup = () => {
                         required
                         value={formData.email}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="e.g. hr@company.com"
                       />
                     </div>
@@ -266,7 +266,7 @@ const RecruiterSignup = () => {
                         required
                         value={formData.password}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="Minimum 6 characters"
                       />
                     </div>
@@ -285,7 +285,7 @@ const RecruiterSignup = () => {
                         required
                         value={formData.phone}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="HR Direct Phone"
                       />
                     </div>
@@ -296,8 +296,8 @@ const RecruiterSignup = () => {
               {/* Section 2: Company Details */}
               <div className="space-y-4 pt-2">
                 <div className="flex items-center gap-2 border-b border-[#E5E7EB] pb-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#7C3AED]" />
-                  <h3 className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest">Company Profile</h3>
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#0B3D91]" />
+                  <h3 className="text-xs font-bold text-[#0B3D91] uppercase tracking-widest">Company Profile</h3>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -314,7 +314,7 @@ const RecruiterSignup = () => {
                         required
                         value={formData.companyName}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="e.g. Microsoft India"
                       />
                     </div>
@@ -332,7 +332,7 @@ const RecruiterSignup = () => {
                         type="url"
                         value={formData.website}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="e.g. https://microsoft.com"
                       />
                     </div>
@@ -352,7 +352,7 @@ const RecruiterSignup = () => {
                         type="text"
                         value={formData.industry}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="e.g. Tech, consulting"
                       />
                     </div>
@@ -370,7 +370,7 @@ const RecruiterSignup = () => {
                         type="text"
                         value={formData.address}
                         onChange={handleChange}
-                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                        className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                         placeholder="e.g. Bangalore, India"
                       />
                     </div>

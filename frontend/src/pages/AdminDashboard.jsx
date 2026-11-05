@@ -677,7 +677,7 @@ const AdminDashboard = () => {
         <td><strong>${d.department}</strong></td>
         <td style="text-align: center;">${d.totalStudents}</td>
         <td style="text-align: center;">${d.placedStudents}</td>
-        <td style="text-align: center; font-weight: bold; color: #6D5EF7;">${d.placementPercentage}%</td>
+        <td style="text-align: center; font-weight: bold; color: #0B3D91;">${d.placementPercentage}%</td>
         <td style="text-align: center;">${d.averagePackage} LPA</td>
         <td style="text-align: center;">${d.highestPackage} LPA</td>
         <td style="text-align: center;">${d.companiesVisited}</td>
@@ -707,7 +707,7 @@ const AdminDashboard = () => {
     `).join('');
 
     let recsHtml = detailedStats.adminRecommendations.map(r => `
-      <div style="margin-bottom: 12px; padding: 10px; border-left: 4px solid #6D5EF7; background: #F8FAFC;">
+      <div style="margin-bottom: 12px; padding: 10px; border-left: 4px solid #0B3D91; background: #F8FAFC;">
         <h5 style="margin: 0; font-size: 13px; font-weight: bold; color: #1E293B;">${r.title} <span style="font-size: 9px; background: #EF4444; color: white; padding: 1px 4px; border-radius: 4px;">${r.priority}</span></h5>
         <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748B;">${r.description}</p>
       </div>
@@ -717,7 +717,7 @@ const AdminDashboard = () => {
       title: `Placement Intelligence Hub Report`,
       styles: `
             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1E293B; margin: 40px; }
-            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #6D5EF7; padding-bottom: 20px; margin-bottom: 25px; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0B3D91; padding-bottom: 20px; margin-bottom: 25px; }
             .logo-section h1 { margin: 0; font-size: 22px; color: #0F172A; }
             .logo-section p { margin: 4px 0 0 0; font-size: 11px; color: #64748B; font-weight: bold; text-transform: uppercase; }
             .report-info { text-align: right; font-size: 11px; color: #64748B; }
@@ -889,7 +889,7 @@ const AdminDashboard = () => {
       title: `${title}`,
       styles: `
                 body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748; margin: 40px; }
-                .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #6D5EF7; padding-bottom: 20px; margin-bottom: 30px; }
+                .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0B3D91; padding-bottom: 20px; margin-bottom: 30px; }
                 .logo-section h1 { margin: 0; font-size: 24px; color: #1A202C; }
                 .logo-section p { margin: 5px 0 0 0; font-size: 12px; color: #718096; font-weight: bold; }
                 .report-info { text-align: right; font-size: 12px; color: #718096; }
@@ -1092,7 +1092,7 @@ const AdminDashboard = () => {
           {/* Logo Branding */}
           <div className="h-16 px-6 border-b border-[#E2E8F0]/60 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#6D5EF7] to-[#8175F9] flex items-center justify-center shadow-md shadow-[#6D5EF7]/20">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#0B3D91] to-[#3B6FD1] flex items-center justify-center shadow-md shadow-[#0B3D91]/20">
                 <GraduationCap className="w-5 h-5 text-white" />
               </div>
               <div className="flex flex-col">
@@ -1119,12 +1119,12 @@ const AdminDashboard = () => {
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-sm font-semibold transition-all duration-200 ${
                     isActive 
-                      ? 'bg-[#6D5EF7]/8 text-[#6D5EF7] border border-[#6D5EF7]/10' 
+                      ? 'bg-[#0B3D91]/8 text-[#0B3D91] border border-[#0B3D91]/10' 
                       : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50/80 border border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <IconComp className={`w-4 h-4 ${isActive ? 'text-[#6D5EF7]' : 'text-slate-400 group-hover:text-slate-500'}`} />
+                    <IconComp className={`w-4 h-4 ${isActive ? 'text-[#0B3D91]' : 'text-slate-400 group-hover:text-slate-500'}`} />
                     <span>{item.label}</span>
                   </div>
                   {item.count > 0 && (
@@ -1140,7 +1140,7 @@ const AdminDashboard = () => {
           {/* Admin Profile & Logout footer */}
           <div className="p-4 border-t border-[#E2E8F0]/60 bg-slate-50/50">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#6D5EF7] to-indigo-400 flex items-center justify-center font-bold text-white text-xs">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#0B3D91] to-indigo-400 flex items-center justify-center font-bold text-white text-xs">
                 {user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
               </div>
               <div className="flex-1 overflow-hidden">
@@ -1232,7 +1232,7 @@ const AdminDashboard = () => {
                 <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-[18px] shadow-lg py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="px-4 pb-2 border-b border-slate-100 flex items-center justify-between">
                     <h3 className="text-xs font-bold text-slate-800">Recruiter Messages</h3>
-                    <button className="text-[10px] text-[#6D5EF7] font-semibold hover:underline">View inbox</button>
+                    <button className="text-[10px] text-[#0B3D91] font-semibold hover:underline">View inbox</button>
                   </div>
                   <div className="max-h-64 overflow-y-auto px-2 mt-2 space-y-1">
                     {messagesList.map(m => (
@@ -1248,7 +1248,7 @@ const AdminDashboard = () => {
                           <p className="text-slate-500 truncate leading-tight">{m.preview}</p>
                         </div>
                         {m.unread && (
-                          <span className="w-2 h-2 bg-[#6D5EF7] rounded-full mt-2.5 shrink-0" />
+                          <span className="w-2 h-2 bg-[#0B3D91] rounded-full mt-2.5 shrink-0" />
                         )}
                       </div>
                     ))}
@@ -1289,7 +1289,7 @@ const AdminDashboard = () => {
                 }}
                 className="flex items-center gap-2 p-1 pr-3 hover:bg-slate-50 rounded-full border border-slate-100 transition-colors"
               >
-                <div className="w-7 h-7 rounded-full bg-[#6D5EF7] flex items-center justify-center font-bold text-white text-xs">
+                <div className="w-7 h-7 rounded-full bg-[#0B3D91] flex items-center justify-center font-bold text-white text-xs">
                   A
                 </div>
                 <span className="hidden md:inline text-xs font-bold text-slate-700">TPO Cell</span>
@@ -1320,7 +1320,7 @@ const AdminDashboard = () => {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 space-y-4">
               <div className="relative">
-                <div className="w-12 h-12 rounded-full border-4 border-[#6D5EF7]/20 border-t-[#6D5EF7] animate-spin" />
+                <div className="w-12 h-12 rounded-full border-4 border-[#0B3D91]/20 border-t-[#0B3D91] animate-spin" />
                 <div className="w-12 h-12 rounded-full border-4 border-emerald-500/10 border-b-emerald-500 animate-spin absolute inset-0 rotate-180" />
               </div>
               <p className="text-xs font-bold text-slate-500 dark:text-slate-400 animate-pulse">
@@ -1470,26 +1470,26 @@ const AdminDashboard = () => {
               {/* Quick Actions Panel */}
               <div className="bg-white border border-slate-200/80 rounded-[18px] p-6 shadow-sm">
                 <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#6D5EF7]" /> Quick Operations
+                  <Sparkles className="w-4 h-4 text-[#0B3D91]" /> Quick Operations
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  <button onClick={() => setActiveModal('createDrive')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/5 text-slate-700 hover:text-[#6D5EF7] transition-all duration-200 cursor-pointer">
+                  <button onClick={() => setActiveModal('createDrive')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#0B3D91]/40 hover:bg-[#0B3D91]/5 text-slate-700 hover:text-[#0B3D91] transition-all duration-200 cursor-pointer">
                     <Target className="w-5 h-5 mb-2 shrink-0" />
                     <span className="text-[11px] font-bold text-center">New Drive</span>
                   </button>
-                  <button onClick={() => setActiveModal('addStudent')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/5 text-slate-700 hover:text-[#6D5EF7] transition-all duration-200 cursor-pointer">
+                  <button onClick={() => setActiveModal('addStudent')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#0B3D91]/40 hover:bg-[#0B3D91]/5 text-slate-700 hover:text-[#0B3D91] transition-all duration-200 cursor-pointer">
                     <GraduationCap className="w-5 h-5 mb-2 shrink-0" />
                     <span className="text-[11px] font-bold text-center">Add Student</span>
                   </button>
-                  <button onClick={() => { setActiveTab('recruiters'); addToast('info', 'Verification queue active'); }} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/5 text-slate-700 hover:text-[#6D5EF7] transition-all duration-200 cursor-pointer">
+                  <button onClick={() => { setActiveTab('recruiters'); addToast('info', 'Verification queue active'); }} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#0B3D91]/40 hover:bg-[#0B3D91]/5 text-slate-700 hover:text-[#0B3D91] transition-all duration-200 cursor-pointer">
                     <Building2 className="w-5 h-5 mb-2 shrink-0" />
                     <span className="text-[11px] font-bold text-center">Approve HRs</span>
                   </button>
-                  <button onClick={() => setActiveModal('announcement')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/5 text-slate-700 hover:text-[#6D5EF7] transition-all duration-200 cursor-pointer">
+                  <button onClick={() => setActiveModal('announcement')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#0B3D91]/40 hover:bg-[#0B3D91]/5 text-slate-700 hover:text-[#0B3D91] transition-all duration-200 cursor-pointer">
                     <Megaphone className="w-5 h-5 mb-2 shrink-0" />
                     <span className="text-[11px] font-bold text-center">Broadcast</span>
                   </button>
-                  <button onClick={() => setActiveModal('csvUpload')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/5 text-slate-700 hover:text-[#6D5EF7] transition-all duration-200 cursor-pointer">
+                  <button onClick={() => setActiveModal('csvUpload')} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-[#0B3D91]/40 hover:bg-[#0B3D91]/5 text-slate-700 hover:text-[#0B3D91] transition-all duration-200 cursor-pointer">
                     <FileSpreadsheet className="w-5 h-5 mb-2 shrink-0" />
                     <span className="text-[11px] font-bold text-center">Upload CSV</span>
                   </button>
@@ -1503,7 +1503,7 @@ const AdminDashboard = () => {
                 <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-slate-50">
                     <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">Upcoming Job Drives</h4>
-                    <span className="text-[10px] text-[#6D5EF7] font-bold hover:underline cursor-pointer" onClick={() => setActiveTab('drives')}>View all</span>
+                    <span className="text-[10px] text-[#0B3D91] font-bold hover:underline cursor-pointer" onClick={() => setActiveTab('drives')}>View all</span>
                   </div>
                   <div className="space-y-4">
                     {drives.slice(0, 3).map(drive => (
@@ -1526,7 +1526,7 @@ const AdminDashboard = () => {
                         </div>
                         <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                           <div 
-                            className="bg-[#6D5EF7] h-full rounded-full" 
+                            className="bg-[#0B3D91] h-full rounded-full" 
                             style={{ width: `${Math.min(100, (drive.registeredCount / 200) * 100)}%` }} 
                           />
                         </div>
@@ -1539,7 +1539,7 @@ const AdminDashboard = () => {
                 <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-slate-50">
                     <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">Top Recruiter Engagement</h4>
-                    <span className="text-[10px] text-[#6D5EF7] font-bold hover:underline cursor-pointer" onClick={() => setActiveTab('companies')}>Details</span>
+                    <span className="text-[10px] text-[#0B3D91] font-bold hover:underline cursor-pointer" onClick={() => setActiveTab('companies')}>Details</span>
                   </div>
                   <div className="space-y-3.5">
                     {companies.slice(0, 4).map(company => (
@@ -1552,7 +1552,7 @@ const AdminDashboard = () => {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs font-black text-[#6D5EF7]">{company.hiredCount} Placed</p>
+                          <p className="text-xs font-black text-[#0B3D91]">{company.hiredCount} Placed</p>
                           <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 mt-0.5 block">Active Partner</span>
                         </div>
                       </div>
@@ -1564,7 +1564,7 @@ const AdminDashboard = () => {
                 <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-slate-50">
                     <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">Department Tracker</h4>
-                    <span className="text-[10px] text-[#6D5EF7] font-bold hover:underline cursor-pointer" onClick={() => setActiveTab('analytics')}>Analytics</span>
+                    <span className="text-[10px] text-[#0B3D91] font-bold hover:underline cursor-pointer" onClick={() => setActiveTab('analytics')}>Analytics</span>
                   </div>
                   <div className="space-y-4">
                     {branchPlacements.slice(0, 4).map(bp => {
@@ -1619,8 +1619,8 @@ const AdminDashboard = () => {
                   <div className="space-y-4">
                     {notificationsList.length > 0 ? (
                       notificationsList.slice(0, 3).map(notif => {
-                        let iconBg = "bg-[#6D5EF7]/10";
-                        let iconColor = "text-[#6D5EF7]";
+                        let iconBg = "bg-[#0B3D91]/10";
+                        let iconColor = "text-[#0B3D91]";
                         let IconComponent = CheckCircle2;
 
                         if (notif.type === 'recruiter') {
@@ -1700,7 +1700,7 @@ const AdminDashboard = () => {
                 <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Configure Student Profiles & Placement Status</p>
                 <button
                   onClick={() => setActiveModal('addStudent')}
-                  className="bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-[#6D5EF7]/10 cursor-pointer"
+                  className="bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-[#0B3D91]/10 cursor-pointer"
                 >
                   <Plus className="w-4 h-4" /> Add Student Record
                 </button>
@@ -1762,7 +1762,7 @@ const AdminDashboard = () => {
                       step="0.5" 
                       value={studentCgpafilter}
                       onChange={(e) => setStudentCgpafilter(parseFloat(e.target.value))}
-                      className="accent-[#6D5EF7] w-20"
+                      className="accent-[#0B3D91] w-20"
                     />
                   </div>
                 </div>
@@ -1815,7 +1815,7 @@ const AdminDashboard = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4">
-                              <span className="bg-indigo-50 text-[#6D5EF7] font-black px-2 py-0.5 rounded text-[11px] border border-indigo-100">
+                              <span className="bg-indigo-50 text-[#0B3D91] font-black px-2 py-0.5 rounded text-[11px] border border-indigo-100">
                                 {student.cgpa.toFixed(2)}
                               </span>
                             </td>
@@ -2057,7 +2057,7 @@ const AdminDashboard = () => {
                       <p className="text-[10px] text-slate-400 font-bold uppercase">HR Contact Person</p>
                       <div className="flex items-center justify-between text-xs font-semibold text-slate-605">
                         <span>{c.hrName}</span>
-                        <span className="text-[#6D5EF7]">{c.email}</span>
+                        <span className="text-[#0B3D91]">{c.email}</span>
                       </div>
                     </div>
 
@@ -2066,7 +2066,7 @@ const AdminDashboard = () => {
                         <Star className="w-3.5 h-3.5 fill-current" />
                         <span className="font-bold">{c.rating}</span>
                       </div>
-                      <a href={`https://${c.website}`} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-[#6D5EF7] hover:underline font-bold text-[11px]">
+                      <a href={`https://${c.website}`} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-[#0B3D91] hover:underline font-bold text-[11px]">
                         Visit {c.website}
                       </a>
                     </div>
@@ -2088,7 +2088,7 @@ const AdminDashboard = () => {
                 <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Active Placement Operations & Timelines</p>
                 <button
                   onClick={() => setActiveModal('createDrive')}
-                  className="bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-[#6D5EF7]/10 cursor-pointer"
+                  className="bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-[#0B3D91]/10 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" /> Schedule New Drive
                 </button>
@@ -2125,7 +2125,7 @@ const AdminDashboard = () => {
                           <div className="space-y-1">
                             <div className="flex flex-wrap gap-1">
                               {drive.branches.map(b => (
-                                <span key={b} className="bg-indigo-50 text-[#6D5EF7] border border-indigo-100 rounded px-1.5 py-0.5 text-[9px] font-bold">{b}</span>
+                                <span key={b} className="bg-indigo-50 text-[#0B3D91] border border-indigo-100 rounded px-1.5 py-0.5 text-[9px] font-bold">{b}</span>
                               ))}
                             </div>
                             <span className="text-[9px] text-slate-400 block">Mode: {drive.mode} • Venue: {drive.venue}</span>
@@ -2150,7 +2150,7 @@ const AdminDashboard = () => {
                             </button>
                             <button
                               onClick={() => { setSelectedDrive(drive); addToast('info', `Displaying registrations for: ${drive.name}`); }}
-                              className="p-1.5 hover:bg-slate-50 rounded text-slate-500 hover:text-[#6D5EF7] cursor-pointer"
+                              className="p-1.5 hover:bg-slate-50 rounded text-slate-500 hover:text-[#0B3D91] cursor-pointer"
                               title="Applicants view"
                             >
                               <Eye className="w-3.5 h-3.5" />
@@ -2189,7 +2189,7 @@ const AdminDashboard = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         <h4 className="text-sm font-bold text-slate-800">{job.role}</h4>
-                        <p className="text-xs font-semibold text-[#6D5EF7]">{job.company}</p>
+                        <p className="text-xs font-semibold text-[#0B3D91]">{job.company}</p>
                       </div>
                       <span className="text-xs font-black text-emerald-600 font-mono bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">{job.ctc}</span>
                     </div>
@@ -2215,7 +2215,7 @@ const AdminDashboard = () => {
                         <button onClick={() => addToast('info', 'Edit Job Specs details Mocked')} className="px-2.5 py-1 text-slate-500 hover:text-slate-750 hover:bg-slate-50 rounded border border-slate-200 font-bold text-[10px] cursor-pointer">
                           Edit Specs
                         </button>
-                        <button onClick={() => addToast('success', 'Vacancy status updated')} className="px-2.5 py-1 bg-[#6D5EF7] text-white rounded font-bold text-[10px] hover:bg-[#5B4EE0] cursor-pointer">
+                        <button onClick={() => addToast('success', 'Vacancy status updated')} className="px-2.5 py-1 bg-[#0B3D91] text-white rounded font-bold text-[10px] hover:bg-[#082F70] cursor-pointer">
                           Promote Listing
                         </button>
                       </div>
@@ -2310,7 +2310,7 @@ const AdminDashboard = () => {
                                 }));
                                 addToast('info', 'Advanced candidate to next vetting round.');
                               }}
-                              className="px-2 py-1 bg-indigo-50 hover:bg-indigo-105 text-[#6D5EF7] border border-indigo-100 rounded font-bold text-[10px] cursor-pointer"
+                              className="px-2 py-1 bg-indigo-50 hover:bg-indigo-105 text-[#0B3D91] border border-indigo-100 rounded font-bold text-[10px] cursor-pointer"
                             >
                               Next Round
                             </button>
@@ -2335,7 +2335,7 @@ const AdminDashboard = () => {
                 <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Placement Drive Selection Shortlists Logs</p>
                 <button
                   onClick={() => setActiveModal('csvUpload')}
-                  className="bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer"
+                  className="bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer"
                 >
                   <Upload className="w-4 h-4" /> Upload Shortlist CSV
                 </button>
@@ -2372,7 +2372,7 @@ const AdminDashboard = () => {
 
                     <div className="pt-2 flex justify-between items-center text-xs text-slate-400">
                       <span>Uploaded on: {list.publishedDate}</span>
-                      <button onClick={() => addToast('success', 'Shortlist file downloaded')} className="text-[#6D5EF7] hover:underline flex items-center gap-1 font-bold cursor-pointer">
+                      <button onClick={() => addToast('success', 'Shortlist file downloaded')} className="text-[#0B3D91] hover:underline flex items-center gap-1 font-bold cursor-pointer">
                         <Download className="w-3.5 h-3.5" /> Download XLS
                       </button>
                     </div>
@@ -2392,7 +2392,7 @@ const AdminDashboard = () => {
               {/* Analytics Hub Header */}
               <div className="pb-4 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                  <span className="text-[10px] bg-[#6D5EF7]/10 text-[#6D5EF7] border border-[#6D5EF7]/20 px-2 py-0.5 rounded font-black tracking-wider uppercase">Institutional BI Suite</span>
+                  <span className="text-[10px] bg-[#0B3D91]/10 text-[#0B3D91] border border-[#0B3D91]/20 px-2 py-0.5 rounded font-black tracking-wider uppercase">Institutional BI Suite</span>
                   <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mt-1 font-sans">Placement Intelligence Dashboard</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Real-time statistics, predictive forecasting, risk analysis, and automated insights</p>
                 </div>
@@ -2416,7 +2416,7 @@ const AdminDashboard = () => {
                   </button>
                   <button
                     onClick={exportIntelligencePDF}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#6D5EF7] hover:bg-[#5B4EE0] text-xs font-bold text-white transition-all cursor-pointer shadow-sm shadow-[#6D5EF7]/20"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0B3D91] hover:bg-[#082F70] text-xs font-bold text-white transition-all cursor-pointer shadow-sm shadow-[#0B3D91]/20"
                   >
                     <Download className="w-3.5 h-3.5" />
                     Export PDF Report
@@ -2430,7 +2430,7 @@ const AdminDashboard = () => {
                   onClick={() => setAnalyticsSubTab('overview')}
                   className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-2 cursor-pointer ${
                     analyticsSubTab === 'overview'
-                      ? 'bg-white dark:bg-slate-800 text-[#6D5EF7] dark:text-[#8175F9] shadow-md shadow-slate-200/50 dark:shadow-none'
+                      ? 'bg-white dark:bg-slate-800 text-[#0B3D91] dark:text-[#3B6FD1] shadow-md shadow-slate-200/50 dark:shadow-none'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 hover:bg-white/40 dark:hover:bg-slate-850/40'
                   }`}
                 >
@@ -2441,7 +2441,7 @@ const AdminDashboard = () => {
                   onClick={() => setAnalyticsSubTab('departments')}
                   className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-2 cursor-pointer ${
                     analyticsSubTab === 'departments'
-                      ? 'bg-white dark:bg-slate-800 text-[#6D5EF7] dark:text-[#8175F9] shadow-md shadow-slate-200/50 dark:shadow-none'
+                      ? 'bg-white dark:bg-slate-800 text-[#0B3D91] dark:text-[#3B6FD1] shadow-md shadow-slate-200/50 dark:shadow-none'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 hover:bg-white/40 dark:hover:bg-slate-850/40'
                   }`}
                 >
@@ -2452,7 +2452,7 @@ const AdminDashboard = () => {
                   onClick={() => setAnalyticsSubTab('companies')}
                   className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-2 cursor-pointer ${
                     analyticsSubTab === 'companies'
-                      ? 'bg-white dark:bg-slate-800 text-[#6D5EF7] dark:text-[#8175F9] shadow-md shadow-slate-200/50 dark:shadow-none'
+                      ? 'bg-white dark:bg-slate-800 text-[#0B3D91] dark:text-[#3B6FD1] shadow-md shadow-slate-200/50 dark:shadow-none'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 hover:bg-white/40 dark:hover:bg-slate-850/40'
                   }`}
                 >
@@ -2463,7 +2463,7 @@ const AdminDashboard = () => {
                   onClick={() => setAnalyticsSubTab('riskATS')}
                   className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-2 cursor-pointer ${
                     analyticsSubTab === 'riskATS'
-                      ? 'bg-white dark:bg-slate-800 text-[#6D5EF7] dark:text-[#8175F9] shadow-md shadow-slate-200/50 dark:shadow-none'
+                      ? 'bg-white dark:bg-slate-800 text-[#0B3D91] dark:text-[#3B6FD1] shadow-md shadow-slate-200/50 dark:shadow-none'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 hover:bg-white/40 dark:hover:bg-slate-850/40'
                   }`}
                 >
@@ -2474,7 +2474,7 @@ const AdminDashboard = () => {
                   onClick={() => setAnalyticsSubTab('trendsPrediction')}
                   className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-2 cursor-pointer ${
                     analyticsSubTab === 'trendsPrediction'
-                      ? 'bg-white dark:bg-slate-800 text-[#6D5EF7] dark:text-[#8175F9] shadow-md shadow-slate-200/50 dark:shadow-none'
+                      ? 'bg-white dark:bg-slate-800 text-[#0B3D91] dark:text-[#3B6FD1] shadow-md shadow-slate-200/50 dark:shadow-none'
                       : 'text-slate-550 dark:text-slate-400 hover:text-slate-800 hover:bg-white/40 dark:hover:bg-slate-850/40'
                   }`}
                 >
@@ -2485,7 +2485,7 @@ const AdminDashboard = () => {
 
               {!detailedStats ? (
                 <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[20px] p-12 text-center flex flex-col items-center justify-center space-y-4">
-                  <RefreshCw className="w-8 h-8 text-[#6D5EF7] animate-spin" />
+                  <RefreshCw className="w-8 h-8 text-[#0B3D91] animate-spin" />
                   <p className="text-slate-550 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Compiling institutional data intelligence...</p>
                 </div>
               ) : (
@@ -2500,11 +2500,11 @@ const AdminDashboard = () => {
                         <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
                           <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase">Placement Success Rate</span>
                           <div className="mt-2 flex items-baseline gap-2">
-                            <span className="text-2xl font-extrabold text-[#6D5EF7] dark:text-[#8175F9]">{detailedStats.overview.placementRate}%</span>
+                            <span className="text-2xl font-extrabold text-[#0B3D91] dark:text-[#3B6FD1]">{detailedStats.overview.placementRate}%</span>
                             <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500">({detailedStats.overview.placedStudents}/{detailedStats.overview.totalStudents})</span>
                           </div>
                           <div className="w-full bg-slate-105 dark:bg-slate-700 h-1.5 rounded-full mt-3 overflow-hidden">
-                            <div className="bg-gradient-to-r from-[#6D5EF7] to-indigo-400 h-full rounded-full" style={{ width: `${detailedStats.overview.placementRate}%` }} />
+                            <div className="bg-gradient-to-r from-[#0B3D91] to-indigo-400 h-full rounded-full" style={{ width: `${detailedStats.overview.placementRate}%` }} />
                           </div>
                         </div>
 
@@ -2566,7 +2566,7 @@ const AdminDashboard = () => {
                         {/* AI Recommendations */}
                         <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
                           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-700">
-                            <Sparkles className="w-5 h-5 text-[#6D5EF7]" />
+                            <Sparkles className="w-5 h-5 text-[#0B3D91]" />
                             <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">AI Diagnostic Recommendations</h4>
                           </div>
                           <div className="space-y-3.5 pt-1">
@@ -2615,7 +2615,7 @@ const AdminDashboard = () => {
                                   <td className="py-3 pl-2 font-bold text-slate-400">#{idx + 1}</td>
                                   <td className="py-3 font-bold text-slate-850 dark:text-slate-200">{p.studentName}</td>
                                   <td className="py-3 font-medium text-slate-550 dark:text-slate-400">
-                                    <span className="px-2 py-0.5 bg-indigo-50/60 dark:bg-indigo-950/20 text-[#6D5EF7] dark:text-[#8175F9] border border-indigo-100/40 rounded text-[10px] font-bold">
+                                    <span className="px-2 py-0.5 bg-indigo-50/60 dark:bg-indigo-950/20 text-[#0B3D91] dark:text-[#3B6FD1] border border-indigo-100/40 rounded text-[10px] font-bold">
                                       {p.department}
                                     </span>
                                   </td>
@@ -2665,7 +2665,7 @@ const AdminDashboard = () => {
                                   <td className="py-3.5 text-center font-bold text-slate-600 dark:text-slate-400">{d.eligibleStudents}</td>
                                   <td className="py-3.5 text-center font-bold text-emerald-600 dark:text-emerald-500">{d.placedStudents}</td>
                                   <td className="py-3.5 text-center font-bold text-rose-500">{d.unplacedStudents}</td>
-                                  <td className="py-3.5 text-center font-black text-[#6D5EF7] dark:text-[#8175F9]">{d.placementPercentage}%</td>
+                                  <td className="py-3.5 text-center font-black text-[#0B3D91] dark:text-[#3B6FD1]">{d.placementPercentage}%</td>
                                   <td className="py-3.5 text-center font-bold text-slate-700 dark:text-slate-350">{d.averagePackage} LPA</td>
                                   <td className="py-3.5 text-center font-semibold text-emerald-600 dark:text-emerald-450">{d.lowestPackage} - {d.highestPackage} LPA</td>
                                   <td className="py-3.5 pr-2 text-right font-bold text-slate-600 dark:text-slate-400">{d.companiesVisited} Drives</td>
@@ -2693,7 +2693,7 @@ const AdminDashboard = () => {
                                     <span className="text-emerald-600 dark:text-emerald-500 font-extrabold">{d.averagePackage} LPA avg</span>
                                   </div>
                                   <div className="w-full bg-slate-105 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
-                                    <div className="bg-[#6D5EF7] h-full rounded-full transition-all duration-500" style={{ width: `${pctWidth}%` }} />
+                                    <div className="bg-[#0B3D91] h-full rounded-full transition-all duration-500" style={{ width: `${pctWidth}%` }} />
                                   </div>
                                 </div>
                               );
@@ -2708,7 +2708,7 @@ const AdminDashboard = () => {
                             <select
                               value={selectedSkillGapDept}
                               onChange={(e) => setSelectedSkillGapDept(e.target.value)}
-                              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-extrabold py-1 px-2 focus:outline-none focus:ring-2 focus:ring-[#6D5EF7]/10"
+                              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-extrabold py-1 px-2 focus:outline-none focus:ring-2 focus:ring-[#0B3D91]/10"
                             >
                               {departments.map(d => (
                                 <option key={d} value={d}>{d}</option>
@@ -2769,7 +2769,7 @@ const AdminDashboard = () => {
                             placeholder="Filter by Recruiter Company name..."
                             value={companySearch}
                             onChange={(e) => setCompanySearch(e.target.value)}
-                            className="w-full pl-9 block py-1.5 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-250 dark:border-slate-700 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#6D5EF7]/10 focus:border-[#6D5EF7] font-medium text-[#111827] dark:text-slate-100"
+                            className="w-full pl-9 block py-1.5 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-250 dark:border-slate-700 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] font-medium text-[#111827] dark:text-slate-100"
                           />
                         </div>
                         {companySearch && (
@@ -2809,7 +2809,7 @@ const AdminDashboard = () => {
                                     <td className="py-3 text-center font-extrabold text-slate-800 dark:text-slate-200">{co.hires} Hires</td>
                                     <td className="py-3 text-center font-bold text-emerald-600 dark:text-emerald-450">{co.averagePackageOffered} LPA</td>
                                     <td className="py-3 text-center font-extrabold text-emerald-600 dark:text-emerald-450">{co.highestPackageOffered} LPA</td>
-                                    <td className="py-3 text-center font-bold text-[#6D5EF7] dark:text-[#8175F9]">{co.selectionRatio}%</td>
+                                    <td className="py-3 text-center font-bold text-[#0B3D91] dark:text-[#3B6FD1]">{co.selectionRatio}%</td>
                                     <td className="py-3 text-center">
                                       <span className="font-extrabold text-amber-500">{co.interviewDifficultyRating}</span>
                                       <span className="text-[10px] text-slate-400"> / 5.0</span>
@@ -2873,7 +2873,7 @@ const AdminDashboard = () => {
                                   <span className="font-bold text-slate-750 dark:text-slate-200">Selected: {drive.selected}</span>
                                 </div>
                                 <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 mt-2.5 rounded-full overflow-hidden flex">
-                                  <div className="bg-[#6D5EF7]/40 h-full" style={{ width: `${(drive.appeared/drive.registered)*100}%` }} title="Appeared" />
+                                  <div className="bg-[#0B3D91]/40 h-full" style={{ width: `${(drive.appeared/drive.registered)*100}%` }} title="Appeared" />
                                   <div className="bg-amber-400 h-full" style={{ width: `${(drive.qualified/drive.registered)*100}%` }} title="Qualified" />
                                   <div className="bg-emerald-500 h-full" style={{ width: `${(drive.selected/drive.registered)*100}%` }} title="Selected" />
                                 </div>
@@ -2899,7 +2899,7 @@ const AdminDashboard = () => {
                             placeholder="Search students in risk desk by name or roll number..."
                             value={riskSearch}
                             onChange={(e) => setRiskSearch(e.target.value)}
-                            className="w-full pl-9 block py-1.5 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-250 dark:border-slate-700 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#6D5EF7]/10 focus:border-[#6D5EF7] font-medium text-[#111827] dark:text-slate-100"
+                            className="w-full pl-9 block py-1.5 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-250 dark:border-slate-700 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] font-medium text-[#111827] dark:text-slate-100"
                           />
                         </div>
                         {riskSearch && (
@@ -3002,12 +3002,12 @@ const AdminDashboard = () => {
 
                         {/* Top ATS Leaders student listings */}
                         <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-4">
-                          <h4 className="text-xs font-black uppercase text-[#6D5EF7] tracking-wider">Sleek Profile ATS Leaderboard</h4>
+                          <h4 className="text-xs font-black uppercase text-[#0B3D91] tracking-wider">Sleek Profile ATS Leaderboard</h4>
                           <div className="space-y-2.5 pt-1">
                             {detailedStats.leaderboards.students.bestATSScore.map((st, idx) => (
                               <div key={idx} className="flex justify-between items-center p-2.5 bg-slate-50 dark:bg-slate-905 border border-slate-100 dark:border-slate-800 rounded-xl hover:shadow-sm transition-all">
                                 <div className="flex items-center gap-2.5">
-                                  <span className="w-5 h-5 rounded bg-indigo-50 dark:bg-indigo-950/20 text-[#6D5EF7] flex items-center justify-center font-bold text-xs">#{idx+1}</span>
+                                  <span className="w-5 h-5 rounded bg-indigo-50 dark:bg-indigo-950/20 text-[#0B3D91] flex items-center justify-center font-bold text-xs">#{idx+1}</span>
                                   <div>
                                     <h6 className="font-extrabold text-slate-850 dark:text-slate-200 text-xs">{st.name}</h6>
                                     <p className="text-[9px] text-slate-400 uppercase mt-0.5">{st.detail}</p>
@@ -3067,8 +3067,8 @@ const AdminDashboard = () => {
                               return (
                                 <div key={idx} className="flex flex-col items-center gap-2 group w-8">
                                   <div className="text-[9px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1">{pt.placed} placed</div>
-                                  <div className="bg-[#6D5EF7]/10 dark:bg-[#6D5EF7]/20 w-5 rounded-t-sm" style={{ height: `${barHeight}px` }}>
-                                    <div className="bg-[#6D5EF7] h-full w-full rounded-t-sm opacity-80 group-hover:opacity-100 transition-opacity" />
+                                  <div className="bg-[#0B3D91]/10 dark:bg-[#0B3D91]/20 w-5 rounded-t-sm" style={{ height: `${barHeight}px` }}>
+                                    <div className="bg-[#0B3D91] h-full w-full rounded-t-sm opacity-80 group-hover:opacity-100 transition-opacity" />
                                   </div>
                                   <span className="text-[10px] font-bold text-slate-550 dark:text-slate-400">{pt.month}</span>
                                 </div>
@@ -3112,7 +3112,7 @@ const AdminDashboard = () => {
                               return (
                                 <div key={idx} className="flex flex-col items-center gap-1.5 w-16">
                                   <span className="text-xs font-bold text-slate-700 dark:text-slate-350">{y.avgSalary} LPA</span>
-                                  <div className="bg-gradient-to-t from-[#6D5EF7] to-indigo-400 w-8 rounded-t-sm" style={{ height: `${barHeight}px` }} />
+                                  <div className="bg-gradient-to-t from-[#0B3D91] to-indigo-400 w-8 rounded-t-sm" style={{ height: `${barHeight}px` }} />
                                   <span className="text-[10px] font-extrabold text-slate-500">{y.year} Batch</span>
                                 </div>
                               );
@@ -3129,9 +3129,9 @@ const AdminDashboard = () => {
                                 <span className="text-slate-755 dark:text-slate-300">{forecast.department}</span>
                                 <div className="flex items-center gap-2">
                                   <div className="w-24 bg-slate-105 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                                    <div className="bg-[#6D5EF7] h-full rounded-full" style={{ width: `${forecast.forecastRate}%` }} />
+                                    <div className="bg-[#0B3D91] h-full rounded-full" style={{ width: `${forecast.forecastRate}%` }} />
                                   </div>
-                                  <span className="text-[#6D5EF7] dark:text-[#8175F9] font-extrabold">{forecast.forecastRate}% forecast</span>
+                                  <span className="text-[#0B3D91] dark:text-[#3B6FD1] font-extrabold">{forecast.forecastRate}% forecast</span>
                                 </div>
                               </div>
                             ))}
@@ -3218,7 +3218,7 @@ const AdminDashboard = () => {
                               {detailedStats.leaderboards.companies.mostHires.map((item, idx) => (
                                 <div key={idx} className="flex justify-between text-xs font-semibold">
                                   <span className="text-slate-700 dark:text-slate-350">{idx+1}. {item.name}</span>
-                                  <span className="text-[#6D5EF7] dark:text-[#8175F9] font-extrabold">{item.score}</span>
+                                  <span className="text-[#0B3D91] dark:text-[#3B6FD1] font-extrabold">{item.score}</span>
                                 </div>
                               ))}
                             </div>
@@ -3257,7 +3257,7 @@ const AdminDashboard = () => {
                 <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Broadcast Notices & placement alerts</p>
                 <button
                   onClick={() => setActiveModal('announcement')}
-                  className="bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer"
+                  className="bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer"
                 >
                   <Megaphone className="w-3.5 h-3.5" /> Post Announcement
                 </button>
@@ -3280,10 +3280,10 @@ const AdminDashboard = () => {
                     {notice.attachment && (
                       <div className="pt-2 border-t border-slate-50 flex items-center justify-between text-xs">
                         <div className="flex items-center gap-1.5 text-slate-500">
-                          <FileText className="w-4 h-4 text-[#6D5EF7]" />
+                          <FileText className="w-4 h-4 text-[#0B3D91]" />
                           <span className="font-semibold">{notice.attachment}</span>
                         </div>
-                        <button onClick={() => addToast('success', 'Attachment downloaded')} className="text-[#6D5EF7] hover:underline font-bold cursor-pointer">
+                        <button onClick={() => addToast('success', 'Attachment downloaded')} className="text-[#0B3D91] hover:underline font-bold cursor-pointer">
                           Download JD
                         </button>
                       </div>
@@ -3308,7 +3308,7 @@ const AdminDashboard = () => {
                 {notificationsList.some(n => !n.read) && (
                   <button 
                     onClick={handleMarkAllNotificationsAsRead}
-                    className="text-xs px-3 py-1.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white rounded-xl font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="text-xs px-3 py-1.5 bg-[#0B3D91] hover:bg-[#082F70] text-white rounded-xl font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <CheckSquare className="w-3.5 h-3.5" />
                     <span>Mark All Read</span>
@@ -3331,7 +3331,7 @@ const AdminDashboard = () => {
                       onClick={() => setNotifFilter(filterVal)}
                       className={`text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
                         isActive 
-                          ? 'bg-[#6D5EF7] text-white border-[#6D5EF7]' 
+                          ? 'bg-[#0B3D91] text-white border-[#0B3D91]' 
                           : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                       }`}
                     >
@@ -3352,7 +3352,7 @@ const AdminDashboard = () => {
                         onClick={() => isUnread && handleMarkNotificationAsRead(n.id)}
                         className={`flex gap-4 p-4 rounded-xl text-xs border transition-all ${
                           isUnread 
-                            ? 'bg-[#6D5EF7]/5 border-[#6D5EF7]/20 hover:border-[#6D5EF7]/40 hover:bg-[#6D5EF7]/10 cursor-pointer shadow-sm' 
+                            ? 'bg-[#0B3D91]/5 border-[#0B3D91]/20 hover:border-[#0B3D91]/40 hover:bg-[#0B3D91]/10 cursor-pointer shadow-sm' 
                             : 'bg-slate-50/50 border-slate-100 text-slate-505'
                         }`}
                       >
@@ -3368,9 +3368,9 @@ const AdminDashboard = () => {
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {isUnread && (
-                            <span className="w-2 h-2 bg-[#6D5EF7] rounded-full" title="Unread" />
+                            <span className="w-2 h-2 bg-[#0B3D91] rounded-full" title="Unread" />
                           )}
-                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${isUnread ? 'bg-[#6D5EF7]/10 text-[#6D5EF7]' : 'bg-slate-100 text-slate-400'}`}>
+                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${isUnread ? 'bg-[#0B3D91]/10 text-[#0B3D91]' : 'bg-slate-100 text-slate-400'}`}>
                             {isUnread ? 'New' : 'Read'}
                           </span>
                         </div>
@@ -3412,7 +3412,7 @@ const AdminDashboard = () => {
                         type="text" 
                         value={settingsForm.name} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, name: e.target.value })}
-                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7] text-slate-707" 
+                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#0B3D91] text-slate-707" 
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -3421,7 +3421,7 @@ const AdminDashboard = () => {
                         type="email" 
                         value={settingsForm.email} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, email: e.target.value })}
-                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7] text-slate-707" 
+                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#0B3D91] text-slate-707" 
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -3430,7 +3430,7 @@ const AdminDashboard = () => {
                         type="text" 
                         value={settingsForm.address} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, address: e.target.value })}
-                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7] text-slate-707" 
+                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#0B3D91] text-slate-707" 
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -3439,7 +3439,7 @@ const AdminDashboard = () => {
                         type="text" 
                         value={settingsForm.phone} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, phone: e.target.value })}
-                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7] text-slate-707" 
+                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#0B3D91] text-slate-707" 
                       />
                     </div>
                   </div>
@@ -3447,7 +3447,7 @@ const AdminDashboard = () => {
                   <div className="pt-3 border-t border-slate-50">
                     <button 
                       onClick={() => addToast('success', 'Profile details updated.')}
-                      className="px-4 py-2 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold rounded-xl shadow-sm cursor-pointer"
+                      className="px-4 py-2 bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-bold rounded-xl shadow-sm cursor-pointer"
                     >
                       Save Configuration
                     </button>
@@ -3457,7 +3457,7 @@ const AdminDashboard = () => {
                 {/* 2. SMTP Configurations */}
                 <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
                   <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider pb-2 border-b border-slate-50 flex items-center gap-1.5">
-                    <Server className="w-4 h-4 text-[#6D5EF7]" /> SMTP Email setup
+                    <Server className="w-4 h-4 text-[#0B3D91]" /> SMTP Email setup
                   </h3>
                   
                   <div className="space-y-3.5 text-xs">
@@ -3467,7 +3467,7 @@ const AdminDashboard = () => {
                         type="text" 
                         value={settingsForm.smtpHost} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, smtpHost: e.target.value })}
-                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7]" 
+                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#0B3D91]" 
                       />
                     </div>
                     <div className="space-y-1">
@@ -3476,7 +3476,7 @@ const AdminDashboard = () => {
                         type="text" 
                         value={settingsForm.smtpPort} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, smtpPort: e.target.value })}
-                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7]" 
+                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#0B3D91]" 
                       />
                     </div>
                     <div className="space-y-1">
@@ -3485,7 +3485,7 @@ const AdminDashboard = () => {
                         type="text" 
                         value={settingsForm.smtpUser} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, smtpUser: e.target.value })}
-                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#6D5EF7]" 
+                        className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:border-[#0B3D91]" 
                       />
                     </div>
 
@@ -3501,7 +3501,7 @@ const AdminDashboard = () => {
                 {/* 3. Granular Permissions Checklist */}
                 <div className="lg:col-span-2 bg-white border border-slate-200/80 rounded-[18px] p-6 shadow-sm space-y-4">
                   <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider pb-2 border-b border-slate-50 flex items-center gap-1.5">
-                    <Shield className="w-4 h-4 text-[#6D5EF7]" /> Placement Cell Permissions Audit
+                    <Shield className="w-4 h-4 text-[#0B3D91]" /> Placement Cell Permissions Audit
                   </h3>
                   
                   <div className="space-y-3.5 text-xs">
@@ -3510,7 +3510,7 @@ const AdminDashboard = () => {
                         type="checkbox" 
                         checked={settingsForm.requireResumeApproval} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, requireResumeApproval: e.target.checked })}
-                        className="accent-[#6D5EF7] w-4 h-4" 
+                        className="accent-[#0B3D91] w-4 h-4" 
                       />
                       <div>
                         <span className="font-bold text-slate-700 block">Require TPO Verification for student resumes</span>
@@ -3523,7 +3523,7 @@ const AdminDashboard = () => {
                         type="checkbox" 
                         checked={settingsForm.allowDualOffers} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, allowDualOffers: e.target.checked })}
-                        className="accent-[#6D5EF7] w-4 h-4" 
+                        className="accent-[#0B3D91] w-4 h-4" 
                       />
                       <div>
                         <span className="font-bold text-slate-700 block">Allow Dual Placement Offers</span>
@@ -3536,7 +3536,7 @@ const AdminDashboard = () => {
                         type="checkbox" 
                         checked={settingsForm.maintenanceMode} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, maintenanceMode: e.target.checked })}
-                        className="accent-[#6D5EF7] w-4 h-4" 
+                        className="accent-[#0B3D91] w-4 h-4" 
                       />
                       <div>
                         <span className="font-bold text-slate-700 block">System Maintenance Mode</span>
@@ -3549,7 +3549,7 @@ const AdminDashboard = () => {
                 {/* 4. Password updates and Theme Lock */}
                 <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
                   <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider pb-2 border-b border-slate-50 flex items-center gap-1.5">
-                    <Lock className="w-4 h-4 text-[#6D5EF7]" /> Password & security
+                    <Lock className="w-4 h-4 text-[#0B3D91]" /> Password & security
                   </h3>
                   <div className="space-y-3.5 text-xs">
                     <div className="space-y-1">
@@ -3562,7 +3562,7 @@ const AdminDashboard = () => {
                     </div>
                     <button 
                       onClick={() => addToast('success', 'Security passwords updated.')}
-                      className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold rounded-xl cursor-pointer"
+                      className="w-full py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-xl cursor-pointer"
                     >
                       Update Password
                     </button>
@@ -3723,7 +3723,7 @@ const AdminDashboard = () => {
                           }}
                           className={`px-3 py-1.5 rounded-lg font-bold border transition-colors cursor-pointer ${
                             isSelected 
-                              ? 'bg-[#6D5EF7] text-white border-transparent' 
+                              ? 'bg-[#0B3D91] text-white border-transparent' 
                               : 'bg-[#F8FAFC] text-slate-600 border-slate-200 hover:bg-slate-50'
                           }`}
                         >
@@ -3734,7 +3734,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <button type="submit" className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
+                <button type="submit" className="w-full py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
                   Create Placement Drive
                 </button>
               </form>
@@ -3846,7 +3846,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <button type="submit" className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
+                <button type="submit" className="w-full py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
                   Add Student Profile
                 </button>
               </form>
@@ -3874,7 +3874,7 @@ const AdminDashboard = () => {
                     <div className="flex gap-1.5 border-b border-slate-200 px-3 py-1.5 bg-slate-50">
                       <button type="button" className="p-1 hover:bg-slate-200 rounded font-black text-slate-700 font-mono text-[10px] cursor-pointer">B</button>
                       <button type="button" className="p-1 hover:bg-slate-200 rounded font-bold text-slate-700 italic font-mono text-[10px] cursor-pointer">I</button>
-                      <button type="button" className="p-1 hover:bg-slate-200 rounded font-bold text-[#6D5EF7] underline text-[9px] cursor-pointer">Link</button>
+                      <button type="button" className="p-1 hover:bg-slate-200 rounded font-bold text-[#0B3D91] underline text-[9px] cursor-pointer">Link</button>
                       <button type="button" className="p-1 hover:bg-slate-200 rounded font-bold text-slate-700 text-[9px] cursor-pointer">• List</button>
                     </div>
                     <textarea 
@@ -3921,7 +3921,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <button type="submit" className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
+                <button type="submit" className="w-full py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
                   Broadcast notice
                 </button>
               </form>
@@ -4017,7 +4017,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <button type="submit" className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
+                <button type="submit" className="w-full py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
                   Schedule Panel Invite
                 </button>
               </form>
@@ -4047,14 +4047,14 @@ const AdminDashboard = () => {
                           type="radio" 
                           checked={reportForm.format === fmt} 
                           onChange={() => setReportForm({ ...reportForm, format: fmt })}
-                          className="accent-[#6D5EF7]"
+                          className="accent-[#0B3D91]"
                         />
                         <span>{fmt} Document</span>
                       </label>
                     ))}
                   </div>
                 </div>
-                <button type="submit" className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
+                <button type="submit" className="w-full py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
                   Compile report
                 </button>
               </form>
@@ -4092,12 +4092,12 @@ const AdminDashboard = () => {
                     }}
                     className="border-2 border-dashed border-slate-200 bg-[#F8FAFC] hover:bg-slate-50 transition-all rounded-xl p-6 text-center cursor-pointer space-y-2"
                   >
-                    <FileSpreadsheet className="w-8 h-8 text-[#6D5EF7] mx-auto" />
+                    <FileSpreadsheet className="w-8 h-8 text-[#0B3D91] mx-auto" />
                     <div className="text-xs font-semibold text-slate-655">
                       {csvUploadData.fileName ? (
                         <span className="text-slate-800 font-bold block">{csvUploadData.fileName}</span>
                       ) : (
-                        <span>Drag & drop student shortlist CSV or <span className="text-[#6D5EF7] underline">Browse</span></span>
+                        <span>Drag & drop student shortlist CSV or <span className="text-[#0B3D91] underline">Browse</span></span>
                       )}
                     </div>
                     <span className="block text-[10px] text-slate-400">Accepted formats: .csv, .xlsx • Max 5MB</span>
@@ -4110,7 +4110,7 @@ const AdminDashboard = () => {
                   </div>
                 )}
 
-                <button type="submit" className="w-full py-2.5 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
+                <button type="submit" className="w-full py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-xl shadow-sm mt-2 cursor-pointer">
                   Register Shortlist File
                 </button>
               </form>

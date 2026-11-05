@@ -175,7 +175,7 @@ const JobDetail = () => {
         <div className="bg-[#F8FAFC] p-5 sm:p-8 md:p-10 border-b border-[#E5E7EB]">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center font-bold text-[#7C3AED] text-sm flex-shrink-0 shadow-sm">
+              <div className="h-12 w-12 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center font-bold text-[#0B3D91] text-sm flex-shrink-0 shadow-sm">
                 {job.companyName.substring(0, 2).toUpperCase()}
               </div>
               <div className="space-y-1">

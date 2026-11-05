@@ -272,7 +272,7 @@ const Profile = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="block w-full px-4 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-xs font-semibold"
+                    className="block w-full px-4 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-xs font-semibold"
                     required
                   />
                 </div>
@@ -285,7 +285,7 @@ const Profile = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="block w-full px-4 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-xs font-semibold"
+                    className="block w-full px-4 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-xs font-semibold"
                     required
                   />
                 </div>
@@ -341,7 +341,7 @@ const Profile = () => {
                         placeholder="PlacementConnect"
                         value={newProject.title}
                         onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
-                        className="block w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] text-xs font-semibold"
+                        className="block w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] text-xs font-semibold"
                       />
                     </div>
                     <div>
@@ -351,7 +351,7 @@ const Profile = () => {
                         placeholder="https://github.com/..."
                         value={newProject.link}
                         onChange={(e) => setNewProject({ ...newProject, link: e.target.value })}
-                        className="block w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] text-xs font-semibold"
+                        className="block w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] text-xs font-semibold"
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -361,7 +361,7 @@ const Profile = () => {
                         placeholder="React.js, Node.js, Express, MongoDB"
                         value={newProject.techStack}
                         onChange={(e) => setNewProject({ ...newProject, techStack: e.target.value })}
-                        className="block w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] text-xs font-semibold"
+                        className="block w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] text-xs font-semibold"
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -371,7 +371,7 @@ const Profile = () => {
                         placeholder="Describe the application features, challenges solved, and components built..."
                         value={newProject.description}
                         onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                        className="block w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] text-xs font-semibold resize-none"
+                        className="block w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] text-xs font-semibold resize-none"
                       />
                     </div>
                   </div>
@@ -490,7 +490,7 @@ const Profile = () => {
                   placeholder="React, Java, Python..."
                   value={skillInput}
                   onChange={(e) => setSkillInput(e.target.value)}
-                  className="flex-grow px-3 py-2 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] text-xs font-semibold"
+                  className="flex-grow px-3 py-2 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] text-xs font-semibold"
                 />
                 <button
                   type="submit"
@@ -654,7 +654,7 @@ const Profile = () => {
             </div>
             
             <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-              <div className="h-16 w-16 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center text-2xl font-bold text-[#7C3AED] shadow-sm">
+              <div className="h-16 w-16 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center text-2xl font-bold text-[#0B3D91] shadow-sm">
                 {formData.name.split(' ').map(n => n[0]).join('').toUpperCase()}
               </div>
 

@@ -197,7 +197,7 @@ const Applications = () => {
                 {/* Top Section */}
                 <div className="p-6 bg-[#F8FAFC] border-b border-[#E5E7EB] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center font-bold text-[#7C3AED] text-xs flex-shrink-0 shadow-sm">
+                    <div className="h-10 w-10 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center font-bold text-[#0B3D91] text-xs flex-shrink-0 shadow-sm">
                       {job.companyName ? job.companyName.substring(0, 2).toUpperCase() : 'PC'}
                     </div>
                     <div>
@@ -398,8 +398,8 @@ const Applications = () => {
                   <div className="p-5 bg-[#F8FAFC] border-t border-[#E5E7EB] animate-in slide-in-from-bottom-2 duration-200">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
                       <div className="space-y-0.5">
-                        <h4 className="text-[10px] font-bold text-[#7C3AED] bg-[#7C3AED]/10 border border-[#7C3AED]/20 px-2.5 py-0.5 rounded inline-flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 text-[#7C3AED]" /> Stage Evaluation Simulator
+                        <h4 className="text-[10px] font-bold text-[#0B3D91] bg-[#0B3D91]/10 border border-[#0B3D91]/20 px-2.5 py-0.5 rounded inline-flex items-center gap-1">
+                          <Sparkles className="w-3 h-3 text-[#0B3D91]" /> Stage Evaluation Simulator
                         </h4>
                         <p className="text-[10px] text-[#4B5563] font-medium">
                           Advance stages or trigger selection/rejection outcomes to inspect the tracker UI and notifications.

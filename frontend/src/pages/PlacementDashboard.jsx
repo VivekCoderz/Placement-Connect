@@ -18,14 +18,14 @@ const CompanyTableRow = ({ co }) => {
         <td className="py-3 text-slate-500 text-xs">{co.industry}</td>
         <td className="py-3 text-center font-bold text-slate-700 text-xs">{co.totalDrives}</td>
         <td className="py-3 text-center font-bold text-slate-700 text-xs">{co.uniqueAppliedStudents}</td>
-        <td className="py-3 text-center font-bold text-[#5B4FCF] text-xs">{co.uniquePlacedStudents}</td>
+        <td className="py-3 text-center font-bold text-[#0B3D91] text-xs">{co.uniquePlacedStudents}</td>
         <td className="py-3 text-right font-black text-emerald-600 text-xs">
           {co.uniquePlacedStudents > 0 ? `${co.lowestPackage} - ${co.highestPackage}` : 'N/A'}
         </td>
         <td className="py-3 pr-2 text-right">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-[10px] font-bold px-2 py-1 rounded bg-[#5B4FCF]/10 text-[#5B4FCF] hover:bg-[#5B4FCF]/20 transition-all cursor-pointer"
+            className="text-[10px] font-bold px-2 py-1 rounded bg-[#0B3D91]/10 text-[#0B3D91] hover:bg-[#0B3D91]/20 transition-all cursor-pointer"
           >
             {isExpanded ? 'Hide Placements' : 'View Placements'}
           </button>
@@ -217,7 +217,7 @@ const PlacementDashboard = () => {
       title: `${status} Students Report`,
       styles: `
             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748; margin: 40px; }
-            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #6D5EF7; padding-bottom: 20px; margin-bottom: 30px; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0B3D91; padding-bottom: 20px; margin-bottom: 30px; }
             .logo-section h1 { margin: 0; font-size: 24px; color: #1A202C; }
             .logo-section p { margin: 5px 0 0 0; font-size: 12px; color: #718096; font-weight: bold; }
             .report-info { text-align: right; font-size: 12px; color: #718096; }
@@ -484,39 +484,39 @@ const PlacementDashboard = () => {
     <div className="w-full max-w-7xl mx-auto space-y-6 sm:space-y-8 font-sans px-0 sm:px-6 py-2 sm:py-6 text-[#4B5563]">
       
       {/* Welcome Header */}
-      <div className="bg-[#5B4FCF] text-white rounded-2xl p-5 sm:p-8 border border-[#7C6AE6] shadow-xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative overflow-hidden">
+      <div className="bg-[#0B3D91] text-white rounded-2xl p-5 sm:p-8 border border-[#1E4FA8] shadow-xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#22C55E]/10 rounded-full blur-[150px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-white/5 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="relative z-10 space-y-4 flex-1">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-[#7C6AE6] border border-white/10 flex items-center justify-center shadow-md">
+            <div className="h-12 w-12 rounded-xl bg-[#1E4FA8] border border-white/10 flex items-center justify-center shadow-md">
               <GraduationCap className="w-6 h-6 text-[#22C55E]" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-white bg-[#7C6AE6] border border-white/20 px-3 py-1 rounded-full">T&P Officer Console</span>
+              <span className="text-[10px] font-bold text-white bg-[#1E4FA8] border border-white/20 px-3 py-1 rounded-full">T&P Officer Console</span>
               <h1 className="text-2xl font-bold tracking-tight text-white mt-2">{user?.name || 'T&P Officer'}</h1>
-              <p className="text-purple-100 font-medium text-xs mt-1">{user?.email || 'placementcell@university.edu'}</p>
+              <p className="text-blue-100 font-medium text-xs mt-1">{user?.email || 'placementcell@university.edu'}</p>
             </div>
           </div>
         </div>
 
         {/* Quick Stats Grid */}
         <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-4 w-full lg:w-auto">
-          <div className="bg-[#7C6AE6]/60 p-4 px-5 rounded-xl border border-white/20 text-center">
-            <p className="text-[10px] font-bold text-purple-100 uppercase tracking-widest">Active Drives</p>
+          <div className="bg-[#1E4FA8]/60 p-4 px-5 rounded-xl border border-white/20 text-center">
+            <p className="text-[10px] font-bold text-blue-100 uppercase tracking-widest">Active Drives</p>
             <p className="text-xl font-bold text-white mt-1">{totalDrivesCount}</p>
           </div>
-          <div className="bg-[#7C6AE6]/60 p-4 px-5 rounded-xl border border-white/20 text-center">
-            <p className="text-[10px] font-bold text-purple-100 uppercase tracking-widest">Applications</p>
+          <div className="bg-[#1E4FA8]/60 p-4 px-5 rounded-xl border border-white/20 text-center">
+            <p className="text-[10px] font-bold text-blue-100 uppercase tracking-widest">Applications</p>
             <p className="text-xl font-bold text-white mt-1">{totalApplicationsCount}</p>
           </div>
-          <div className="bg-[#7C6AE6]/60 p-4 px-5 rounded-xl border border-white/20 text-center">
-            <p className="text-[10px] font-bold text-purple-100 uppercase tracking-widest">Shortlisted</p>
+          <div className="bg-[#1E4FA8]/60 p-4 px-5 rounded-xl border border-white/20 text-center">
+            <p className="text-[10px] font-bold text-blue-100 uppercase tracking-widest">Shortlisted</p>
             <p className="text-xl font-bold text-purple-50 mt-1">{shortlistedCount}</p>
           </div>
-          <div className="bg-[#7C6AE6]/60 p-4 px-5 rounded-xl border border-white/20 text-center">
-            <p className="text-[10px] font-bold text-purple-100 uppercase tracking-widest">Placed</p>
+          <div className="bg-[#1E4FA8]/60 p-4 px-5 rounded-xl border border-white/20 text-center">
+            <p className="text-[10px] font-bold text-blue-100 uppercase tracking-widest">Placed</p>
             <p className="text-xl font-bold text-[#22C55E] mt-1">{selectedCount}</p>
           </div>
         </div>
@@ -662,7 +662,7 @@ const PlacementDashboard = () => {
           {/* Recruiter proposed schedule list - matches the exact requested flow */}
           <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 md:p-8 space-y-6 shadow-sm">
             <h3 className="text-base font-bold text-[#111827] tracking-tight flex items-center gap-2">
-              <BellRing className="w-4 h-4 text-[#7C3AED]" /> Recruiter Round Schedule Proposals
+              <BellRing className="w-4 h-4 text-[#0B3D91]" /> Recruiter Round Schedule Proposals
             </h3>
             <p className="text-xs text-[#4B5563] font-medium">Incoming proposals from company recruiters specifying round counts, target intake, and timings. Review and notify students.</p>
 
@@ -715,7 +715,7 @@ const PlacementDashboard = () => {
                 type="text"
                 value={monitorSearch}
                 onChange={(e) => setMonitorSearch(e.target.value)}
-                className="pl-9 block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] font-medium text-[#111827]"
+                className="pl-9 block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] font-medium text-[#111827]"
                 placeholder="Search drive or company..."
               />
             </div>
@@ -736,7 +736,7 @@ const PlacementDashboard = () => {
                   <div key={drive._id} className="p-6 rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] hover:bg-[#F1F5F9] transition-all duration-300 space-y-4">
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center font-bold text-[#7C3AED] text-xs shadow-sm">
+                        <div className="h-10 w-10 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center font-bold text-[#0B3D91] text-xs shadow-sm">
                           {drive.companyId?.name ? drive.companyId.name.substring(0,2).toUpperCase() : 'CO'}
                         </div>
                         <div>
@@ -756,7 +756,7 @@ const PlacementDashboard = () => {
                       </div>
                       <div>
                         <p className="text-[9px] font-bold text-[#94A3B8] uppercase tracking-widest">Shortlisted</p>
-                        <p className="text-sm font-bold text-[#7C3AED] mt-1">{driveShortlisted}</p>
+                        <p className="text-sm font-bold text-[#0B3D91] mt-1">{driveShortlisted}</p>
                       </div>
                       <div>
                         <p className="text-[9px] font-bold text-[#94A3B8] uppercase tracking-widest">Selected</p>
@@ -789,13 +789,13 @@ const PlacementDashboard = () => {
             <div className="flex bg-[#F3F4F6] p-1 rounded-xl self-start sm:self-center">
               <button
                 onClick={() => setAnalyserMode('stats')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyserMode === 'stats' ? 'bg-[#5B4FCF] text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyserMode === 'stats' ? 'bg-[#0B3D91] text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 Placement Analytics
               </button>
               <button
                 onClick={() => setAnalyserMode('talent')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyserMode === 'talent' ? 'bg-[#5B4FCF] text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyserMode === 'talent' ? 'bg-[#0B3D91] text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 Student Talent Search
               </button>
@@ -842,7 +842,7 @@ const PlacementDashboard = () => {
                       type="text"
                       value={analyserSearch}
                       onChange={(e) => setAnalyserSearch(e.target.value)}
-                      className="pl-9 block w-full py-1.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] font-medium text-[#111827]"
+                      className="pl-9 block w-full py-1.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] font-medium text-[#111827]"
                       placeholder="Search student name..."
                     />
                   </div>
@@ -895,7 +895,7 @@ const PlacementDashboard = () => {
               
               {!detailedStats ? (
                 <div className="bg-white border border-[#E5E7EB] rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-4 shadow-sm">
-                  <RefreshCw className="w-8 h-8 text-[#5B4FCF] animate-spin" />
+                  <RefreshCw className="w-8 h-8 text-[#0B3D91] animate-spin" />
                   <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Loading campus placement analytics...</p>
                 </div>
               ) : (
@@ -904,19 +904,19 @@ const PlacementDashboard = () => {
                   <div className="flex bg-[#F3F4F6] p-1 rounded-xl self-start w-fit">
                     <button
                       onClick={() => setAnalyticsSubTab('overview')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyticsSubTab === 'overview' ? 'bg-white text-[#5B4FCF] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyticsSubTab === 'overview' ? 'bg-white text-[#0B3D91] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
                     >
                       Overview & Charts
                     </button>
                     <button
                       onClick={() => setAnalyticsSubTab('companyStats')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyticsSubTab === 'companyStats' ? 'bg-white text-[#5B4FCF] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyticsSubTab === 'companyStats' ? 'bg-white text-[#0B3D91] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
                     >
                       Company & Drives
                     </button>
                     <button
                       onClick={() => setAnalyticsSubTab('skills')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyticsSubTab === 'skills' ? 'bg-white text-[#5B4FCF] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${analyticsSubTab === 'skills' ? 'bg-white text-[#0B3D91] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
                     >
                       Compensation & Skills
                     </button>
@@ -928,7 +928,7 @@ const PlacementDashboard = () => {
                       <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 shadow-sm flex flex-col justify-between">
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Placed Ratio</span>
                         <div className="mt-2 flex items-baseline gap-2">
-                          <span className="text-2xl font-black text-[#5B4FCF]">{detailedStats.overview.placementRate}%</span>
+                          <span className="text-2xl font-black text-[#0B3D91]">{detailedStats.overview.placementRate}%</span>
                           <span className="text-[10px] font-bold text-emerald-600">({detailedStats.overview.placedStudents}/{detailedStats.overview.totalStudents})</span>
                         </div>
                       </div>
@@ -949,8 +949,8 @@ const PlacementDashboard = () => {
                       <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 shadow-sm flex flex-col justify-between">
                         <span className="text-[10px] text-slate-405 font-bold uppercase tracking-wider">Highest Salary Offer</span>
                         <div className="mt-2 flex items-baseline gap-2">
-                          <span className="text-2xl font-black text-[#5B4FCF]">{detailedStats.overview.highestPackage} LPA</span>
-                          <span className="text-[10px] font-bold text-[#5B4FCF]">{detailedStats.packageBreakdown.highestPlaced[0]?.companyName || 'Google'}</span>
+                          <span className="text-2xl font-black text-[#0B3D91]">{detailedStats.overview.highestPackage} LPA</span>
+                          <span className="text-[10px] font-bold text-[#0B3D91]">{detailedStats.packageBreakdown.highestPlaced[0]?.companyName || 'Google'}</span>
                         </div>
                       </div>
                     </div>
@@ -969,12 +969,12 @@ const PlacementDashboard = () => {
                               <div key={bp.branch} className="flex flex-col items-center gap-2 w-12 group">
                                 <div className="w-full flex items-end gap-1 h-36">
                                   <div 
-                                    className="bg-[#5B4FCF]/10 w-4 rounded-t-sm" 
+                                    className="bg-[#0B3D91]/10 w-4 rounded-t-sm" 
                                     style={{ height: '100%' }}
                                     title={`Total: ${bp.totalStudents}`}
                                   />
                                   <div 
-                                    className="bg-[#5B4FCF] w-4 rounded-t-sm transition-all duration-500" 
+                                    className="bg-[#0B3D91] w-4 rounded-t-sm transition-all duration-500" 
                                     style={{ height: `${bp.placementRate}%` }}
                                     title={`Placed: ${bp.placedStudents} (${bp.placementRate}%)`}
                                   />
@@ -985,10 +985,10 @@ const PlacementDashboard = () => {
                           </div>
                           <div className="flex gap-4 items-center justify-center text-[10px] text-slate-405 font-bold uppercase pt-2">
                             <div className="flex items-center gap-1">
-                              <span className="w-2.5 h-2.5 bg-[#5B4FCF]/10 rounded" /> Registered Students
+                              <span className="w-2.5 h-2.5 bg-[#0B3D91]/10 rounded" /> Registered Students
                             </div>
                             <div className="flex items-center gap-1">
-                              <span className="w-2.5 h-2.5 bg-[#5B4FCF] rounded" /> Placement Rate %
+                              <span className="w-2.5 h-2.5 bg-[#0B3D91] rounded" /> Placement Rate %
                             </div>
                           </div>
                         </div>
@@ -1054,7 +1054,7 @@ const PlacementDashboard = () => {
                             placeholder="Filter by Company or Role/Job title..."
                             value={analyticsSearchQuery}
                             onChange={(e) => setAnalyticsSearchQuery(e.target.value)}
-                            className="w-full pl-9 block py-1.5 px-3 bg-slate-50 border border-[#E5E7EB] rounded-xl text-xs placeholder-slate-405 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] font-medium text-[#111827]"
+                            className="w-full pl-9 block py-1.5 px-3 bg-slate-50 border border-[#E5E7EB] rounded-xl text-xs placeholder-slate-405 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] font-medium text-[#111827]"
                           />
                         </div>
                         {analyticsSearchQuery && (
@@ -1147,8 +1147,8 @@ const PlacementDashboard = () => {
                         
                         {/* Highest Placements */}
                         <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 shadow-sm space-y-4">
-                          <h4 className="text-xs font-black uppercase text-[#5B4FCF] tracking-wider flex items-center gap-1.5">
-                            <Sparkles className="w-4 h-4 text-[#5B4FCF]" /> Dream Packages (Highest Placements)
+                          <h4 className="text-xs font-black uppercase text-[#0B3D91] tracking-wider flex items-center gap-1.5">
+                            <Sparkles className="w-4 h-4 text-[#0B3D91]" /> Dream Packages (Highest Placements)
                           </h4>
                           <div className="space-y-3">
                             {detailedStats.packageBreakdown.highestPlaced.length === 0 ? (
@@ -1160,7 +1160,7 @@ const PlacementDashboard = () => {
                                     <h5 className="font-bold text-slate-805 text-sm">{hp.studentName}</h5>
                                     <p className="text-[10px] text-slate-450 font-mono mt-0.5">{hp.rollNumber} · {hp.branch}</p>
                                     <div className="text-[10px] text-slate-500 font-bold mt-1.5 uppercase flex items-center gap-1">
-                                      <Building2 className="w-3.5 h-3.5 text-[#5B4FCF]" /> {hp.companyName} ({hp.jobTitle})
+                                      <Building2 className="w-3.5 h-3.5 text-[#0B3D91]" /> {hp.companyName} ({hp.jobTitle})
                                     </div>
                                   </div>
                                   <div className="text-right">
@@ -1232,17 +1232,17 @@ const PlacementDashboard = () => {
                                   return (
                                     <tr key={sk.skill} className="border-b border-slate-50 hover:bg-slate-50/50">
                                       <td className="py-3 pl-2 font-bold text-slate-800">
-                                        <span className="px-2.5 py-1 bg-[#5B4FCF]/5 text-[#5B4FCF] border border-[#5B4FCF]/10 rounded-lg text-[11px]">
+                                        <span className="px-2.5 py-1 bg-[#0B3D91]/5 text-[#0B3D91] border border-[#0B3D91]/10 rounded-lg text-[11px]">
                                           {sk.skill}
                                         </span>
                                       </td>
                                       <td className="py-3 text-center font-bold text-slate-700">{sk.placedCount} placed</td>
                                       <td className="py-3 text-center font-semibold text-rose-500">{sk.lowestPackage} LPA</td>
-                                      <td className="py-3 text-center font-black text-[#5B4FCF]">{sk.averagePackage} LPA</td>
+                                      <td className="py-3 text-center font-black text-[#0B3D91]">{sk.averagePackage} LPA</td>
                                       <td className="py-3 text-center font-bold text-emerald-600">{sk.highestPackage} LPA</td>
                                       <td className="py-3 pr-2 text-right w-44">
                                         <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden inline-block align-middle mr-2">
-                                          <div className="bg-[#5B4FCF] h-full rounded-full transition-all duration-500" style={{ width: `${barPct}%` }} />
+                                          <div className="bg-[#0B3D91] h-full rounded-full transition-all duration-500" style={{ width: `${barPct}%` }} />
                                         </div>
                                       </td>
                                     </tr>
@@ -1519,7 +1519,7 @@ const PlacementDashboard = () => {
                           <h4 className="font-bold text-[#111827] text-sm">{companyName} - {job.title}</h4>
                         </div>
                         <p className="text-xs text-[#4B5563] font-semibold mt-1">
-                          Target Round: <strong className="text-[#7C3AED] font-bold">{sh.roundName}</strong> | Candidates: <strong className="text-[#111827] font-bold">{sh.studentIds?.length || 0}</strong>
+                          Target Round: <strong className="text-[#0B3D91] font-bold">{sh.roundName}</strong> | Candidates: <strong className="text-[#111827] font-bold">{sh.studentIds?.length || 0}</strong>
                         </p>
                         {sh.roundDetails && (
                           <p className="text-[11px] text-[#4B5563] bg-white p-2.5 border border-[#E5E7EB] rounded-lg mt-2 italic font-semibold">
@@ -1709,7 +1709,7 @@ const PlacementDashboard = () => {
                               setSelectedAppForReview(app);
                               setRejectReason('');
                             }}
-                            className="px-3.5 py-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold rounded-lg transition-all shadow-sm cursor-pointer active:scale-95"
+                            className="px-3.5 py-1.5 bg-[#0B3D91] hover:bg-[#082F70] text-white font-bold rounded-lg transition-all shadow-sm cursor-pointer active:scale-95"
                           >
                             Review Offer
                           </button>
@@ -1760,7 +1760,7 @@ const PlacementDashboard = () => {
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-[#E5E7EB] border-dashed">
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-[#7C3AED] uppercase tracking-widest">{companyName}</span>
+                            <span className="text-[10px] font-bold text-[#0B3D91] uppercase tracking-widest">{companyName}</span>
                             <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                               isApproved ? 'bg-emerald-100 text-emerald-700' :
                               isRejected ? 'bg-rose-100 text-rose-700 font-bold' :
@@ -1770,7 +1770,7 @@ const PlacementDashboard = () => {
                             </span>
                           </div>
                           <h3 className="text-sm font-bold text-[#111827] mt-1">
-                            {job.title} — <span className="text-[#7C3AED]">{appr.roundName} Results Sheet</span>
+                            {job.title} — <span className="text-[#0B3D91]">{appr.roundName} Results Sheet</span>
                           </h3>
                           <p className="text-[10px] text-[#94A3B8] font-semibold mt-0.5">
                             Uploaded by: {appr.uploadedBy?.name || "Recruiter"} ({appr.uploadedBy?.email}) on {new Date(appr.createdAt).toLocaleString()}
@@ -1823,7 +1823,7 @@ const PlacementDashboard = () => {
                       {/* Candidates Table/List */}
                       <div className="mt-4 space-y-2">
                         <details className="group cursor-pointer select-none">
-                          <summary className="text-[10px] font-bold text-[#7C3AED] hover:underline flex items-center gap-1">
+                          <summary className="text-[10px] font-bold text-[#0B3D91] hover:underline flex items-center gap-1">
                             <span>View Candidate Results Batch ({appr.results?.length || 0} students)</span>
                             <ChevronRight className="w-3.5 h-3.5 transition-transform group-open:rotate-90" />
                           </summary>
@@ -1886,7 +1886,7 @@ const PlacementDashboard = () => {
                       onChange={(e) => setApprovalRejectionReason(e.target.value)}
                       placeholder="Specify reasons (e.g. Missing entries, Incorrect grading)..."
                       rows="4"
-                      className="w-full p-3 bg-[#F8FAFC] border border-slate-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED]"
+                      className="w-full p-3 bg-[#F8FAFC] border border-slate-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91]"
                     />
                   </div>
                   <div className="flex items-center justify-end gap-2 font-semibold pt-2">
@@ -1967,7 +1967,7 @@ const PlacementDashboard = () => {
                 </button>
                 <button
                   onClick={() => handleExportPDF(filteredReportApps, reportFilterStatus)}
-                  className="px-4 py-2 bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                  className="px-4 py-2 bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
                 >
                   <FileText className="w-4 h-4 text-white" /> Compile PDF Report
                 </button>
@@ -2115,14 +2115,14 @@ const PlacementDashboard = () => {
                 <div className="p-5 sm:p-8 bg-slate-50 border border-slate-200 rounded-xl overflow-y-auto min-h-[350px]">
                   {selectedAppForReview.offerLetterUrl ? (
                     <div className="bg-white p-5 sm:p-8 rounded-lg border border-slate-100 shadow-sm text-center space-y-4">
-                      <FileText className="w-16 h-16 text-[#7C3AED] mx-auto" />
+                      <FileText className="w-16 h-16 text-[#0B3D91] mx-auto" />
                       <h4 className="text-sm font-bold text-slate-800">A custom PDF offer letter has been uploaded.</h4>
                       <p className="text-xs text-slate-500">You can view or download this PDF file directly using the link below.</p>
                       <a
                         href={selectedAppForReview.offerLetterUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer active:scale-95"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer active:scale-95"
                       >
                         <Eye className="w-4 h-4" /> Open Uploaded PDF Offer Letter
                       </a>
@@ -2140,7 +2140,7 @@ const PlacementDashboard = () => {
               <div className="space-y-4 flex flex-col justify-between">
                 <div className="space-y-4">
                   <div className="p-4 bg-purple-50 rounded-xl border border-purple-100 space-y-1.5">
-                    <h4 className="text-xs font-bold text-[#7C3AED] uppercase tracking-wider">Recruiter Details</h4>
+                    <h4 className="text-xs font-bold text-[#0B3D91] uppercase tracking-wider">Recruiter Details</h4>
                     <p className="text-[10px] font-medium">Drive: <strong>{selectedAppForReview.jobId?.title}</strong></p>
                     <p className="text-[10px] font-medium">CTC Offer: <strong>{selectedAppForReview.jobId?.package} LPA</strong></p>
                   </div>
@@ -2152,7 +2152,7 @@ const PlacementDashboard = () => {
                       onChange={(e) => setRejectReason(e.target.value)}
                       placeholder="Specify the issues (e.g. wrong CTC, invalid format) if you choose to reject..."
                       rows="5"
-                      className="w-full p-3 bg-[#F8FAFC] border border-slate-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED]"
+                      className="w-full p-3 bg-[#F8FAFC] border border-slate-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91]"
                     />
                   </div>
                 </div>

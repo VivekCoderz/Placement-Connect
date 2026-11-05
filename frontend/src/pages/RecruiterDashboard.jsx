@@ -772,33 +772,33 @@ const RecruiterDashboard = () => {
       {/* Recruiter Welcome Header - High Fidelity Emerald Dashboard Card */}
       <div className="bg-[#0B3D91] text-white rounded-2xl p-5 sm:p-8 md:p-10 border border-[#082F70] shadow-xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#22C55E]/10 rounded-full blur-[150px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[#7C3AED]/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[#0B3D91]/10 rounded-full blur-[100px] pointer-events-none" />
         
         <div className="relative z-10 space-y-5 flex-1">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-[#5B21B6] border border-[#7C3AED]/15 flex items-center justify-center shadow-md">
+            <div className="h-12 w-12 rounded-xl bg-[#082F70] border border-[#0B3D91]/15 flex items-center justify-center shadow-md">
               <Building2 className="w-6 h-6 text-[#22C55E]" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-white bg-[#5B21B6] border border-[#7C3AED]/40 px-3 py-1 rounded-full">Recruiter Portal</span>
+              <span className="text-[10px] font-bold text-white bg-[#082F70] border border-[#0B3D91]/40 px-3 py-1 rounded-full">Recruiter Portal</span>
               <h1 className="text-2xl font-bold tracking-tight text-white mt-2">{user?.name || 'Recruiter'}</h1>
-              <p className="text-purple-200 font-medium text-xs mt-1">{user?.recruiterEmail || 'Corporate Account'}</p>
+              <p className="text-blue-200 font-medium text-xs mt-1">{user?.recruiterEmail || 'Corporate Account'}</p>
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 text-white text-xs font-semibold border-t border-[#7C3AED]/30 w-full">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 text-white text-xs font-semibold border-t border-[#0B3D91]/30 w-full">
             {user?.industry && (
-              <span className="flex items-center gap-2 bg-[#5B21B6]/60 px-3 py-1.5 rounded-lg border border-[#7C3AED]/40">
+              <span className="flex items-center gap-2 bg-[#082F70]/60 px-3 py-1.5 rounded-lg border border-[#0B3D91]/40">
                 <Briefcase className="w-3.5 h-3.5 text-[#22C55E]" /> {user.industry}
               </span>
             )}
             {user?.website && (
-              <a href={user.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#5B21B6]/60 px-3 py-1.5 rounded-lg border border-[#7C3AED]/40 hover:text-[#22C55E] hover:border-[#22C55E]/40 transition-all">
+              <a href={user.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#082F70]/60 px-3 py-1.5 rounded-lg border border-[#0B3D91]/40 hover:text-[#22C55E] hover:border-[#22C55E]/40 transition-all">
                 <Globe className="w-3.5 h-3.5 text-[#22C55E]" /> Company Website
               </a>
             )}
             {user?.hrContactPhone && (
-              <span className="flex items-center gap-2 bg-[#5B21B6]/60 px-3 py-1.5 rounded-lg border border-[#7C3AED]/40">
+              <span className="flex items-center gap-2 bg-[#082F70]/60 px-3 py-1.5 rounded-lg border border-[#0B3D91]/40">
                 <Phone className="w-3.5 h-3.5 text-[#22C55E]" /> {user.hrContactPhone}
               </span>
             )}
@@ -806,9 +806,9 @@ const RecruiterDashboard = () => {
         </div>
 
         {/* Stats card */}
-        <div className="relative z-10 flex items-center gap-5 bg-[#5B21B6]/60 p-6 px-5 sm:px-8 rounded-xl border border-[#7C3AED]/40 shadow-sm self-stretch lg:self-auto min-w-[200px] justify-center text-center">
+        <div className="relative z-10 flex items-center gap-5 bg-[#082F70]/60 p-6 px-5 sm:px-8 rounded-xl border border-[#0B3D91]/40 shadow-sm self-stretch lg:self-auto min-w-[200px] justify-center text-center">
           <div>
-            <p className="text-[10px] font-bold text-purple-200 uppercase tracking-widest">Active Openings</p>
+            <p className="text-[10px] font-bold text-blue-200 uppercase tracking-widest">Active Openings</p>
             <p className="text-4xl font-bold text-white mt-2 tracking-tight">{drives.length}</p>
           </div>
         </div>
@@ -950,16 +950,16 @@ const RecruiterDashboard = () => {
                 {/* Header */}
                 <div className="border-b border-[#E5E7EB] pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <span className="text-[10px] font-bold text-[#7C3AED] uppercase tracking-widest">Candidate Evaluation</span>
+                    <span className="text-[10px] font-bold text-[#0B3D91] uppercase tracking-widest">Candidate Evaluation</span>
                     <h2 className="text-lg font-bold text-[#111827] tracking-tight mt-1">{selectedJob.title}</h2>
                     <p className="text-xs text-[#4B5563] font-semibold mt-1">Review student profile cards, credentials, portfolios and download resume.</p>
                   </div>
                   <div className="flex flex-wrap gap-2 md:self-end">
                     <button
                       onClick={() => setIsAtsModalOpen(true)}
-                      className="px-3 py-1.5 border border-[#7C3AED] text-[#7C3AED] hover:bg-[#7C3AED]/5 text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1 active:scale-95 cursor-pointer"
+                      className="px-3 py-1.5 border border-[#0B3D91] text-[#0B3D91] hover:bg-[#0B3D91]/5 text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1 active:scale-95 cursor-pointer"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" /> ATS Auto-Shortlist
+                      <Sparkles className="w-3.5 h-3.5 text-[#0B3D91]" /> ATS Auto-Shortlist
                     </button>
                     <button
                       onClick={() => {
@@ -1182,7 +1182,7 @@ const RecruiterDashboard = () => {
                             <span>Select All Filtered Candidates ({getFilteredApplicants().length})</span>
                           </label>
                           {selectedApplicants.length > 0 && (
-                            <span className="text-xs font-bold text-[#7C3AED]">
+                            <span className="text-xs font-bold text-[#0B3D91]">
                               {selectedApplicants.length} selected
                             </span>
                           )}
@@ -1215,7 +1215,7 @@ const RecruiterDashboard = () => {
                                   <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                                     <div className="space-y-1">
                                       <div className="flex flex-wrap items-center gap-2">
-                                        <span className="bg-[#7C3AED] text-white px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider shadow-sm select-none">
+                                        <span className="bg-[#0B3D91] text-white px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider shadow-sm select-none">
                                           Rank #{app.rank}
                                         </span>
                                         <h4 className="font-bold text-[#111827] text-sm">{student.name}</h4>
@@ -1804,7 +1804,7 @@ const RecruiterDashboard = () => {
                                   </div>
                                   <button
                                     type="submit"
-                                    className="px-4 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-extrabold rounded-xl shadow-sm transition-all flex items-center gap-1.5 active:scale-[0.98] cursor-pointer"
+                                    className="px-4 py-2.5 bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-extrabold rounded-xl shadow-sm transition-all flex items-center gap-1.5 active:scale-[0.98] cursor-pointer"
                                   >
                                     <Calendar className="w-3.5 h-3.5" /> Stage Interview Round
                                   </button>
@@ -1889,7 +1889,7 @@ const RecruiterDashboard = () => {
                           <div key={round._id} className="p-5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-sm transition-all">
                             <div className="space-y-2 flex-1">
                               <div className="flex items-center gap-2">
-                                <span className="h-6 w-6 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center text-xs font-bold">{round.sequence}</span>
+                                <span className="h-6 w-6 rounded-full bg-[#0B3D91]/10 text-[#0B3D91] flex items-center justify-center text-xs font-bold">{round.sequence}</span>
                                 <h4 className="text-xs font-bold text-[#111827] uppercase tracking-wider">{round.name}</h4>
                                 <span className={`text-[9px] px-2 py-0.5 rounded-md font-bold uppercase ${
                                   round.mode === 'Physical' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-indigo-100 text-indigo-700 border border-indigo-200'
@@ -1904,7 +1904,7 @@ const RecruiterDashboard = () => {
                                 {round.time && <span><strong>Time:</strong> {round.time}</span>}
                               </div>
                               {round.meetingLink && (
-                                <p className="text-[10px] truncate max-w-md text-[#7C3AED] font-semibold bg-[#7C3AED]/5 border border-[#7C3AED]/10 px-2.5 py-1 rounded-lg">
+                                <p className="text-[10px] truncate max-w-md text-[#0B3D91] font-semibold bg-[#0B3D91]/5 border border-[#0B3D91]/10 px-2.5 py-1 rounded-lg">
                                   🔗 Link: <a href={round.meetingLink.startsWith('http') ? round.meetingLink : `https://${round.meetingLink}`} target="_blank" rel="noopener noreferrer" className="hover:underline">{round.meetingLink}</a>
                                 </p>
                               )}
@@ -1987,7 +1987,7 @@ const RecruiterDashboard = () => {
                 required
                 value={jobForm.title}
                 onChange={(e) => setJobForm(prev => ({ ...prev, title: e.target.value }))}
-                className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all font-medium text-[#111827]"
+                className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all font-medium text-[#111827]"
                 placeholder="e.g. Software Development Engineer (SDE-1)"
               />
             </div>
@@ -2000,7 +2000,7 @@ const RecruiterDashboard = () => {
                 rows="4"
                 value={jobForm.description}
                 onChange={(e) => setJobForm(prev => ({ ...prev, description: e.target.value }))}
-                className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all font-medium text-[#111827]"
+                className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all font-medium text-[#111827]"
                 placeholder="Provide detailed description of roles, responsibilities, job location, and benefits."
               />
             </div>
@@ -2019,7 +2019,7 @@ const RecruiterDashboard = () => {
                     required
                     value={jobForm.package}
                     onChange={(e) => setJobForm(prev => ({ ...prev, package: e.target.value }))}
-                    className="pl-12 block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all font-medium text-[#111827]"
+                    className="pl-12 block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all font-medium text-[#111827]"
                     placeholder="e.g. 12"
                   />
                 </div>
@@ -2036,7 +2036,7 @@ const RecruiterDashboard = () => {
                   required
                   value={jobForm.minCgpa}
                   onChange={(e) => setJobForm(prev => ({ ...prev, minCgpa: e.target.value }))}
-                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all font-medium text-[#111827]"
+                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all font-medium text-[#111827]"
                   placeholder="e.g. 6.5"
                 />
               </div>
@@ -2063,7 +2063,7 @@ const RecruiterDashboard = () => {
                   required
                   value={jobForm.requiredSkills || ''}
                   onChange={(e) => setJobForm(prev => ({ ...prev, requiredSkills: e.target.value }))}
-                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all font-medium text-[#111827]"
+                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all font-medium text-[#111827]"
                   placeholder="e.g. React, Node.js, Express, MongoDB"
                 />
               </div>
@@ -2075,7 +2075,7 @@ const RecruiterDashboard = () => {
                   type="text"
                   value={jobForm.preferredSkills || ''}
                   onChange={(e) => setJobForm(prev => ({ ...prev, preferredSkills: e.target.value }))}
-                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all font-medium text-[#111827]"
+                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all font-medium text-[#111827]"
                   placeholder="e.g. TypeScript, Docker, AWS"
                 />
               </div>
@@ -2090,7 +2090,7 @@ const RecruiterDashboard = () => {
                   required
                   value={jobForm.experienceRequired || ''}
                   onChange={(e) => setJobForm(prev => ({ ...prev, experienceRequired: e.target.value }))}
-                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all font-medium text-[#111827]"
+                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all font-medium text-[#111827]"
                   placeholder="e.g. Freshers, 0-2 years"
                 />
               </div>
@@ -2103,7 +2103,7 @@ const RecruiterDashboard = () => {
                   required
                   value={jobForm.numOpenings || ''}
                   onChange={(e) => setJobForm(prev => ({ ...prev, numOpenings: e.target.value }))}
-                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all font-medium text-[#111827]"
+                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all font-medium text-[#111827]"
                   placeholder="e.g. 5"
                 />
               </div>
@@ -2118,7 +2118,7 @@ const RecruiterDashboard = () => {
                   required
                   value={jobForm.atsThreshold || ''}
                   onChange={(e) => setJobForm(prev => ({ ...prev, atsThreshold: e.target.value }))}
-                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all font-medium text-[#111827]"
+                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all font-medium text-[#111827]"
                   placeholder="e.g. 60"
                 />
               </div>
@@ -2298,7 +2298,7 @@ const RecruiterDashboard = () => {
                   required
                   value={proposeForm.numRounds}
                   onChange={(e) => setProposeForm(prev => ({ ...prev, numRounds: e.target.value }))}
-                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] font-medium text-[#111827]"
+                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] font-medium text-[#111827]"
                   placeholder="e.g. 3 rounds"
                 />
               </div>
@@ -2312,7 +2312,7 @@ const RecruiterDashboard = () => {
                   required
                   value={proposeForm.studentsNeeded}
                   onChange={(e) => setProposeForm(prev => ({ ...prev, studentsNeeded: e.target.value }))}
-                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] font-medium text-[#111827]"
+                  className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] font-medium text-[#111827]"
                   placeholder="e.g. 15 students"
                 />
               </div>
@@ -2338,7 +2338,7 @@ const RecruiterDashboard = () => {
                 rows="4"
                 value={proposeForm.message}
                 onChange={(e) => setProposeForm(prev => ({ ...prev, message: e.target.value }))}
-                className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] font-medium text-[#111827]"
+                className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] font-medium text-[#111827]"
                 placeholder="Details of test venue, platform links, round criteria or batch timings..."
               />
             </div>
@@ -2406,7 +2406,7 @@ const RecruiterDashboard = () => {
                 rows="12"
                 value={offerTemplate}
                 onChange={(e) => setOfferTemplate(e.target.value)}
-                className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm font-mono placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] text-[#111827]"
+                className="block w-full py-2.5 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-sm font-mono placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] text-[#111827]"
                 placeholder="Enter HTML or plain text offer letter structure..."
               />
             </div>
@@ -2481,7 +2481,7 @@ const RecruiterDashboard = () => {
                       value={generatedOfferContent}
                       onChange={(e) => setGeneratedOfferContent(e.target.value)}
                       rows="14"
-                      className="w-full p-4 bg-slate-50 font-mono text-xs text-[#111827] border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED]"
+                      className="w-full p-4 bg-slate-50 font-mono text-xs text-[#111827] border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91]"
                     />
                   </div>
 
@@ -2552,7 +2552,7 @@ const RecruiterDashboard = () => {
           <div className="relative bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 space-y-5 text-[#4B5563]">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-1.5">
-                <Sparkles className="w-5 h-5 text-[#7C3AED]" />
+                <Sparkles className="w-5 h-5 text-[#0B3D91]" />
                 <h3 className="text-base font-bold text-[#111827] tracking-tight">ATS Auto-Shortlist</h3>
               </div>
               <button
@@ -2585,7 +2585,7 @@ const RecruiterDashboard = () => {
 
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Minimum ATS Match Score: <span className="text-[#7C3AED] font-extrabold">{atsThreshold}%</span></label>
+                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Minimum ATS Match Score: <span className="text-[#0B3D91] font-extrabold">{atsThreshold}%</span></label>
                 </div>
                 <input
                   type="range"
@@ -2594,7 +2594,7 @@ const RecruiterDashboard = () => {
                   step="5"
                   value={atsThreshold}
                   onChange={(e) => setAtsThreshold(e.target.value)}
-                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#7C3AED]"
+                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#0B3D91]"
                 />
                 <div className="flex justify-between text-[9px] font-bold text-slate-400">
                   <span>30% Match</span>
@@ -2608,7 +2608,7 @@ const RecruiterDashboard = () => {
                 const count = applicants.filter(a => a.status === 'Applied' && a.atsScore >= atsThreshold).length;
                 return (
                   <div className="p-3 bg-[#FAF5FF] border border-[#F3E8FF] rounded-xl text-center">
-                    <p className="text-xs font-bold text-[#7C3AED]">
+                    <p className="text-xs font-bold text-[#0B3D91]">
                       Found {count} eligible applicant(s) in "Applied" status matching &ge; {atsThreshold}% score.
                     </p>
                   </div>
@@ -2626,7 +2626,7 @@ const RecruiterDashboard = () => {
               <button
                 disabled={isAtsProcessing || applicants.filter(a => a.status === 'Applied' && a.atsScore >= atsThreshold).length === 0}
                 onClick={handleAtsShortlist}
-                className="px-4 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
               >
                 {isAtsProcessing ? 'Shortlisting...' : 'Shortlist Matches'}
               </button>
@@ -2675,7 +2675,7 @@ const RecruiterDashboard = () => {
                     student@email.com, Passed, Good coding skills<br/>
                     2023CSE41, Failed, Communication gap
                   </p>
-                  <p className="font-bold text-[9px] text-[#7C3AED] mt-1.5">⚠️ Note: Result updates require Placement Cell (TPO) approval before being applied.</p>
+                  <p className="font-bold text-[9px] text-[#0B3D91] mt-1.5">⚠️ Note: Result updates require Placement Cell (TPO) approval before being applied.</p>
                 </div>
 
                 {csvResultsError && (
@@ -2914,7 +2914,7 @@ const RecruiterDashboard = () => {
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-base font-bold text-[#111827] tracking-tight">Grade Stage Candidates</h3>
-                <p className="text-[10px] font-bold text-[#7C3AED] uppercase mt-0.5">Round: {selectedRoundForResults.name}</p>
+                <p className="text-[10px] font-bold text-[#0B3D91] uppercase mt-0.5">Round: {selectedRoundForResults.name}</p>
               </div>
               <button onClick={() => setSelectedRoundForResults(null)} className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer">
                 <XCircle className="w-5 h-5 text-rose-500" />

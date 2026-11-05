@@ -169,7 +169,7 @@ const JobListings = () => {
             placeholder="Search role, company or keywords..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full pl-11 pr-4 py-2.5 bg-white border border-[#E5E7EB] focus:bg-[#F8FAFC] rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-xs font-semibold"
+            className="block w-full pl-11 pr-4 py-2.5 bg-white border border-[#E5E7EB] focus:bg-[#F8FAFC] rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-xs font-semibold"
           />
         </div>
 
@@ -178,7 +178,7 @@ const JobListings = () => {
           <select
             value={salaryFilter}
             onChange={(e) => setSalaryFilter(e.target.value)}
-            className="block w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#4B5563] focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-xs font-semibold"
+            className="block w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#4B5563] focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-xs font-semibold"
           >
             <option value="all" className="bg-white text-[#4B5563]">All CTC Packages</option>
             <option value="high" className="bg-white text-[#4B5563]">Super Dream (20+ LPA)</option>
@@ -223,7 +223,7 @@ const JobListings = () => {
                 <div className="p-6 md:p-8 space-y-5">
                   <div className="flex justify-between items-start gap-3">
                     <div className="flex items-center gap-3.5">
-                      <div className="h-10 w-10 rounded-xl bg-[#F8FAFC] border border-[#E5E7EB] flex items-center justify-center font-bold text-[#7C3AED] text-xs flex-shrink-0 shadow-sm">
+                      <div className="h-10 w-10 rounded-xl bg-[#F8FAFC] border border-[#E5E7EB] flex items-center justify-center font-bold text-[#0B3D91] text-xs flex-shrink-0 shadow-sm">
                         {job.companyName.substring(0, 2).toUpperCase()}
                       </div>
                       <div>

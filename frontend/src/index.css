@@ -263,13 +263,13 @@ html.dark aside button:hover {
   color: #FFFFFF !important;
 }
 
-html.dark aside button.bg-\[\#6D5EF7\]\/8 {
+html.dark aside button.bg-\[\#0B3D91\]\/8 {
   background-color: rgba(255, 153, 51, 0.15) !important; /* Saffron tint */
   color: #FF9933 !important; /* Saffron text */
   border: 1px solid rgba(255, 153, 51, 0.25) !important;
 }
 
-html.dark aside button.bg-\[\#6D5EF7\]\/8 svg {
+html.dark aside button.bg-\[\#0B3D91\]\/8 svg {
   color: #FF9933 !important;
 }
 

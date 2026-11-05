@@ -84,7 +84,7 @@ const Notifications = () => {
       case 'job_post':
         return <Briefcase className="w-4 h-4 text-[#F59E0B]" />;
       case 'interview_scheduled':
-        return <Clock className="w-4 h-4 text-[#8B5CF6]" />;
+        return <Clock className="w-4 h-4 text-[#3B6FD1]" />;
       case 'announcement':
         return <BellRing className="w-4 h-4 text-[#3B82F6]" />;
       case 'schedule_propose':
@@ -217,20 +217,20 @@ const Notifications = () => {
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8 animate-in fade-in duration-300 text-[#4B5563]">
       {/* Header Info Banner */}
-      <div className="bg-[#4C1D95] text-white p-5 sm:p-8 rounded-3xl border border-[#5B21B6] shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-[#0B3D91] text-white p-5 sm:p-8 rounded-3xl border border-[#082F70] shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#22C55E]/15 rounded-full blur-[100px] pointer-events-none" />
         
         <div className="relative z-10 space-y-2">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-[#5B21B6] border border-white/10 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-xl bg-[#082F70] border border-white/10 flex items-center justify-center">
               <Bell className="w-5 h-5 text-[#22C55E]" />
             </div>
             <div>
-              <span className="text-[9px] font-bold text-white bg-[#5B21B6] border border-white/15 px-2.5 py-0.5 rounded-full uppercase tracking-wider">Alert Center</span>
+              <span className="text-[9px] font-bold text-white bg-[#082F70] border border-white/15 px-2.5 py-0.5 rounded-full uppercase tracking-wider">Alert Center</span>
               <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white mt-1">Notification Center</h1>
             </div>
           </div>
-          <p className="text-purple-200 font-medium text-xs max-w-md">Review announcements, evaluation updates, and scheduler triggers with dynamic sound alerts.</p>
+          <p className="text-blue-200 font-medium text-xs max-w-md">Review announcements, evaluation updates, and scheduler triggers with dynamic sound alerts.</p>
         </div>
 
         {/* Global actions */}
