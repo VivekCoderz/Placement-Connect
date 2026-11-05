@@ -335,8 +335,8 @@ const Profile = () => {
                 <div className="bg-[#F8FAFC] p-6 border border-[#E5E7EB] rounded-xl space-y-5 animate-in slide-in-from-top-2 duration-200 font-semibold text-[#4B5563]">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <label className="block text-[10px] font-bold text-[#94A3B8] uppercase mb-2">Project Title</label>
-                      <input
+                      <label htmlFor="profile-field-1" className="block text-[10px] font-bold text-[#94A3B8] uppercase mb-2">Project Title</label>
+                      <input id="profile-field-1"
                         type="text"
                         placeholder="PlacementConnect"
                         value={newProject.title}
@@ -345,8 +345,8 @@ const Profile = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-[#94A3B8] uppercase mb-2">Repository/Deployment Link</label>
-                      <input
+                      <label htmlFor="profile-field-2" className="block text-[10px] font-bold text-[#94A3B8] uppercase mb-2">Repository/Deployment Link</label>
+                      <input id="profile-field-2"
                         type="url"
                         placeholder="https://github.com/..."
                         value={newProject.link}
@@ -355,8 +355,8 @@ const Profile = () => {
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-[10px] font-bold text-[#94A3B8] uppercase mb-2">Tech Stack (Comma-separated)</label>
-                      <input
+                      <label htmlFor="profile-field-3" className="block text-[10px] font-bold text-[#94A3B8] uppercase mb-2">Tech Stack (Comma-separated)</label>
+                      <input id="profile-field-3"
                         type="text"
                         placeholder="React.js, Node.js, Express, MongoDB"
                         value={newProject.techStack}
@@ -365,8 +365,8 @@ const Profile = () => {
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-[10px] font-bold text-[#94A3B8] uppercase mb-2">Brief Description</label>
-                      <textarea
+                      <label htmlFor="profile-field-4" className="block text-[10px] font-bold text-[#94A3B8] uppercase mb-2">Brief Description</label>
+                      <textarea id="profile-field-4"
                         rows="4"
                         placeholder="Describe the application features, challenges solved, and components built..."
                         value={newProject.description}

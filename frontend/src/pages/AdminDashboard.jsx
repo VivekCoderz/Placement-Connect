@@ -1503,7 +1503,7 @@ const AdminDashboard = () => {
                 <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-slate-50">
                     <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">Upcoming Job Drives</h4>
-                    <span className="text-[10px] text-[#0B3D91] font-bold hover:underline cursor-pointer" onClick={() => setActiveTab('drives')}>View all</span>
+                    <button type="button" className="text-[10px] text-[#0B3D91] font-bold hover:underline cursor-pointer rounded" onClick={() => setActiveTab('drives')}>View all</button>
                   </div>
                   <div className="space-y-4">
                     {drives.slice(0, 3).map(drive => (
@@ -1539,7 +1539,7 @@ const AdminDashboard = () => {
                 <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-slate-50">
                     <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">Top Recruiter Engagement</h4>
-                    <span className="text-[10px] text-[#0B3D91] font-bold hover:underline cursor-pointer" onClick={() => setActiveTab('companies')}>Details</span>
+                    <button type="button" className="text-[10px] text-[#0B3D91] font-bold hover:underline cursor-pointer rounded" onClick={() => setActiveTab('companies')}>Details</button>
                   </div>
                   <div className="space-y-3.5">
                     {companies.slice(0, 4).map(company => (
@@ -1564,7 +1564,7 @@ const AdminDashboard = () => {
                 <div className="bg-white border border-slate-200/80 rounded-[18px] p-5 shadow-sm space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-slate-50">
                     <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">Department Tracker</h4>
-                    <span className="text-[10px] text-[#0B3D91] font-bold hover:underline cursor-pointer" onClick={() => setActiveTab('analytics')}>Analytics</span>
+                    <button type="button" className="text-[10px] text-[#0B3D91] font-bold hover:underline cursor-pointer rounded" onClick={() => setActiveTab('analytics')}>Analytics</button>
                   </div>
                   <div className="space-y-4">
                     {branchPlacements.slice(0, 4).map(bp => {
@@ -3407,8 +3407,8 @@ const AdminDashboard = () => {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                     <div className="space-y-1.5">
-                      <label className="block font-bold text-slate-600">Cell/Office Name</label>
-                      <input 
+                      <label htmlFor="admindas-field-1" className="block font-bold text-slate-600">Cell/Office Name</label>
+                      <input id="admindas-field-1" 
                         type="text" 
                         value={settingsForm.name} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, name: e.target.value })}
@@ -3416,8 +3416,8 @@ const AdminDashboard = () => {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="block font-bold text-slate-600">Primary Contact Email</label>
-                      <input 
+                      <label htmlFor="admindas-field-2" className="block font-bold text-slate-600">Primary Contact Email</label>
+                      <input id="admindas-field-2" 
                         type="email" 
                         value={settingsForm.email} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, email: e.target.value })}
@@ -3425,8 +3425,8 @@ const AdminDashboard = () => {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="block font-bold text-slate-600">Office Location / Address</label>
-                      <input 
+                      <label htmlFor="admindas-field-3" className="block font-bold text-slate-600">Office Location / Address</label>
+                      <input id="admindas-field-3" 
                         type="text" 
                         value={settingsForm.address} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, address: e.target.value })}
@@ -3434,8 +3434,8 @@ const AdminDashboard = () => {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="block font-bold text-slate-600">Contact Number</label>
-                      <input 
+                      <label htmlFor="admindas-field-4" className="block font-bold text-slate-600">Contact Number</label>
+                      <input id="admindas-field-4" 
                         type="text" 
                         value={settingsForm.phone} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, phone: e.target.value })}
@@ -3462,8 +3462,8 @@ const AdminDashboard = () => {
                   
                   <div className="space-y-3.5 text-xs">
                     <div className="space-y-1">
-                      <label className="block font-bold text-slate-600">SMTP Server Host</label>
-                      <input 
+                      <label htmlFor="admindas-field-5" className="block font-bold text-slate-600">SMTP Server Host</label>
+                      <input id="admindas-field-5" 
                         type="text" 
                         value={settingsForm.smtpHost} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, smtpHost: e.target.value })}
@@ -3471,8 +3471,8 @@ const AdminDashboard = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="block font-bold text-slate-600">SMTP Port</label>
-                      <input 
+                      <label htmlFor="admindas-field-6" className="block font-bold text-slate-600">SMTP Port</label>
+                      <input id="admindas-field-6" 
                         type="text" 
                         value={settingsForm.smtpPort} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, smtpPort: e.target.value })}
@@ -3480,8 +3480,8 @@ const AdminDashboard = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="block font-bold text-slate-600">Sender Username</label>
-                      <input 
+                      <label htmlFor="admindas-field-7" className="block font-bold text-slate-600">Sender Username</label>
+                      <input id="admindas-field-7" 
                         type="text" 
                         value={settingsForm.smtpUser} 
                         onChange={(e) => setSettingsForm({ ...settingsForm, smtpUser: e.target.value })}
@@ -3553,12 +3553,12 @@ const AdminDashboard = () => {
                   </h3>
                   <div className="space-y-3.5 text-xs">
                     <div className="space-y-1">
-                      <label className="block font-bold text-slate-655">Current Password</label>
-                      <input type="password" placeholder="••••••••" className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none" />
+                      <label htmlFor="admindas-field-8" className="block font-bold text-slate-655">Current Password</label>
+                      <input id="admindas-field-8" type="password" placeholder="••••••••" className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none" />
                     </div>
                     <div className="space-y-1">
-                      <label className="block font-bold text-slate-655">New Secure Password</label>
-                      <input type="password" placeholder="Min 8 characters" className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none" />
+                      <label htmlFor="admindas-field-9" className="block font-bold text-slate-655">New Secure Password</label>
+                      <input id="admindas-field-9" type="password" placeholder="Min 8 characters" className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none" />
                     </div>
                     <button 
                       onClick={() => addToast('success', 'Security passwords updated.')}
@@ -3622,8 +3622,8 @@ const AdminDashboard = () => {
             {activeModal === 'createDrive' && (
               <form onSubmit={handleCreateDriveSubmit} className="space-y-3.5 text-xs">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-655">Placement Drive Title</label>
-                  <input 
+                  <label htmlFor="admindas-field-10" className="block font-bold text-slate-655">Placement Drive Title</label>
+                  <input id="admindas-field-10" 
                     type="text" 
                     required 
                     placeholder="e.g. Google SDE Recruitment 2026" 
@@ -3634,8 +3634,8 @@ const AdminDashboard = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Company Name</label>
-                    <input 
+                    <label htmlFor="admindas-field-11" className="block font-bold text-slate-655">Company Name</label>
+                    <input id="admindas-field-11" 
                       type="text" 
                       required 
                       placeholder="e.g. Google India" 
@@ -3645,8 +3645,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Target Job Role</label>
-                    <input 
+                    <label htmlFor="admindas-field-12" className="block font-bold text-slate-655">Target Job Role</label>
+                    <input id="admindas-field-12" 
                       type="text" 
                       required 
                       placeholder="e.g. Software Engineer" 
@@ -3658,8 +3658,8 @@ const AdminDashboard = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Offered CTC Package</label>
-                    <input 
+                    <label htmlFor="admindas-field-13" className="block font-bold text-slate-655">Offered CTC Package</label>
+                    <input id="admindas-field-13" 
                       type="text" 
                       required 
                       placeholder="e.g. 24.5 LPA" 
@@ -3669,8 +3669,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Registration Deadline</label>
-                    <input 
+                    <label htmlFor="admindas-field-14" className="block font-bold text-slate-655">Registration Deadline</label>
+                    <input id="admindas-field-14" 
                       type="date" 
                       required 
                       value={driveForm.deadline}
@@ -3682,8 +3682,8 @@ const AdminDashboard = () => {
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Assessment Mode</label>
-                    <select
+                    <label htmlFor="admindas-field-15" className="block font-bold text-slate-655">Assessment Mode</label>
+                    <select id="admindas-field-15"
                       value={driveForm.mode}
                       onChange={(e) => setDriveForm({ ...driveForm, mode: e.target.value })}
                       className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-semibold"
@@ -3693,8 +3693,8 @@ const AdminDashboard = () => {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Location Venue Details</label>
-                    <input 
+                    <label htmlFor="admindas-field-16" className="block font-bold text-slate-655">Location Venue Details</label>
+                    <input id="admindas-field-16" 
                       type="text" 
                       placeholder="e.g. Audit Hall 2" 
                       value={driveForm.venue}
@@ -3745,8 +3745,8 @@ const AdminDashboard = () => {
               <form onSubmit={handleAddStudentSubmit} className="space-y-3.5 text-xs">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Student Full Name</label>
-                    <input 
+                    <label htmlFor="admindas-field-17" className="block font-bold text-slate-655">Student Full Name</label>
+                    <input id="admindas-field-17" 
                       type="text" 
                       required 
                       placeholder="e.g. Kabir Malhotra" 
@@ -3756,8 +3756,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">University Roll Number</label>
-                    <input 
+                    <label htmlFor="admindas-field-18" className="block font-bold text-slate-655">University Roll Number</label>
+                    <input id="admindas-field-18" 
                       type="text" 
                       required 
                       placeholder="e.g. GU2022CSE018" 
@@ -3770,8 +3770,8 @@ const AdminDashboard = () => {
 
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Department</label>
-                    <select
+                    <label htmlFor="admindas-field-19" className="block font-bold text-slate-655">Department</label>
+                    <select id="admindas-field-19"
                       value={studentForm.branch}
                       onChange={(e) => setStudentForm({ ...studentForm, branch: e.target.value })}
                       className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-semibold"
@@ -3785,8 +3785,8 @@ const AdminDashboard = () => {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">CGPA</label>
-                    <input 
+                    <label htmlFor="admindas-field-20" className="block font-bold text-slate-655">CGPA</label>
+                    <input id="admindas-field-20" 
                       type="number" 
                       step="0.01" 
                       required 
@@ -3797,8 +3797,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Batch Year</label>
-                    <select
+                    <label htmlFor="admindas-field-21" className="block font-bold text-slate-655">Batch Year</label>
+                    <select id="admindas-field-21"
                       value={studentForm.year}
                       onChange={(e) => setStudentForm({ ...studentForm, year: e.target.value })}
                       className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-semibold"
@@ -3810,8 +3810,8 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-655">Student Email Address</label>
-                  <input 
+                  <label htmlFor="admindas-field-22" className="block font-bold text-slate-655">Student Email Address</label>
+                  <input id="admindas-field-22" 
                     type="email" 
                     required 
                     placeholder="e.g. student@geeta.edu" 
@@ -3823,8 +3823,8 @@ const AdminDashboard = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Resume status</label>
-                    <select
+                    <label htmlFor="admindas-field-23" className="block font-bold text-slate-655">Resume status</label>
+                    <select id="admindas-field-23"
                       value={studentForm.resumeStatus}
                       onChange={(e) => setStudentForm({ ...studentForm, resumeStatus: e.target.value })}
                       className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-semibold"
@@ -3834,8 +3834,8 @@ const AdminDashboard = () => {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Placement Status</label>
-                    <select
+                    <label htmlFor="admindas-field-24" className="block font-bold text-slate-655">Placement Status</label>
+                    <select id="admindas-field-24"
                       value={studentForm.placementStatus}
                       onChange={(e) => setStudentForm({ ...studentForm, placementStatus: e.target.value })}
                       className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-semibold"
@@ -3856,8 +3856,8 @@ const AdminDashboard = () => {
             {activeModal === 'announcement' && (
               <form onSubmit={handleAnnouncementSubmit} className="space-y-3.5 text-xs">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-655">Notice Topic / Title</label>
-                  <input 
+                  <label htmlFor="admindas-field-25" className="block font-bold text-slate-655">Notice Topic / Title</label>
+                  <input id="admindas-field-25" 
                     type="text" 
                     required 
                     placeholder="e.g. TCS Assessment Guidelines" 
@@ -3889,8 +3889,8 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-655">Target Student Audience</label>
-                  <select
+                  <label htmlFor="admindas-field-26" className="block font-bold text-slate-655">Target Student Audience</label>
+                  <select id="admindas-field-26"
                     value={noticeForm.targetAudience}
                     onChange={(e) => setNoticeForm({ ...noticeForm, targetAudience: e.target.value })}
                     className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-semibold"
@@ -3931,8 +3931,8 @@ const AdminDashboard = () => {
             {activeModal === 'interview' && (
               <form onSubmit={handleInterviewSubmit} className="space-y-3.5 text-xs">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-655">Candidate Student Name</label>
-                  <select
+                  <label htmlFor="admindas-field-27" className="block font-bold text-slate-655">Candidate Student Name</label>
+                  <select id="admindas-field-27"
                     required
                     value={interviewForm.candidate}
                     onChange={(e) => setInterviewForm({ ...interviewForm, candidate: e.target.value })}
@@ -3947,8 +3947,8 @@ const AdminDashboard = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Company Name</label>
-                    <input 
+                    <label htmlFor="admindas-field-28" className="block font-bold text-slate-655">Company Name</label>
+                    <input id="admindas-field-28" 
                       type="text" 
                       required 
                       placeholder="e.g. Google India" 
@@ -3958,8 +3958,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Interviewer Panel / HR</label>
-                    <input 
+                    <label htmlFor="admindas-field-29" className="block font-bold text-slate-655">Interviewer Panel / HR</label>
+                    <input id="admindas-field-29" 
                       type="text" 
                       required 
                       placeholder="e.g. Siddharth Roy" 
@@ -3972,8 +3972,8 @@ const AdminDashboard = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Interview Date</label>
-                    <input 
+                    <label htmlFor="admindas-field-30" className="block font-bold text-slate-655">Interview Date</label>
+                    <input id="admindas-field-30" 
                       type="date" 
                       required 
                       value={interviewForm.date}
@@ -3982,8 +3982,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Interview Time</label>
-                    <input 
+                    <label htmlFor="admindas-field-31" className="block font-bold text-slate-655">Interview Time</label>
+                    <input id="admindas-field-31" 
                       type="time" 
                       required 
                       value={interviewForm.time}
@@ -3995,8 +3995,8 @@ const AdminDashboard = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Vetting Mode</label>
-                    <select
+                    <label htmlFor="admindas-field-32" className="block font-bold text-slate-655">Vetting Mode</label>
+                    <select id="admindas-field-32"
                       value={interviewForm.mode}
                       onChange={(e) => setInterviewForm({ ...interviewForm, mode: e.target.value })}
                       className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-semibold"
@@ -4006,8 +4006,8 @@ const AdminDashboard = () => {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-655">Meeting Room / Link details</label>
-                    <input 
+                    <label htmlFor="admindas-field-33" className="block font-bold text-slate-655">Meeting Room / Link details</label>
+                    <input id="admindas-field-33" 
                       type="text" 
                       placeholder="e.g. Teams Panel C" 
                       value={interviewForm.roomNumber}
@@ -4027,8 +4027,8 @@ const AdminDashboard = () => {
             {activeModal === 'report' && (
               <form onSubmit={handleReportSubmit} className="space-y-4 text-xs">
                 <div className="space-y-1.5">
-                  <label className="block font-bold text-slate-655">Report category</label>
-                  <select
+                  <label htmlFor="admindas-field-34" className="block font-bold text-slate-655">Report category</label>
+                  <select id="admindas-field-34"
                     className="w-full p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none font-semibold text-slate-700"
                     value={reportForm.type}
                     onChange={(e) => setReportForm({ ...reportForm, type: e.target.value })}
@@ -4064,8 +4064,8 @@ const AdminDashboard = () => {
             {activeModal === 'csvUpload' && (
               <form onSubmit={handleCsvUploadSubmit} className="space-y-3.5 text-xs">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-655">Associate with Placement Drive</label>
-                  <select
+                  <label htmlFor="admindas-field-35" className="block font-bold text-slate-655">Associate with Placement Drive</label>
+                  <select id="admindas-field-35"
                     required
                     value={csvUploadData.driveId}
                     onChange={(e) => setCsvUploadData({ ...csvUploadData, driveId: e.target.value })}

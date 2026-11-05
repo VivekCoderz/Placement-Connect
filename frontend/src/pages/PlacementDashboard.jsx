@@ -1291,8 +1291,8 @@ const PlacementDashboard = () => {
           <form className="space-y-6 text-[#4B5563] font-semibold" onSubmit={handleSendNotification}>
             {/* Target Job Selector */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Target Placement Drive (Optional)</label>
-              <select
+              <label htmlFor="placemen-field-1" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Target Placement Drive (Optional)</label>
+              <select id="placemen-field-1"
                 value={notifForm.jobId}
                 onChange={(e) => setNotifForm(prev => ({ ...prev, jobId: e.target.value }))}
                 className="block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-sm font-medium text-[#111827] focus:outline-none"
@@ -1311,8 +1311,8 @@ const PlacementDashboard = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl">
                 {/* Round Name */}
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#4B5563] uppercase tracking-wider">Round Name *</label>
-                  <input
+                  <label htmlFor="placemen-field-2" className="text-xs font-bold text-[#4B5563] uppercase tracking-wider">Round Name *</label>
+                  <input id="placemen-field-2"
                     type="text"
                     required={!!notifForm.jobId}
                     value={notifForm.roundName}
@@ -1324,8 +1324,8 @@ const PlacementDashboard = () => {
 
                 {/* Round Date */}
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#4B5563] uppercase tracking-wider">Scheduled Date/Time *</label>
-                  <input
+                  <label htmlFor="placemen-field-3" className="text-xs font-bold text-[#4B5563] uppercase tracking-wider">Scheduled Date/Time *</label>
+                  <input id="placemen-field-3"
                     type="datetime-local"
                     required={!!notifForm.jobId}
                     value={notifForm.roundDate}
@@ -1338,8 +1338,8 @@ const PlacementDashboard = () => {
 
             {/* Message */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Announcement / Instructions *</label>
-              <textarea
+              <label htmlFor="placemen-field-4" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Announcement / Instructions *</label>
+              <textarea id="placemen-field-4"
                 required
                 rows="4"
                 value={notifForm.message}
@@ -1393,8 +1393,8 @@ const PlacementDashboard = () => {
           <form className="space-y-6 text-[#4B5563] font-semibold" onSubmit={handleUploadCsv}>
             {/* Target Job Selector */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Placement Drive *</label>
-              <select
+              <label htmlFor="placemen-field-5" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Placement Drive *</label>
+              <select id="placemen-field-5"
                 required
                 value={csvForm.jobId}
                 onChange={(e) => setCsvForm(prev => ({ ...prev, jobId: e.target.value }))}
@@ -1411,8 +1411,8 @@ const PlacementDashboard = () => {
 
             {/* Round Name */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Round Name *</label>
-              <input
+              <label htmlFor="placemen-field-6" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Round Name *</label>
+              <input id="placemen-field-6"
                 type="text"
                 required
                 value={csvForm.roundName}
@@ -1429,13 +1429,14 @@ const PlacementDashboard = () => {
                 id="rejectOthers"
                 checked={csvForm.rejectOthers}
                 onChange={(e) => setCsvForm(prev => ({ ...prev, rejectOthers: e.target.checked }))}
+                aria-describedby="rejectOthers-desc"
                 className="h-4.5 w-4.5 rounded border-[#E5E7EB] text-[#22C55E] focus:ring-[#22C55E] cursor-pointer"
               />
-              <div className="cursor-pointer select-none" onClick={() => setCsvForm(prev => ({ ...prev, rejectOthers: !prev.rejectOthers }))}>
+              <div className="select-none">
                 <label htmlFor="rejectOthers" className="text-xs font-bold text-[#111827] cursor-pointer block">
                   Auto-reject remaining active candidates
                 </label>
-                <span className="text-[10px] text-[#4B5563] font-medium block mt-0.5">
+                <span id="rejectOthers-desc" className="text-[10px] text-[#4B5563] font-medium block mt-0.5">
                   Check this to automatically reject all other active applicants for this drive who are not in the CSV file.
                 </span>
               </div>
@@ -1589,8 +1590,8 @@ const PlacementDashboard = () => {
                         }} className="space-y-4">
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="space-y-1">
-                              <label className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Schedule Date *</label>
-                              <input
+                              <label htmlFor={`placemen-field-7-${sh._id}`} className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Schedule Date *</label>
+                              <input id={`placemen-field-7-${sh._id}`}
                                 type="datetime-local"
                                 name="scheduledAt"
                                 defaultValue={sh.scheduledAt ? formatDateTimeLocal(sh.scheduledAt) : ""}
@@ -1599,8 +1600,8 @@ const PlacementDashboard = () => {
                               />
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Round Type *</label>
-                              <select
+                              <label htmlFor={`placemen-field-8-${sh._id}`} className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Round Type *</label>
+                              <select id={`placemen-field-8-${sh._id}`}
                                 name="roundType"
                                 value={roundTypes[sh._id] || "Online"}
                                 onChange={(e) => setRoundTypes(prev => ({ ...prev, [sh._id]: e.target.value }))}
@@ -1612,8 +1613,8 @@ const PlacementDashboard = () => {
                             </div>
                             {(roundTypes[sh._id] || "Online") === "Online" ? (
                               <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Test/Meeting Link</label>
-                                <input
+                                <label htmlFor={`placemen-field-9-${sh._id}`} className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Test/Meeting Link</label>
+                                <input id={`placemen-field-9-${sh._id}`}
                                   type="text"
                                   name="testLink"
                                   placeholder="e.g. HackerRank / Meet link"
@@ -1622,8 +1623,8 @@ const PlacementDashboard = () => {
                               </div>
                             ) : (
                               <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Venue / Room</label>
-                                <input
+                                <label htmlFor={`placemen-field-10-${sh._id}`} className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Venue / Room</label>
+                                <input id={`placemen-field-10-${sh._id}`}
                                   type="text"
                                   name="venue"
                                   placeholder="e.g. Seminar Hall, Room 102"
@@ -1632,8 +1633,8 @@ const PlacementDashboard = () => {
                               </div>
                             )}
                             <div className="space-y-1">
-                              <label className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Instructions</label>
-                              <input
+                              <label htmlFor="placemen-field-11" className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider">Instructions</label>
+                              <input id="placemen-field-11"
                                 type="text"
                                 name="roundDetails"
                                 defaultValue={sh.roundDetails || ""}
@@ -1879,8 +1880,8 @@ const PlacementDashboard = () => {
                     <p className="text-[10px] mt-0.5">Please provide a reason for rejecting this results sheet. Recruiters will be notified.</p>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Reason for Rejection *</label>
-                    <textarea
+                    <label htmlFor="placemen-field-12" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Reason for Rejection *</label>
+                    <textarea id="placemen-field-12"
                       required
                       value={approvalRejectionReason}
                       onChange={(e) => setApprovalRejectionReason(e.target.value)}
@@ -1977,8 +1978,8 @@ const PlacementDashboard = () => {
             {/* Filters panel */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 border border-[#E5E7EB] rounded-2xl">
               <div className="space-y-1 text-[#4B5563] font-semibold">
-                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Placement Status</label>
-                <select
+                <label htmlFor="placemen-field-13" className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Placement Status</label>
+                <select id="placemen-field-13"
                   value={reportFilterStatus}
                   onChange={(e) => setReportFilterStatus(e.target.value)}
                   className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
@@ -1992,8 +1993,8 @@ const PlacementDashboard = () => {
               </div>
 
               <div className="space-y-1 text-[#4B5563] font-semibold">
-                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Academic Branch</label>
-                <select
+                <label htmlFor="placemen-field-14" className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Academic Branch</label>
+                <select id="placemen-field-14"
                   value={reportFilterBranch}
                   onChange={(e) => setReportFilterBranch(e.target.value)}
                   className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
@@ -2005,8 +2006,8 @@ const PlacementDashboard = () => {
               </div>
 
               <div className="space-y-1 text-[#4B5563] font-semibold">
-                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Recruiting Company</label>
-                <select
+                <label htmlFor="placemen-field-15" className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Recruiting Company</label>
+                <select id="placemen-field-15"
                   value={reportFilterCompany}
                   onChange={(e) => setReportFilterCompany(e.target.value)}
                   className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
@@ -2019,9 +2020,9 @@ const PlacementDashboard = () => {
               </div>
 
               <div className="space-y-1 text-[#4B5563] font-semibold">
-                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Search Candidate/Job</label>
+                <label htmlFor="placemen-field-16" className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Search Candidate/Job</label>
                 <div className="relative">
-                  <input
+                  <input id="placemen-field-16"
                     type="text"
                     value={reportSearchQuery}
                     onChange={(e) => setReportSearchQuery(e.target.value)}
@@ -2146,8 +2147,8 @@ const PlacementDashboard = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Rejection Reason</label>
-                    <textarea
+                    <label htmlFor="placemen-field-17" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Rejection Reason</label>
+                    <textarea id="placemen-field-17"
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
                       placeholder="Specify the issues (e.g. wrong CTC, invalid format) if you choose to reject..."

@@ -215,12 +215,12 @@ const RecruiterSignup = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Full Name */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Recruiter Name *</label>
+                    <label htmlFor="recruite-field-1" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Recruiter Name *</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <User className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-1"
                         name="name"
                         type="text"
                         required
@@ -234,12 +234,12 @@ const RecruiterSignup = () => {
 
                   {/* Corporate Email */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Corporate Email *</label>
+                    <label htmlFor="recruite-field-2" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Corporate Email *</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <Mail className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-2"
                         name="email"
                         type="email"
                         required
@@ -255,12 +255,12 @@ const RecruiterSignup = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Password */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Password *</label>
+                    <label htmlFor="recruite-field-3" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Password *</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <Lock className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-3"
                         name="password"
                         type="password"
                         required
@@ -274,12 +274,12 @@ const RecruiterSignup = () => {
 
                   {/* Phone */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Contact Phone *</label>
+                    <label htmlFor="recruite-field-4" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Contact Phone *</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <Phone className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-4"
                         name="phone"
                         type="text"
                         required
@@ -303,12 +303,12 @@ const RecruiterSignup = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Company Name */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Company Name *</label>
+                    <label htmlFor="recruite-field-5" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Company Name *</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <Building2 className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-5"
                         name="companyName"
                         type="text"
                         required
@@ -322,12 +322,12 @@ const RecruiterSignup = () => {
 
                   {/* Website */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Company Website</label>
+                    <label htmlFor="recruite-field-6" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Company Website</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <Globe className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-6"
                         name="website"
                         type="url"
                         value={formData.website}
@@ -342,12 +342,12 @@ const RecruiterSignup = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Industry */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Industry</label>
+                    <label htmlFor="recruite-field-7" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Industry</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <Briefcase className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-7"
                         name="industry"
                         type="text"
                         value={formData.industry}
@@ -360,12 +360,12 @@ const RecruiterSignup = () => {
 
                   {/* Address */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Company Location /HQ</label>
+                    <label htmlFor="recruite-field-8" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Company Location /HQ</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
                         <MapPin className="h-4.5 w-4.5" />
                       </div>
-                      <input
+                      <input id="recruite-field-8"
                         name="address"
                         type="text"
                         value={formData.address}

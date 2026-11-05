@@ -1005,8 +1005,8 @@ const RecruiterDashboard = () => {
                     <div className="bg-[#F8FAFC] border border-[#E5E7EB] p-5 rounded-2xl space-y-4 shadow-sm animate-in fade-in duration-200">
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sort by ATS Match</label>
-                          <select
+                          <label htmlFor="recruite-field-1" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sort by ATS Match</label>
+                          <select id="recruite-field-1"
                             value={sortOrder}
                             onChange={(e) => setSortOrder(e.target.value)}
                             className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
@@ -1017,8 +1017,8 @@ const RecruiterDashboard = () => {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Branch</label>
-                          <select
+                          <label htmlFor="recruite-field-2" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Branch</label>
+                          <select id="recruite-field-2"
                             value={filterBranch}
                             onChange={(e) => setFilterBranch(e.target.value)}
                             className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
@@ -1033,8 +1033,8 @@ const RecruiterDashboard = () => {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</label>
-                          <select
+                          <label htmlFor="recruite-field-3" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</label>
+                          <select id="recruite-field-3"
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
                             className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
@@ -1051,8 +1051,8 @@ const RecruiterDashboard = () => {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Min CGPA</label>
-                          <input
+                          <label htmlFor="recruite-field-4" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Min CGPA</label>
+                          <input id="recruite-field-4"
                             type="number"
                             step="0.1"
                             placeholder="e.g. 8.0"
@@ -1063,8 +1063,8 @@ const RecruiterDashboard = () => {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Skill Search</label>
-                          <input
+                          <label htmlFor="recruite-field-5" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Skill Search</label>
+                          <input id="recruite-field-5"
                             type="text"
                             placeholder="e.g. React"
                             value={filterSkill}
@@ -1076,8 +1076,8 @@ const RecruiterDashboard = () => {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-3 border-t border-slate-200/50">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Min Rank</label>
-                          <input
+                          <label htmlFor="recruite-field-6" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Min Rank</label>
+                          <input id="recruite-field-6"
                             type="number"
                             placeholder="e.g. 1"
                             value={filterMinRank}
@@ -1087,8 +1087,8 @@ const RecruiterDashboard = () => {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Max Rank</label>
-                          <input
+                          <label htmlFor="recruite-field-7" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Max Rank</label>
+                          <input id="recruite-field-7"
                             type="number"
                             placeholder="e.g. 10"
                             value={filterMaxRank}
@@ -1098,8 +1098,8 @@ const RecruiterDashboard = () => {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Min AI Score</label>
-                          <input
+                          <label htmlFor="recruite-field-8" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Min AI Score</label>
+                          <input id="recruite-field-8"
                             type="number"
                             placeholder="e.g. 80"
                             value={filterMinScore}
@@ -1109,8 +1109,8 @@ const RecruiterDashboard = () => {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Max AI Score</label>
-                          <input
+                          <label htmlFor="recruite-field-9" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Max AI Score</label>
+                          <input id="recruite-field-9"
                             type="number"
                             placeholder="e.g. 100"
                             value={filterMaxScore}
@@ -1120,8 +1120,8 @@ const RecruiterDashboard = () => {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Min Exp Score (0-15)</label>
-                          <input
+                          <label htmlFor="recruite-field-10" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Min Exp Score (0-15)</label>
+                          <input id="recruite-field-10"
                             type="number"
                             placeholder="e.g. 5"
                             value={filterMinExperience}
@@ -1652,8 +1652,8 @@ const RecruiterDashboard = () => {
                                     Stage candidate rejection. You can optionally include feedback or rejection reasons.
                                   </p>
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Rejection Feedback (Optional)</label>
-                                    <input
+                                    <label htmlFor="recruite-field-11" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Rejection Feedback (Optional)</label>
+                                    <input id="recruite-field-11"
                                       type="text"
                                       name="notes"
                                       placeholder="e.g. Resume lack required experience in React."
@@ -1684,8 +1684,8 @@ const RecruiterDashboard = () => {
                                   </p>
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-1">
-                                      <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Round Name</label>
-                                      <input
+                                      <label htmlFor="recruite-field-12" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Round Name</label>
+                                      <input id="recruite-field-12"
                                         type="text"
                                         name="roundName"
                                         defaultValue="Online Assessment"
@@ -1693,8 +1693,8 @@ const RecruiterDashboard = () => {
                                       />
                                     </div>
                                     <div className="space-y-1">
-                                      <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Test Link *</label>
-                                      <input
+                                      <label htmlFor="recruite-field-13" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Test Link *</label>
+                                      <input id="recruite-field-13"
                                         type="text"
                                         name="testLink"
                                         required
@@ -1704,8 +1704,8 @@ const RecruiterDashboard = () => {
                                     </div>
                                   </div>
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Instructions (Optional)</label>
-                                    <textarea
+                                    <label htmlFor="recruite-field-14" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Instructions (Optional)</label>
+                                    <textarea id="recruite-field-14"
                                       name="notes"
                                       rows="2"
                                       placeholder="e.g. Please complete the test within 48 hours."
@@ -1740,8 +1740,8 @@ const RecruiterDashboard = () => {
                                   </p>
                                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     <div className="space-y-1">
-                                      <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Interview Round Name</label>
-                                      <select
+                                      <label htmlFor="recruite-field-15" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Interview Round Name</label>
+                                      <select id="recruite-field-15"
                                         name="roundName"
                                         required
                                         className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
@@ -1754,8 +1754,8 @@ const RecruiterDashboard = () => {
                                       </select>
                                     </div>
                                     <div className="space-y-1">
-                                      <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Scheduled Date & Time *</label>
-                                      <input
+                                      <label htmlFor="recruite-field-16" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Scheduled Date & Time *</label>
+                                      <input id="recruite-field-16"
                                         type="datetime-local"
                                         name="scheduledAt"
                                         required
@@ -1763,8 +1763,8 @@ const RecruiterDashboard = () => {
                                       />
                                     </div>
                                     <div className="space-y-1">
-                                      <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Round Type</label>
-                                      <select
+                                      <label htmlFor="recruite-field-17" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Round Type</label>
+                                      <select id="recruite-field-17"
                                         name="roundType"
                                         className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
                                       >
@@ -1775,8 +1775,8 @@ const RecruiterDashboard = () => {
                                   </div>
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-1">
-                                      <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Meeting Link (For Online)</label>
-                                      <input
+                                      <label htmlFor="recruite-field-18" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Meeting Link (For Online)</label>
+                                      <input id="recruite-field-18"
                                         type="text"
                                         name="testLink"
                                         placeholder="e.g. zoom.us/meeting-id"
@@ -1784,8 +1784,8 @@ const RecruiterDashboard = () => {
                                       />
                                     </div>
                                     <div className="space-y-1">
-                                      <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Venue (For Physical)</label>
-                                      <input
+                                      <label htmlFor="recruite-field-19" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Venue (For Physical)</label>
+                                      <input id="recruite-field-19"
                                         type="text"
                                         name="venue"
                                         placeholder="e.g. Block C Seminar Hall"
@@ -1794,8 +1794,8 @@ const RecruiterDashboard = () => {
                                     </div>
                                   </div>
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Instructions (Optional)</label>
-                                    <textarea
+                                    <label htmlFor="recruite-field-20" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Instructions (Optional)</label>
+                                    <textarea id="recruite-field-20"
                                       name="notes"
                                       rows="2"
                                       placeholder="e.g. Please carry 2 print copies of your resume."
@@ -1824,8 +1824,8 @@ const RecruiterDashboard = () => {
                                     Stage a bulk email broadcast. Emails will be sent out instantly upon approval.
                                   </p>
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Subject *</label>
-                                    <input
+                                    <label htmlFor="recruite-field-21" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Subject *</label>
+                                    <input id="recruite-field-21"
                                       type="text"
                                       name="subject"
                                       required
@@ -1834,8 +1834,8 @@ const RecruiterDashboard = () => {
                                     />
                                   </div>
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Email Body *</label>
-                                    <textarea
+                                    <label htmlFor="recruite-field-22" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Email Body *</label>
+                                    <textarea id="recruite-field-22"
                                       name="body"
                                       required
                                       rows="5"
@@ -1981,8 +1981,8 @@ const RecruiterDashboard = () => {
           <form className="space-y-6 text-[#4B5563] font-semibold" onSubmit={handlePostJob}>
             {/* Job Title */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Job Profile/Title *</label>
-              <input
+              <label htmlFor="recruite-field-23" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Job Profile/Title *</label>
+              <input id="recruite-field-23"
                 type="text"
                 required
                 value={jobForm.title}
@@ -1994,8 +1994,8 @@ const RecruiterDashboard = () => {
 
             {/* Job Description */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Job Description *</label>
-              <textarea
+              <label htmlFor="recruite-field-24" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Job Description *</label>
+              <textarea id="recruite-field-24"
                 required
                 rows="4"
                 value={jobForm.description}
@@ -2008,12 +2008,12 @@ const RecruiterDashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               {/* Compensation Package */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">CTC Package (LPA) *</label>
+                <label htmlFor="recruite-field-25" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">CTC Package (LPA) *</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#94A3B8] font-bold text-xs">
                     LPA
                   </div>
-                  <input
+                  <input id="recruite-field-25"
                     type="number"
                     step="0.1"
                     required
@@ -2027,8 +2027,8 @@ const RecruiterDashboard = () => {
 
               {/* Minimum CGPA */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Minimum CGPA benchmark *</label>
-                <input
+                <label htmlFor="recruite-field-26" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Minimum CGPA benchmark *</label>
+                <input id="recruite-field-26"
                   type="number"
                   step="0.01"
                   min="0"
@@ -2043,8 +2043,8 @@ const RecruiterDashboard = () => {
 
               {/* Deadline Date */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Application Deadline *</label>
-                <input
+                <label htmlFor="recruite-field-27" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Application Deadline *</label>
+                <input id="recruite-field-27"
                   type="date"
                   required
                   value={jobForm.deadline}
@@ -2057,8 +2057,8 @@ const RecruiterDashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Required Skills */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Required Skills (Comma-separated) *</label>
-                <input
+                <label htmlFor="recruite-field-28" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Required Skills (Comma-separated) *</label>
+                <input id="recruite-field-28"
                   type="text"
                   required
                   value={jobForm.requiredSkills || ''}
@@ -2070,8 +2070,8 @@ const RecruiterDashboard = () => {
 
               {/* Preferred Skills */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Preferred Skills (Comma-separated)</label>
-                <input
+                <label htmlFor="recruite-field-29" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Preferred Skills (Comma-separated)</label>
+                <input id="recruite-field-29"
                   type="text"
                   value={jobForm.preferredSkills || ''}
                   onChange={(e) => setJobForm(prev => ({ ...prev, preferredSkills: e.target.value }))}
@@ -2084,8 +2084,8 @@ const RecruiterDashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               {/* Experience Required */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Experience Required *</label>
-                <input
+                <label htmlFor="recruite-field-30" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Experience Required *</label>
+                <input id="recruite-field-30"
                   type="text"
                   required
                   value={jobForm.experienceRequired || ''}
@@ -2097,8 +2097,8 @@ const RecruiterDashboard = () => {
 
               {/* Number of Openings */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Number of Openings *</label>
-                <input
+                <label htmlFor="recruite-field-31" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Number of Openings *</label>
+                <input id="recruite-field-31"
                   type="number"
                   required
                   value={jobForm.numOpenings || ''}
@@ -2110,8 +2110,8 @@ const RecruiterDashboard = () => {
 
               {/* ATS Screening Cutoff */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">ATS Score Threshold (0-100) *</label>
-                <input
+                <label htmlFor="recruite-field-32" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">ATS Score Threshold (0-100) *</label>
+                <input id="recruite-field-32"
                   type="number"
                   min="0"
                   max="100"
@@ -2272,8 +2272,8 @@ const RecruiterDashboard = () => {
           <form className="space-y-6 text-[#4B5563] font-semibold" onSubmit={handleProposeSchedule}>
             {/* Target Job Selector */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Select Active Job Drive *</label>
-              <select
+              <label htmlFor="recruite-field-33" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Select Active Job Drive *</label>
+              <select id="recruite-field-33"
                 required
                 value={proposeForm.jobId}
                 onChange={(e) => setProposeForm(prev => ({ ...prev, jobId: e.target.value }))}
@@ -2291,8 +2291,8 @@ const RecruiterDashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               {/* Number of Rounds */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Total Rounds count *</label>
-                <input
+                <label htmlFor="recruite-field-34" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Total Rounds count *</label>
+                <input id="recruite-field-34"
                   type="number"
                   min="1"
                   required
@@ -2305,8 +2305,8 @@ const RecruiterDashboard = () => {
 
               {/* Target Students needed */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Students Needed *</label>
-                <input
+                <label htmlFor="recruite-field-35" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Students Needed *</label>
+                <input id="recruite-field-35"
                   type="number"
                   min="1"
                   required
@@ -2319,8 +2319,8 @@ const RecruiterDashboard = () => {
 
               {/* Proposed Date & Time */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Proposed Date & Time *</label>
-                <input
+                <label htmlFor="recruite-field-36" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Proposed Date & Time *</label>
+                <input id="recruite-field-36"
                   type="datetime-local"
                   required
                   value={proposeForm.scheduleDate}
@@ -2332,8 +2332,8 @@ const RecruiterDashboard = () => {
 
             {/* Message/Proposal Details */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Schedule Proposal details / message *</label>
-              <textarea
+              <label htmlFor="recruite-field-37" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Schedule Proposal details / message *</label>
+              <textarea id="recruite-field-37"
                 required
                 rows="4"
                 value={proposeForm.message}
@@ -2400,8 +2400,8 @@ const RecruiterDashboard = () => {
 
             {/* Template content editor */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Offer Letter Structure (HTML / Text) *</label>
-              <textarea
+              <label htmlFor="recruite-field-38" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Offer Letter Structure (HTML / Text) *</label>
+              <textarea id="recruite-field-38"
                 required
                 rows="12"
                 value={offerTemplate}
@@ -2476,8 +2476,8 @@ const RecruiterDashboard = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Left Column: Edit generated offer letter */}
                   <div className="space-y-3">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Customize Offer Content</label>
-                    <textarea
+                    <label htmlFor="recruite-field-39" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Customize Offer Content</label>
+                    <textarea id="recruite-field-39"
                       value={generatedOfferContent}
                       onChange={(e) => setGeneratedOfferContent(e.target.value)}
                       rows="14"
@@ -2569,8 +2569,8 @@ const RecruiterDashboard = () => {
 
             <div className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Evaluation Stage / Round Name *</label>
-                <select
+                <label htmlFor="recruite-field-40" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Evaluation Stage / Round Name *</label>
+                <select id="recruite-field-40"
                   value={atsRoundName}
                   onChange={(e) => setAtsRoundName(e.target.value)}
                   className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
@@ -2585,9 +2585,9 @@ const RecruiterDashboard = () => {
 
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Minimum ATS Match Score: <span className="text-[#0B3D91] font-extrabold">{atsThreshold}%</span></label>
+                  <label htmlFor="recruite-field-41" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Minimum ATS Match Score: <span className="text-[#0B3D91] font-extrabold">{atsThreshold}%</span></label>
                 </div>
-                <input
+                <input id="recruite-field-41"
                   type="range"
                   min="30"
                   max="95"
@@ -2685,8 +2685,8 @@ const RecruiterDashboard = () => {
                 )}
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Evaluation Stage / Round Name *</label>
-                  <select
+                  <label htmlFor="recruite-field-42" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Evaluation Stage / Round Name *</label>
+                  <select id="recruite-field-42"
                     value={csvResultRoundId}
                     onChange={(e) => setCsvResultRoundId(e.target.value)}
                     className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
@@ -2747,8 +2747,8 @@ const RecruiterDashboard = () => {
                 <p className="text-[11px] text-slate-500">Current overall status: {overrideApp.status}</p>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Override Status *</label>
-                <select
+                <label htmlFor="recruite-field-43" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Override Status *</label>
+                <select id="recruite-field-43"
                   value={overrideForm.status}
                   onChange={(e) => setOverrideForm(prev => ({ ...prev, status: e.target.value }))}
                   className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
@@ -2758,8 +2758,8 @@ const RecruiterDashboard = () => {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Override Reason *</label>
-                <textarea
+                <label htmlFor="recruite-field-44" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Override Reason *</label>
+                <textarea id="recruite-field-44"
                   required
                   rows="3"
                   value={overrideForm.reason}
@@ -2794,42 +2794,42 @@ const RecruiterDashboard = () => {
             <form onSubmit={handleCreateRound} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Round Name *</label>
-                  <input type="text" name="name" required placeholder="e.g. Coding Round" className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
+                  <label htmlFor="recruite-field-45" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Round Name *</label>
+                  <input id="recruite-field-45" type="text" name="name" required placeholder="e.g. Coding Round" className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Mode *</label>
-                  <select name="mode" className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none">
+                  <label htmlFor="recruite-field-46" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Mode *</label>
+                  <select id="recruite-field-46" name="mode" className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none">
                     <option value="Online">Online</option>
                     <option value="Physical">Physical</option>
                   </select>
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Description</label>
-                <input type="text" name="description" placeholder="e.g. Solve 3 algorithms problems on HackerRank" className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
+                <label htmlFor="recruite-field-47" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Description</label>
+                <input id="recruite-field-47" type="text" name="description" placeholder="e.g. Solve 3 algorithms problems on HackerRank" className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Date</label>
-                  <input type="date" name="date" className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
+                  <label htmlFor="recruite-field-48" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Date</label>
+                  <input id="recruite-field-48" type="date" name="date" className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Time</label>
-                  <input type="time" name="time" className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
+                  <label htmlFor="recruite-field-49" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Time</label>
+                  <input id="recruite-field-49" type="time" name="time" className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Platform</label>
-                  <input type="text" name="platform" placeholder="e.g. Google Meet, Zoom" className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
+                  <label htmlFor="recruite-field-50" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Platform</label>
+                  <input id="recruite-field-50" type="text" name="platform" placeholder="e.g. Google Meet, Zoom" className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Meeting Link</label>
-                <input type="text" name="meetingLink" placeholder="e.g. meet.google.com/abc-defg-hij" className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
+                <label htmlFor="recruite-field-51" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Meeting Link</label>
+                <input id="recruite-field-51" type="text" name="meetingLink" placeholder="e.g. meet.google.com/abc-defg-hij" className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Instructions</label>
-                <textarea rows="2" name="instructions" placeholder="e.g. Keep your camera on. Have photo ID proof ready." className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
+                <label htmlFor="recruite-field-52" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Instructions</label>
+                <textarea id="recruite-field-52" rows="2" name="instructions" placeholder="e.g. Keep your camera on. Have photo ID proof ready." className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
               </div>
               <div className="flex items-center justify-end gap-2 font-semibold pt-3 border-t border-slate-100">
                 <button type="button" onClick={() => setIsAddingRoundModalOpen(false)} className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-xs rounded-xl transition-colors cursor-pointer">
@@ -2857,42 +2857,42 @@ const RecruiterDashboard = () => {
             <form onSubmit={handleUpdateRound} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Round Name *</label>
-                  <input type="text" name="name" required defaultValue={editingRound.name} className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
+                  <label htmlFor="recruite-field-53" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Round Name *</label>
+                  <input id="recruite-field-53" type="text" name="name" required defaultValue={editingRound.name} className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Mode *</label>
-                  <select name="mode" defaultValue={editingRound.mode} className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none">
+                  <label htmlFor="recruite-field-54" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Mode *</label>
+                  <select id="recruite-field-54" name="mode" defaultValue={editingRound.mode} className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none">
                     <option value="Online">Online</option>
                     <option value="Physical">Physical</option>
                   </select>
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Description</label>
-                <input type="text" name="description" defaultValue={editingRound.description} className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
+                <label htmlFor="recruite-field-55" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Description</label>
+                <input id="recruite-field-55" type="text" name="description" defaultValue={editingRound.description} className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Date</label>
-                  <input type="date" name="date" defaultValue={editingRound.date ? editingRound.date.split('T')[0] : ''} className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
+                  <label htmlFor="recruite-field-56" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Date</label>
+                  <input id="recruite-field-56" type="date" name="date" defaultValue={editingRound.date ? editingRound.date.split('T')[0] : ''} className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Time</label>
-                  <input type="time" name="time" defaultValue={editingRound.time} className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
+                  <label htmlFor="recruite-field-57" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Time</label>
+                  <input id="recruite-field-57" type="time" name="time" defaultValue={editingRound.time} className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Platform</label>
-                  <input type="text" name="platform" defaultValue={editingRound.platform} className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
+                  <label htmlFor="recruite-field-58" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Platform</label>
+                  <input id="recruite-field-58" type="text" name="platform" defaultValue={editingRound.platform} className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Meeting Link</label>
-                <input type="text" name="meetingLink" defaultValue={editingRound.meetingLink} className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
+                <label htmlFor="recruite-field-59" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Meeting Link</label>
+                <input id="recruite-field-59" type="text" name="meetingLink" defaultValue={editingRound.meetingLink} className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Instructions</label>
-                <textarea rows="2" name="instructions" defaultValue={editingRound.instructions} className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
+                <label htmlFor="recruite-field-60" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Instructions</label>
+                <textarea id="recruite-field-60" rows="2" name="instructions" defaultValue={editingRound.instructions} className="block w-full py-2 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#111827] focus:outline-none" />
               </div>
               <div className="flex items-center justify-end gap-2 font-semibold pt-3 border-t border-slate-100">
                 <button type="button" onClick={() => { setIsEditingRoundModalOpen(false); setEditingRound(null); }} className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-xs rounded-xl transition-colors cursor-pointer">
