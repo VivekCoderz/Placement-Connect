@@ -15,6 +15,7 @@ const Applications = () => {
   const [selectedOfferContent, setSelectedOfferContent] = useState('');
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState('active');
+  const [isLoading, setIsLoading] = useState(true);
 
   const handlePrintOffer = (content) => {
     const printWindow = window.open('', '_blank');
@@ -55,6 +56,8 @@ const Applications = () => {
       setJobs(populatedJobs);
     } catch (err) {
       console.error("Failed to fetch applications:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -169,8 +172,18 @@ const Applications = () => {
         </button>
       </div>
 
-      {displayedApps.length === 0 ? (
-        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-20 text-center space-y-5 shadow-sm animate-slide-up">
+      {isLoading ? (
+        <div className="space-y-4" role="status" aria-label="Loading applications">
+          {[0, 1].map((i) => (
+            <div key={i} className="pc-card p-6 space-y-3">
+              <div className="pc-skeleton h-4 w-1/3" />
+              <div className="pc-skeleton h-3 w-1/2" />
+              <div className="pc-skeleton h-10 w-full rounded-xl" />
+            </div>
+          ))}
+        </div>
+      ) : displayedApps.length === 0 ? (
+        <div className="pc-empty space-y-3 animate-slide-up">
           <p className="text-[#4B5563] text-sm font-semibold">
             No applications found in this section.
           </p>

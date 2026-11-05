@@ -134,8 +134,20 @@ const JobDetail = () => {
 
   if (!job) {
     return (
-      <div className="flex-grow flex items-center justify-center py-24">
-        <div className="animate-spin rounded-full h-11 w-11 border-t-2 border-b-2 border-emerald-600"></div>
+      <div className="w-full max-w-4xl mx-auto space-y-6" role="status" aria-label="Loading drive details">
+        <div className="pc-skeleton h-4 w-32" />
+        <div className="pc-card p-6 sm:p-10 space-y-5">
+          <div className="flex items-center gap-4">
+            <div className="pc-skeleton h-12 w-12 rounded-xl" />
+            <div className="flex-1 space-y-2">
+              <div className="pc-skeleton h-3 w-1/4" />
+              <div className="pc-skeleton h-5 w-1/2" />
+            </div>
+          </div>
+          <div className="pc-skeleton h-3 w-full" />
+          <div className="pc-skeleton h-3 w-11/12" />
+          <div className="pc-skeleton h-3 w-4/5" />
+        </div>
       </div>
     );
   }
