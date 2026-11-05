@@ -6,6 +6,16 @@ const Application = require("../models/application");
 const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
 const { sendEmail } = require("../utils/email");
+const { getClientBaseUrl } = require("../config/env");
+
+const PUBLIC_ROLES = ["student", "company"];
+const STAFF_ROLES = ["admin", "placementCell"];
+
+const FORGOT_PASSWORD_RESPONSE = {
+  success: true,
+  message: "If an account exists for that email, a password reset link has been sent.",
+  data: {},
+};
 
 // Register handler
 module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
@@ -15,8 +25,12 @@ module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(400, "Name, email, password, and role are required");
   }
 
-  const validRoles = ["student", "company", "placementCell", "admin"];
-  if (!validRoles.includes(role)) {
+  // Only students and companies may self-register. Staff accounts (admin, placementCell)
+  // are created by an admin via POST /api/admin/users or by `npm run seed:admin`.
+  if (STAFF_ROLES.includes(role)) {
+    throw new ErrorHandler(403, "Staff accounts cannot be self-registered");
+  }
+  if (!PUBLIC_ROLES.includes(role)) {
     throw new ErrorHandler(400, "Invalid role selection");
   }
 
@@ -96,17 +110,17 @@ module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
       );
     }
 
-    // Create User (Company) - auto-approved upon registration
+    // Create User (Company) - pending admin approval
     const newUser = new User({
       name,
       email,
       password,
       role,
-      isApproved: true,
+      isApproved: false,
     });
     savedUser = await newUser.save();
 
-    // Create Company Profile - auto-approved
+    // Create Company Profile - pending admin approval
     const newCompany = new Company({
       name: companyName,
       recruiterId: savedUser._id,
@@ -116,7 +130,7 @@ module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
       hrContactName,
       hrContactPhone,
       address,
-      approved: true,
+      approved: false,
     });
     const savedCompany = await newCompany.save();
 
@@ -128,25 +142,14 @@ module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
     return res.status(201).json({
       success: true,
       message:
-        "Company recruiter registered and approved successfully.",
+        "Company recruiter registered successfully. The account is pending admin approval.",
       data: {
         userId: savedUser._id,
         companyId: savedCompany._id,
+        approvalStatus: "pending",
       },
     });
   }
-
-  // Admin or Placement Cell
-  const newUser = new User({ name, email, password, role });
-  savedUser = await newUser.save();
-
-  return res.status(201).json({
-    success: true,
-    message: `${role.charAt(0).toUpperCase() + role.slice(1)} registered successfully`,
-    data: {
-      userId: savedUser._id,
-    },
-  });
 });
 
 // Login handler
@@ -238,18 +241,16 @@ module.exports.postLogin = ErrorWrapper(async (req, res, next) => {
   let userExists;
 
   if (rollNumber) {
-    const student = await Student.findOne({ rollNumber: rollNumber.trim() });
-    if (!student) {
-      throw new ErrorHandler(404, "No student found with this roll number");
-    }
-    userExists = await User.findById(student.userId);
+    const student = await Student.findOne({ rollNumber: String(rollNumber).trim() });
+    userExists = student ? await User.findById(student.userId) : null;
   } else {
     const cleanEmail = email ? email.trim().toLowerCase() : "";
     userExists = await User.findOne({ email: cleanEmail });
   }
 
+  // Same response for unknown accounts and wrong passwords (no account enumeration).
   if (!userExists) {
-    throw new ErrorHandler(404, "User not found");
+    throw new ErrorHandler(401, "Invalid credentials");
   }
 
   // Check password
@@ -361,44 +362,41 @@ module.exports.forgotPassword = ErrorWrapper(async (req, res, next) => {
 
   const cleanEmail = email ? email.trim().toLowerCase() : "";
   const user = await User.findOne({ email: cleanEmail });
-  if (!user) {
-    throw new ErrorHandler(404, "No user found with this email");
+
+  // Always answer the same way, whether or not the account exists.
+  if (!user || !user.isActive) {
+    return res.status(200).json(FORGOT_PASSWORD_RESPONSE);
   }
 
   // Get reset token
   const resetToken = user.getResetPasswordToken();
   await user.save({ validateBeforeSave: false });
 
-  // Create reset url
-  // Fallback to localhost if FRONTEND_URL is not set
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-  const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+  const resetUrl = `${getClientBaseUrl()}/reset-password/${resetToken}`;
+  const message = `You are receiving this email because you (or someone else) requested a password reset for your PlacementConnect account. Open the link below to choose a new password:\n\n${resetUrl}\n\nThis link will expire in 10 minutes. If you did not request this, you can ignore this email.`;
 
-  const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to:\n\n${resetUrl}\n\nThis link will expire in 10 minutes.`;
-
+  let delivered = false;
   try {
-    await sendEmail({
+    const result = await sendEmail({
       to: user.email,
       subject: "PlacementConnect - Password Reset Request",
       text: message,
-      html: `<p>You requested a password reset for PlacementConnect. Click the link below to reset it:</p><a href="${resetUrl}">${resetUrl}</a><p>This link expires in 10 minutes.</p>`,
+      html: `<p>You requested a password reset for PlacementConnect. Click the link below to reset it:</p><a href="${resetUrl}">${resetUrl}</a><p>This link expires in 10 minutes. If you did not request this, you can ignore this email.</p>`,
     });
-
-    return res.status(200).json({
-      success: true,
-      message: "Email sent with password reset link",
-      data: {},
-    });
+    delivered = Boolean(result && result.sent);
   } catch (err) {
+    delivered = false;
+  }
+
+  if (!delivered) {
+    // Don't leave a usable token around if the email never went out.
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save({ validateBeforeSave: false });
-
-    throw new ErrorHandler(
-      500,
-      "Email could not be sent. Please try again later.",
-    );
+    console.error("[forgot-password] Reset email was not delivered (SMTP not configured or failed).");
   }
+
+  return res.status(200).json(FORGOT_PASSWORD_RESPONSE);
 });
 
 // Reset Password handler
@@ -411,6 +409,10 @@ module.exports.resetPassword = ErrorWrapper(async (req, res, next) => {
   }
 
   // Hash the parameter token to match stored hashed token
+  if (typeof token !== "string" || !/^[a-f0-9]{40}$/i.test(token)) {
+    throw new ErrorHandler(400, "Invalid or expired reset token");
+  }
+
   const resetPasswordToken = crypto
     .createHash("sha256")
     .update(token)

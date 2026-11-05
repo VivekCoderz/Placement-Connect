@@ -157,7 +157,7 @@ module.exports.postJob = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(404, "No registered company found for this recruiter profile");
   }
 
-  if (!company.approved) {
+  if (!company.approved || !req.user.isApproved) {
     throw new ErrorHandler(403, "Access Denied: Recruiter company has not been approved by the Placement Cell yet");
   }
 
