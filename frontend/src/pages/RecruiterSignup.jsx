@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, Mail, Lock, User, Globe, Phone, MapPin, Briefcase, AlertCircle, ArrowRight } from 'lucide-react';
+import { Building2, Mail, Lock, User, Globe, Phone, MapPin, Briefcase, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from '../redux/authSlice';
 import api from '../utils/api';
@@ -34,6 +34,15 @@ const RecruiterSignup = () => {
     }
   }, [authenticatedUser, navigate]);
 
+  useEffect(() => {
+    if (isSuccess) {
+      const timer = setTimeout(() => {
+        navigate('/recruiter/dashboard');
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess, navigate]);
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -66,6 +75,28 @@ const RecruiterSignup = () => {
         address
       });
 
+      // Automatically log in since account is auto-approved by placement cell
+      try {
+        const loginResponse = await api.post('/api/auth/login', { email, password });
+        const loginRes = loginResponse.data;
+        const { token } = loginRes.data;
+        localStorage.setItem('token', token);
+
+        const meResponse = await api.get('/api/auth/me');
+        const meRes = meResponse.data;
+
+        const combinedUser = {
+          ...meRes.data.user,
+          ...meRes.data.details,
+          id: meRes.data.user._id || meRes.data.user.id,
+        };
+
+        localStorage.setItem('user', JSON.stringify(combinedUser));
+        dispatch(setUser(combinedUser));
+      } catch (loginErr) {
+        console.error('Auto-login error after registration:', loginErr);
+      }
+
       setIsSuccess(true);
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Company registration failed');
@@ -85,40 +116,41 @@ const RecruiterSignup = () => {
         
         {isSuccess ? (
           <div className="text-center space-y-6 py-6 font-sans">
-            <div className="mx-auto h-16 w-16 rounded-full bg-[#22C55E]/10 border border-[#22C55E]/20 flex items-center justify-center text-[#22C55E] shadow-sm">
-              <Building2 className="h-8 w-8" />
+            <div className="mx-auto h-16 w-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-sm animate-bounce">
+              <CheckCircle2 className="h-9 w-9" />
             </div>
             <div className="space-y-3">
               <h2 className="text-2xl font-bold text-[#111827] tracking-tight">
-                Profile Submitted!
+                Account Approved & Verified!
               </h2>
               <p className="text-sm font-semibold text-[#4B5563] max-w-md mx-auto leading-relaxed">
-                Thank you for registering <strong className="text-[#111827]">{formData.companyName}</strong> on PlacementConnect.
+                Welcome to PlacementConnect! Your recruiter profile for <strong className="text-[#111827]">{formData.companyName}</strong> has been auto-approved by the Placement Cell.
               </p>
             </div>
             <div className="bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl p-5 text-left text-xs font-semibold text-[#4B5563] space-y-2.5 max-w-md mx-auto">
-              <p className="text-[#111827] font-bold uppercase tracking-wider text-[10px] mb-1">What happens next?</p>
-              <div className="flex gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#22C55E] mt-1 flex-shrink-0" />
-                <span>The Placement Cell administrator will review your recruiter account details.</span>
+              <p className="text-[#111827] font-bold uppercase tracking-wider text-[10px] mb-1">Approval Summary</p>
+              <div className="flex items-center gap-2 text-emerald-700">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-600" />
+                <span>Placement Cell approval: <strong>Granted (Active)</strong></span>
               </div>
-              <div className="flex gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#22C55E] mt-1 flex-shrink-0" />
-                <span>You will receive an email notification once your profile is approved.</span>
+              <div className="flex items-center gap-2 text-slate-700">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-600" />
+                <span>Job posting & candidate evaluation privileges: <strong>Unlocked</strong></span>
               </div>
-              <div className="flex gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#22C55E] mt-1 flex-shrink-0" />
-                <span>After approval, you can sign in using your corporate email: <strong className="text-[#111827]">{formData.email}</strong>.</span>
+              <div className="flex items-center gap-2 text-slate-700">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-600" />
+                <span>Signed in as: <strong className="text-[#111827]">{formData.email}</strong></span>
               </div>
             </div>
-            <div className="pt-4">
+            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
-                to="/login"
+                to="/recruiter/dashboard"
                 className="inline-flex items-center gap-2 justify-center w-full sm:w-auto px-8 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-[#22C55E] hover:bg-[#16A34A] shadow-md transition-all active:scale-[0.98]"
               >
-                Go to Sign In <ArrowRight className="w-4 h-4 text-white" />
+                Go to Recruiter Dashboard <ArrowRight className="w-4 h-4 text-white" />
               </Link>
             </div>
+            <p className="text-xs text-slate-400 font-medium">Redirecting to recruiter dashboard in a moment...</p>
           </div>
         ) : (
           <>

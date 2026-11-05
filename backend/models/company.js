@@ -25,7 +25,7 @@ const companySchema = new mongoose.Schema(
     },
     approved: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     offerLetterTemplate: {
       type: String,

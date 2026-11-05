@@ -128,6 +128,52 @@ const RecruiterDashboard = () => {
   const [filterStatus, setFilterStatus] = useState('All');
   const [sortOrder, setSortOrder] = useState('highest_ats');
 
+  const [filterMinRank, setFilterMinRank] = useState('');
+  const [filterMaxRank, setFilterMaxRank] = useState('');
+  const [filterMinScore, setFilterMinScore] = useState('');
+  const [filterMaxScore, setFilterMaxScore] = useState('');
+  const [filterMinExperience, setFilterMinExperience] = useState('');
+
+  const [bulkTab, setBulkTab] = useState('shortlist');
+
+  const handleApproveSelection = async () => {
+    if (!selectedJob) return;
+    if (!confirm("Are you sure you want to approve and send all staged selections, notifications, and emails?")) return;
+    try {
+      const res = await api.post(`/api/company/jobs/${selectedJob._id}/approve-selection`);
+      alert(res.data.message || "All decisions successfully approved and sent!");
+      handleFetchApplicants(selectedJob, true); // Refresh candidates list
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || "Failed to approve selections");
+    }
+  };
+
+  const handleBulkAction = async (actionType, details = {}) => {
+    if (!selectedJob) return;
+    const studentIds = selectedApplicants
+      .map(appId => applicants.find(a => a._id === appId)?.studentId?._id)
+      .filter(Boolean);
+
+    if (studentIds.length === 0) {
+      alert("No valid student profiles selected.");
+      return;
+    }
+
+    try {
+      const res = await api.post('/api/company/applications/bulk-action', {
+        jobId: selectedJob._id,
+        actionType,
+        studentIds,
+        details
+      });
+      alert(res.data.message || `Batch '${actionType}' staged successfully!`);
+      setSelectedApplicants([]);
+      handleFetchApplicants(selectedJob, true); // Silent refresh
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || "Failed to stage bulk action");
+    }
+  };
+
   const getFilteredApplicants = () => {
     let list = [...applicants];
 
@@ -149,8 +195,33 @@ const RecruiterDashboard = () => {
     // Skills filter
     if (filterSkill) {
       list = list.filter(app => 
-        app.studentId?.skills?.some(s => s.toLowerCase().includes(filterSkill.toLowerCase()))
+        app.studentId?.skills?.some(s => s.toLowerCase().includes(filterSkill.toLowerCase())) ||
+        app.matchedSkills?.some(s => s.toLowerCase().includes(filterSkill.toLowerCase()))
       );
+    }
+
+    // Rank filter
+    if (filterMinRank) {
+      list = list.filter(app => app.rank >= parseInt(filterMinRank));
+    }
+    if (filterMaxRank) {
+      list = list.filter(app => app.rank <= parseInt(filterMaxRank));
+    }
+
+    // Score filter
+    if (filterMinScore) {
+      list = list.filter(app => app.atsScore >= parseInt(filterMinScore));
+    }
+    if (filterMaxScore) {
+      list = list.filter(app => app.atsScore <= parseInt(filterMaxScore));
+    }
+
+    // Experience filter (Ollama experienceScore check)
+    if (filterMinExperience) {
+      list = list.filter(app => {
+        const expScore = app.experienceScore !== undefined ? app.experienceScore : (app.aiAnalysis?.experienceScore || 0);
+        return expScore >= parseInt(filterMinExperience);
+      });
     }
 
     // Sort order
@@ -949,71 +1020,133 @@ const RecruiterDashboard = () => {
                 {recruitmentTab === 'pipeline' && (
                   <div className="space-y-6">
                     {/* Filters & Sorting Panel */}
-                    <div className="bg-[#F8FAFC] border border-[#E5E7EB] p-5 rounded-2xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 shadow-sm animate-in fade-in duration-200">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sort by ATS Match</label>
-                        <select
-                          value={sortOrder}
-                          onChange={(e) => setSortOrder(e.target.value)}
-                          className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
-                        >
-                          <option value="highest_ats">Highest ATS Score</option>
-                          <option value="lowest_ats">Lowest ATS Score</option>
-                        </select>
+                    <div className="bg-[#F8FAFC] border border-[#E5E7EB] p-5 rounded-2xl space-y-4 shadow-sm animate-in fade-in duration-200">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sort by ATS Match</label>
+                          <select
+                            value={sortOrder}
+                            onChange={(e) => setSortOrder(e.target.value)}
+                            className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                          >
+                            <option value="highest_ats">Highest ATS Score</option>
+                            <option value="lowest_ats">Lowest ATS Score</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Branch</label>
+                          <select
+                            value={filterBranch}
+                            onChange={(e) => setFilterBranch(e.target.value)}
+                            className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                          >
+                            <option value="All">All Branches</option>
+                            <option value="CSE">CSE</option>
+                            <option value="IT">IT</option>
+                            <option value="ECE">ECE</option>
+                            <option value="MECH">MECH</option>
+                            <option value="EEE">EEE</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</label>
+                          <select
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                            className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                          >
+                            <option value="All">All Statuses</option>
+                            <option value="Applied">Applied</option>
+                            <option value="Under Review">Under Review</option>
+                            <option value="Shortlisted">Shortlisted</option>
+                            <option value="Assessment">Assessment</option>
+                            <option value="Interview">Interview</option>
+                            <option value="Selected">Selected</option>
+                            <option value="Rejected">Rejected</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Min CGPA</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="e.g. 8.0"
+                            value={filterMinCgpa}
+                            onChange={(e) => setFilterMinCgpa(e.target.value)}
+                            className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] placeholder-slate-400 focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Skill Search</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. React"
+                            value={filterSkill}
+                            onChange={(e) => setFilterSkill(e.target.value)}
+                            className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] placeholder-slate-400 focus:outline-none"
+                          />
+                        </div>
                       </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Branch</label>
-                        <select
-                          value={filterBranch}
-                          onChange={(e) => setFilterBranch(e.target.value)}
-                          className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
-                        >
-                          <option value="All">All Branches</option>
-                          <option value="CSE">CSE</option>
-                          <option value="IT">IT</option>
-                          <option value="ECE">ECE</option>
-                          <option value="MECH">MECH</option>
-                          <option value="EEE">EEE</option>
-                        </select>
-                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-3 border-t border-slate-200/50">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Min Rank</label>
+                          <input
+                            type="number"
+                            placeholder="e.g. 1"
+                            value={filterMinRank}
+                            onChange={(e) => setFilterMinRank(e.target.value)}
+                            className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] placeholder-slate-400 focus:outline-none"
+                          />
+                        </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</label>
-                        <select
-                          value={filterStatus}
-                          onChange={(e) => setFilterStatus(e.target.value)}
-                          className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
-                        >
-                          <option value="All">All Statuses</option>
-                          <option value="Applied">Applied</option>
-                          <option value="Shortlisted">Shortlisted</option>
-                          <option value="Rejected">Rejected</option>
-                          <option value="Selected">Selected</option>
-                        </select>
-                      </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Max Rank</label>
+                          <input
+                            type="number"
+                            placeholder="e.g. 10"
+                            value={filterMaxRank}
+                            onChange={(e) => setFilterMaxRank(e.target.value)}
+                            className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] placeholder-slate-400 focus:outline-none"
+                          />
+                        </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Min CGPA</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          placeholder="e.g. 8.0"
-                          value={filterMinCgpa}
-                          onChange={(e) => setFilterMinCgpa(e.target.value)}
-                          className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] placeholder-slate-400 focus:outline-none"
-                        />
-                      </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Min AI Score</label>
+                          <input
+                            type="number"
+                            placeholder="e.g. 80"
+                            value={filterMinScore}
+                            onChange={(e) => setFilterMinScore(e.target.value)}
+                            className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] placeholder-slate-400 focus:outline-none"
+                          />
+                        </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Skill Search</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. React"
-                          value={filterSkill}
-                          onChange={(e) => setFilterSkill(e.target.value)}
-                          className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] placeholder-slate-400 focus:outline-none"
-                        />
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Max AI Score</label>
+                          <input
+                            type="number"
+                            placeholder="e.g. 100"
+                            value={filterMaxScore}
+                            onChange={(e) => setFilterMaxScore(e.target.value)}
+                            className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] placeholder-slate-400 focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Min Exp Score (0-15)</label>
+                          <input
+                            type="number"
+                            placeholder="e.g. 5"
+                            value={filterMinExperience}
+                            onChange={(e) => setFilterMinExperience(e.target.value)}
+                            className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] placeholder-slate-400 focus:outline-none"
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -1029,6 +1162,26 @@ const RecruiterDashboard = () => {
                       </div>
                     ) : (
                       <div className="space-y-4">
+                        {/* Staged Decisions Pending Approval Banner */}
+                        {applicants.some(app => app.pendingStatus && app.pendingStatus !== "None") && (
+                          <div className="bg-amber-50 border border-amber-200 p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in slide-in-from-top-2 select-none">
+                            <div className="space-y-0.5">
+                              <h4 className="font-extrabold text-amber-900 text-sm flex items-center gap-1.5">
+                                ⚠️ Candidate Decisions Staged
+                              </h4>
+                              <p className="text-xs text-amber-700 font-semibold leading-relaxed">
+                                You have pending recruiter actions staged for this job. Students will not receive any notifications or emails until you finalize and approve the selections.
+                              </p>
+                            </div>
+                            <button
+                              onClick={handleApproveSelection}
+                              className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-md transition-all active:scale-[0.98] select-none cursor-pointer flex items-center gap-1.5 flex-shrink-0"
+                            >
+                              <CheckCircle2 className="w-4 h-4 text-white" /> Approve Selection
+                            </button>
+                          </div>
+                        )}
+
                         {/* Select All Checkbox */}
                         <div className="flex items-center justify-between bg-[#F8FAFC] p-4 rounded-xl border border-[#E5E7EB] shadow-sm select-none animate-in fade-in duration-200">
                           <label className="flex items-center gap-2.5 text-xs font-bold text-[#4B5563] cursor-pointer">
@@ -1080,6 +1233,9 @@ const RecruiterDashboard = () => {
                                   <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                                     <div className="space-y-1">
                                       <div className="flex flex-wrap items-center gap-2">
+                                        <span className="bg-[#7C3AED] text-white px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider shadow-sm select-none">
+                                          Rank #{app.rank}
+                                        </span>
                                         <h4 className="font-bold text-[#111827] text-sm">{student.name}</h4>
                                         {app.atsScore !== undefined && (
                                           <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider ${
@@ -1100,7 +1256,7 @@ const RecruiterDashboard = () => {
                                     </div>
 
                                     {/* Status tag */}
-                                    <div className="flex items-center gap-2 self-start">
+                                    <div className="flex items-center gap-2 self-start flex-wrap">
                                       <span className={`text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider shadow-sm flex items-center gap-1.5 ${
                                         app.status === 'Selected' ? 'bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#22C55E]' :
                                         app.status === 'Rejected' ? 'bg-rose-50 border border-rose-200 text-rose-600' :
@@ -1110,11 +1266,17 @@ const RecruiterDashboard = () => {
                                         <span className={`h-1.5 w-1.5 rounded-full ${
                                           app.status === 'Selected' ? 'bg-[#22C55E] animate-pulse' :
                                           app.status === 'Rejected' ? 'bg-rose-500' :
-                                          app.status === 'Shortlisted' ? 'bg-blue-550 animate-pulse' :
+                                          app.status === 'Shortlisted' ? 'bg-blue-500 animate-pulse' :
                                           'bg-slate-400'
                                         }`} />
                                         {app.status}
                                       </span>
+
+                                      {app.pendingStatus && app.pendingStatus !== "None" && (
+                                        <span className="bg-amber-100 border border-amber-300 text-amber-850 px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider animate-pulse shadow-sm">
+                                          Staged: {app.pendingStatus}
+                                        </span>
+                                      )}
                                     </div>
                                   </div>
 
@@ -1133,57 +1295,69 @@ const RecruiterDashboard = () => {
                                   )}
 
                                   {/* AI MATCH METRICS PREVIEW */}
-                                  {app.aiAnalysis && (
-                                    <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs space-y-2 font-semibold text-slate-700">
-                                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-slate-200/60 pb-2">
-                                        <div className="flex items-center gap-1">
-                                          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">ATS Score:</span>
-                                          <span className="text-slate-800 font-bold">{app.aiAnalysis.atsScore}%</span>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Resume Match %:</span>
-                                          <span className="text-slate-800 font-bold">{app.aiAnalysis.matchPercentage}%</span>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Skill Match %:</span>
-                                          <span className="text-slate-800 font-bold">
-                                            {(() => {
-                                              const matched = app.aiAnalysis.skillsMatch?.length || 0;
-                                              const missing = app.aiAnalysis.missingSkills?.length || 0;
-                                              return (matched + missing) > 0 ? Math.round((matched / (matched + missing)) * 100) : 0;
-                                            })()}%
+                                  {(app.aiAnalysis || app.overallScore !== undefined) && (
+                                    <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs space-y-3 font-semibold text-slate-700 shadow-sm">
+                                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 pb-2">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Ollama Recommendation:</span>
+                                          <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${
+                                            (app.recommendation || app.aiAnalysis?.recommendation) === 'Strongly Recommended' ? 'bg-emerald-100 border-emerald-300 text-emerald-800' :
+                                            (app.recommendation || app.aiAnalysis?.recommendation) === 'Recommended' ? 'bg-emerald-50 border-emerald-250 text-emerald-700' :
+                                            (app.recommendation || app.aiAnalysis?.recommendation) === 'Consider' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                                            'bg-rose-50 border-rose-200 text-rose-700'
+                                          }`}>
+                                            {app.recommendation || app.aiAnalysis?.recommendation || "Consider"}
                                           </span>
+                                        </div>
+                                        <div className="text-[10px] bg-slate-200/50 px-2 py-0.5 rounded font-mono text-slate-650 font-bold">
+                                          Rank #{app.rank}
                                         </div>
                                       </div>
 
-                                      <div className="flex flex-wrap items-start justify-between gap-2 pt-1">
-                                        <div className="space-y-1 max-w-md">
-                                          <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">AI Decision:</span>
-                                          <span className={`inline-flex items-center gap-1 text-[11px] font-bold ${
-                                            app.aiAnalysis.status === 'Shortlisted' ? 'text-emerald-700' : 'text-rose-650'
-                                          }`}>
-                                            {app.aiAnalysis.status === 'Shortlisted' ? '✅ Shortlisted' : '❌ Rejected'}
-                                          </span>
-                                          
-                                          {app.aiAnalysis.status === 'Rejected' && app.aiAnalysis.missingSkills?.length > 0 && (
-                                            <div className="text-[10px] text-rose-600 space-y-0.5 mt-1 font-bold">
-                                              <p className="uppercase tracking-wider text-[9px] text-rose-700 font-extrabold">Missing Gaps:</p>
-                                              <ul className="list-disc pl-4 font-semibold text-rose-650 space-y-0.5">
-                                                {app.aiAnalysis.missingSkills.map((sk, idx) => (
-                                                  <li key={idx}>Missing {sk}</li>
-                                                ))}
-                                                {app.aiAnalysis.atsScore < (selectedJob?.atsThreshold || 60) && (
-                                                  <li>Low ATS Score (below {selectedJob?.atsThreshold || 60}%)</li>
-                                                )}
-                                              </ul>
-                                            </div>
-                                          )}
+                                      <div className="grid grid-cols-2 md:grid-cols-6 gap-2 text-center text-[10px]">
+                                        <div className="bg-white p-2 rounded border border-slate-150">
+                                          <span className="text-slate-400 font-bold uppercase block tracking-wider">Skill (40%)</span>
+                                          <span className="text-slate-800 font-extrabold text-xs block mt-0.5">{app.skillScore || app.aiAnalysis?.skillScore || 0}/40</span>
+                                        </div>
+                                        <div className="bg-white p-2 rounded border border-slate-150">
+                                          <span className="text-slate-400 font-bold uppercase block tracking-wider">Projects (20%)</span>
+                                          <span className="text-slate-800 font-extrabold text-xs block mt-0.5">{app.projectScore || app.aiAnalysis?.projectScore || 0}/20</span>
+                                        </div>
+                                        <div className="bg-white p-2 rounded border border-slate-150">
+                                          <span className="text-slate-400 font-bold uppercase block tracking-wider">Experience (15%)</span>
+                                          <span className="text-slate-800 font-extrabold text-xs block mt-0.5">{app.experienceScore || app.aiAnalysis?.experienceScore || 0}/15</span>
+                                        </div>
+                                        <div className="bg-white p-2 rounded border border-slate-150">
+                                          <span className="text-slate-400 font-bold uppercase block tracking-wider">Education (10%)</span>
+                                          <span className="text-slate-800 font-extrabold text-xs block mt-0.5">{app.educationScore || app.aiAnalysis?.educationScore || 0}/10</span>
+                                        </div>
+                                        <div className="bg-white p-2 rounded border border-slate-150">
+                                          <span className="text-slate-400 font-bold uppercase block tracking-wider">Certifications (5%)</span>
+                                          <span className="text-slate-800 font-extrabold text-xs block mt-0.5">{app.aiAnalysis?.atsScore ? Math.min(5, Math.max(0, (app.aiAnalysis.atsScore - (app.skillScore || 0) - (app.projectScore || 0) - (app.experienceScore || 0) - (app.educationScore || 0)))) : 0}/5</span>
+                                        </div>
+                                        <div className="bg-white p-2 rounded border border-[#22C55E]/30 bg-emerald-50/10">
+                                          <span className="text-[#22C55E] font-extrabold uppercase block tracking-wider">ATS Score</span>
+                                          <span className="text-[#16A34A] font-extrabold text-sm block mt-0.5">{app.atsScore || 0}%</span>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex flex-col md:flex-row items-start justify-between gap-4 pt-1">
+                                        <div className="space-y-1 flex-1">
+                                          <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">AI Match Gaps & Details:</span>
+                                          <div className="text-[10px] text-slate-600 font-semibold space-y-1 mt-0.5">
+                                            {app.aiAnalysis?.strengths && app.aiAnalysis.strengths.length > 0 && (
+                                              <p><span className="text-emerald-600">✔ Strengths:</span> {app.aiAnalysis.strengths.join(", ")}</p>
+                                            )}
+                                            {app.aiAnalysis?.weaknesses && app.aiAnalysis.weaknesses.length > 0 && (
+                                              <p><span className="text-rose-650 font-bold">✖ Gaps:</span> {app.aiAnalysis.weaknesses.join(", ")}</p>
+                                            )}
+                                          </div>
                                         </div>
 
-                                        <div className="text-right max-w-xs space-y-1">
-                                          <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">AI Summary:</span>
-                                          <p className="text-[10px] text-slate-500 leading-normal font-medium italic">
-                                            "{app.aiAnalysis.aiSummary || 'Profile analyzed successfully.'}"
+                                        <div className="flex-1 space-y-1">
+                                          <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">AI Resume Summary:</span>
+                                          <p className="text-[10px] text-slate-500 leading-relaxed font-medium italic">
+                                            "{app.resumeSummary || app.aiAnalysis?.aiSummary || 'Profile evaluated successfully.'}"
                                           </p>
                                         </div>
                                       </div>
@@ -1427,89 +1601,275 @@ const RecruiterDashboard = () => {
                           })}
                         </div>
 
-                        {/* Handover shortlists section */}
+                        {/* Staged Recruiter Bulk Actions Panel */}
                         {selectedApplicants.length > 0 && (
-                          <div className="bg-[#4C1D95]/5 border border-[#4C1D95]/10 p-6 rounded-xl space-y-4 shadow-sm mt-6 animate-in fade-in duration-200">
-                            <div className="flex items-center gap-2">
-                              <Send className="w-4 h-4 text-[#7C3AED]" />
-                              <h4 className="font-bold text-[#111827] text-sm">Send Shortlist & Schedule to Placement Cell</h4>
-                            </div>
-                            <p className="text-xs text-[#4B5563] font-semibold">
-                              You have selected <strong className="text-[#7C3AED] font-bold">{selectedApplicants.length} candidate(s)</strong>. Submit this batch shortlist to the Training & Placement Cell with your proposed round schedule.
-                            </p>
-                            
-                            <form onSubmit={async (e) => {
-                              e.preventDefault();
-                              const targetRound = e.target.roundName.value;
-                              const roundDetails = e.target.roundDetails.value;
-                              const scheduledAt = e.target.scheduledAt.value;
-                              
-                              if (!targetRound) return alert("Please select the evaluation round name.");
-                              if (!scheduledAt) return alert("Please specify the scheduled date & time.");
-
-                              const ids = selectedApplicants
-                                .map(appId => applicants.find(a => a._id === appId)?.studentId?._id)
-                                .filter(Boolean);
-
-                              try {
-                                const res = await api.post('/api/company/submit-shortlist', {
-                                  jobId: selectedJob._id,
-                                  roundName: targetRound,
-                                  roundDetails,
-                                  scheduledAt,
-                                  studentIds: ids
-                                });
-                                if (res.status === 201) {
-                                  alert(`Shortlist and schedule successfully submitted for ${ids.length} student(s)!`);
-                                  setSelectedApplicants([]);
-                                  e.target.reset();
-                                  handleFetchApplicants(selectedJob, true); // Refresh silently
-                                }
-                              } catch (err) {
-                                alert(err.response?.data?.message || err.message || "Failed to submit shortlist");
-                              }
-                            }} className="space-y-4">
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div className="space-y-1">
-                                  <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Evaluation Round *</label>
-                                  <select
-                                    name="roundName"
-                                    required
-                                    className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
-                                  >
-                                    {(jobRounds.length > 0 ? jobRounds.map(r => r.name) : [
-                                      'Aptitude Test', 'Group Discussion (GD)', 'Technical Interview', 'HR Round'
-                                    ]).map((name, idx) => (
-                                      <option key={idx} value={name}>{name}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <div className="space-y-1">
-                                  <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Scheduled Date & Time *</label>
-                                  <input
-                                    type="datetime-local"
-                                    name="scheduledAt"
-                                    required
-                                    className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
-                                  />
-                                </div>
-                                <div className="space-y-1">
-                                  <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Venue/Details (Optional)</label>
-                                  <input
-                                    type="text"
-                                    name="roundDetails"
-                                    placeholder="e.g. Room 302, Block A or HackerRank link"
-                                    className="block w-full py-2 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] placeholder-slate-400 focus:outline-none"
-                                  />
-                                </div>
+                          <div className="bg-slate-50 border border-slate-200 p-6 rounded-2xl space-y-6 shadow-sm mt-6 animate-in fade-in duration-200">
+                            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                              <div className="flex items-center gap-2">
+                                <ListChecks className="w-5 h-5 text-[#22C55E]" />
+                                <h4 className="font-extrabold text-[#111827] text-sm">Recruiter Bulk Actions ({selectedApplicants.length} selected)</h4>
                               </div>
-                              <button
-                                type="submit"
-                                className="px-4 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 active:scale-[0.98]"
+                              <button 
+                                onClick={() => setSelectedApplicants([])} 
+                                className="text-xs text-slate-450 hover:text-slate-600 font-semibold cursor-pointer"
                               >
-                                <Send className="w-3.5 h-3.5" /> Submit Batch Shortlist & Proposed Schedule
+                                Cancel Selection
                               </button>
-                            </form>
+                            </div>
+
+                            {/* Action Category Tab List */}
+                            <div className="flex flex-wrap border-b border-slate-200 gap-2 font-bold text-xs select-none">
+                              {['shortlist', 'reject', 'assessment', 'interview', 'email'].map((tab) => (
+                                <button
+                                  key={tab}
+                                  onClick={() => setBulkTab(tab)}
+                                  className={`pb-2.5 px-4 border-b-2 capitalize transition-all cursor-pointer ${
+                                    bulkTab === tab
+                                      ? 'border-[#22C55E] text-[#22C55E]'
+                                      : 'border-transparent text-[#94A3B8] hover:text-[#4B5563]'
+                                  }`}
+                                >
+                                  {tab === 'shortlist' ? 'Shortlist / Select' : tab}
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Tab Content Panels */}
+                            <div className="space-y-4">
+                              {/* 1. Shortlist / Select Tab */}
+                              {bulkTab === 'shortlist' && (
+                                <div className="space-y-3">
+                                  <p className="text-xs text-slate-500 font-semibold">
+                                    Stage the shortlisted or final selection outcome for the selected {selectedApplicants.length} candidate(s).
+                                  </p>
+                                  <div className="flex gap-3">
+                                    <button
+                                      onClick={() => handleBulkAction('Shortlist')}
+                                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5"
+                                    >
+                                      <CheckCircle2 className="w-4 h-4 text-white" /> Stage Shortlist
+                                    </button>
+                                    <button
+                                      onClick={() => handleBulkAction('Select')}
+                                      className="px-4 py-2.5 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-extrabold rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5"
+                                    >
+                                      <Award className="w-4 h-4 text-white" /> Stage Final Selection
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* 2. Reject Tab */}
+                              {bulkTab === 'reject' && (
+                                <form onSubmit={(e) => {
+                                  e.preventDefault();
+                                  const notes = e.target.notes.value;
+                                  handleBulkAction('Reject', { notes });
+                                }} className="space-y-3">
+                                  <p className="text-xs text-slate-500 font-semibold">
+                                    Stage candidate rejection. You can optionally include feedback or rejection reasons.
+                                  </p>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Rejection Feedback (Optional)</label>
+                                    <input
+                                      type="text"
+                                      name="notes"
+                                      placeholder="e.g. Resume lack required experience in React."
+                                      className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none placeholder-slate-400"
+                                    />
+                                  </div>
+                                  <button
+                                    type="submit"
+                                    className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5"
+                                  >
+                                    <XCircle className="w-4 h-4 text-white" /> Stage Rejection
+                                  </button>
+                                </form>
+                              )}
+
+                              {/* 3. Send Assessment Tab */}
+                              {bulkTab === 'assessment' && (
+                                <form onSubmit={(e) => {
+                                  e.preventDefault();
+                                  const roundName = e.target.roundName.value;
+                                  const testLink = e.target.testLink.value;
+                                  const notes = e.target.notes.value;
+                                  if (!testLink) return alert("Please specify the online assessment test link.");
+                                  handleBulkAction('Send Assessment', { roundName, testLink, notes });
+                                }} className="space-y-4">
+                                  <p className="text-xs text-slate-500 font-semibold">
+                                    Stage an online assessment round with a link for the selected candidates.
+                                  </p>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Round Name</label>
+                                      <input
+                                        type="text"
+                                        name="roundName"
+                                        defaultValue="Online Assessment"
+                                        className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Test Link *</label>
+                                      <input
+                                        type="text"
+                                        name="testLink"
+                                        required
+                                        placeholder="e.g. hackerrank.com/test-url"
+                                        className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none placeholder-slate-400"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Instructions (Optional)</label>
+                                    <textarea
+                                      name="notes"
+                                      rows="2"
+                                      placeholder="e.g. Please complete the test within 48 hours."
+                                      className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none placeholder-slate-400 resize-none"
+                                    />
+                                  </div>
+                                  <button
+                                    type="submit"
+                                    className="px-4 py-2.5 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-extrabold rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5"
+                                  >
+                                    <Send className="w-3.5 h-3.5" /> Stage Assessment
+                                  </button>
+                                </form>
+                              )}
+
+                              {/* 4. Schedule Interview Tab */}
+                              {bulkTab === 'interview' && (
+                                <form onSubmit={(e) => {
+                                  e.preventDefault();
+                                  const roundName = e.target.roundName.value;
+                                  const scheduledAt = e.target.scheduledAt.value;
+                                  const roundType = e.target.roundType.value;
+                                  const testLink = e.target.testLink.value;
+                                  const venue = e.target.venue.value;
+                                  const notes = e.target.notes.value;
+
+                                  if (!scheduledAt) return alert("Please specify the scheduled date & time.");
+                                  handleBulkAction('Schedule Interview', { roundName, scheduledAt, roundType, testLink, venue, notes });
+                                }} className="space-y-4">
+                                  <p className="text-xs text-slate-500 font-semibold">
+                                    Stage an interview round. Calendar invites (ICS format) will be sent on approval.
+                                  </p>
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Interview Round Name</label>
+                                      <select
+                                        name="roundName"
+                                        required
+                                        className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                                      >
+                                        {(jobRounds.length > 0 ? jobRounds.map(r => r.name) : [
+                                          'Technical Interview', 'HR Interview', 'Managerial Round', 'Personal Interview'
+                                        ]).map((name, idx) => (
+                                          <option key={idx} value={name}>{name}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Scheduled Date & Time *</label>
+                                      <input
+                                        type="datetime-local"
+                                        name="scheduledAt"
+                                        required
+                                        className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Round Type</label>
+                                      <select
+                                        name="roundType"
+                                        className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
+                                      >
+                                        <option value="Online">Online Interview</option>
+                                        <option value="Physical">Physical (On-Campus)</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Meeting Link (For Online)</label>
+                                      <input
+                                        type="text"
+                                        name="testLink"
+                                        placeholder="e.g. zoom.us/meeting-id"
+                                        className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none placeholder-slate-400"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Venue (For Physical)</label>
+                                      <input
+                                        type="text"
+                                        name="venue"
+                                        placeholder="e.g. Block C Seminar Hall"
+                                        className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none placeholder-slate-400"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Instructions (Optional)</label>
+                                    <textarea
+                                      name="notes"
+                                      rows="2"
+                                      placeholder="e.g. Please carry 2 print copies of your resume."
+                                      className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none placeholder-slate-400 resize-none"
+                                    />
+                                  </div>
+                                  <button
+                                    type="submit"
+                                    className="px-4 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-extrabold rounded-xl shadow-sm transition-all flex items-center gap-1.5 active:scale-[0.98] cursor-pointer"
+                                  >
+                                    <Calendar className="w-3.5 h-3.5" /> Stage Interview Round
+                                  </button>
+                                </form>
+                              )}
+
+                              {/* 5. Send Email Tab */}
+                              {bulkTab === 'email' && (
+                                <form onSubmit={(e) => {
+                                  e.preventDefault();
+                                  const subject = e.target.subject.value;
+                                  const body = e.target.body.value;
+                                  if (!subject || !body) return alert("Subject and email body are required.");
+                                  handleBulkAction('Send Email', { subject, body });
+                                }} className="space-y-4">
+                                  <p className="text-xs text-slate-500 font-semibold">
+                                    Stage a bulk email broadcast. Emails will be sent out instantly upon approval.
+                                  </p>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Subject *</label>
+                                    <input
+                                      type="text"
+                                      name="subject"
+                                      required
+                                      placeholder="e.g. Pre-Placement Talk details for Geeta University"
+                                      className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none placeholder-slate-400"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block">Email Body *</label>
+                                    <textarea
+                                      name="body"
+                                      required
+                                      rows="5"
+                                      placeholder="Type your message here..."
+                                      className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none placeholder-slate-400"
+                                    />
+                                  </div>
+                                  <button
+                                    type="submit"
+                                    className="px-4 py-2.5 bg-indigo-650 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5"
+                                  >
+                                    <Send className="w-3.5 h-3.5" /> Stage Email Message
+                                  </button>
+                                </form>
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>

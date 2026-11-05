@@ -16,6 +16,15 @@ const applicationSchema = new mongoose.Schema(
       type: String,
       default: "Applied",
     },
+    pendingStatus: {
+      type: String,
+      enum: ["None", "Shortlisted", "Rejected", "Assessment", "Interview", "Selected"],
+      default: "None",
+    },
+    pendingStatusDetails: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
     rounds: [
       {
         name: {

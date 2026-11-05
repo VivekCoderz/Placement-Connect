@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Sparkles, CheckCircle2, XCircle, ListChecks, Calendar, FileText } from 'lucide-react';
+import { ChevronRight, Sparkles, CheckCircle2, XCircle, ListChecks, Calendar, FileText, Bell, Award } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import Stepper from '../components/Stepper';
 import api from '../utils/api';
+import { io } from 'socket.io-client';
 
 const Applications = () => {
   const user = useSelector((state) => state.auth.user);
@@ -12,6 +13,7 @@ const Applications = () => {
   const [showSimulator, setShowSimulator] = useState({});
   const [selectedOfferContent, setSelectedOfferContent] = useState('');
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
+  const [currentSection, setCurrentSection] = useState('active');
 
   const handlePrintOffer = (content) => {
     const printWindow = window.open('', '_blank');
@@ -78,6 +80,38 @@ const Applications = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+
+    const socketUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+      ? 'http://127.0.0.1:5000'
+      : window.location.origin;
+
+    const socket = io(socketUrl, {
+      transports: ['websocket'],
+      upgrade: false
+    });
+
+    const userId = user.id || user._id;
+    socket.emit('join', userId);
+
+    socket.on('application_status_update', (data) => {
+      console.log('Real-time application status update received:', data);
+      fetchApplicationsData();
+      if (data.message) {
+        try {
+          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-120.wav');
+          audio.volume = 0.4;
+          audio.play().catch(() => {});
+        } catch (e) {}
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user]);
+
   const getJobDetails = (jobId) => {
     return jobs.find(j => j.id === jobId) || {};
   };
@@ -93,6 +127,17 @@ const Applications = () => {
     }));
   };
 
+  const activeApps = applications.filter(app => app.status !== 'Selected' && app.status !== 'Rejected');
+  const selectedApps = applications.filter(app => app.status === 'Selected');
+  const rejectedApps = applications.filter(app => app.status === 'Rejected');
+  const completedApps = applications.filter(app => app.status === 'Selected' || app.status === 'Rejected');
+
+  let displayedApps = [];
+  if (currentSection === 'active') displayedApps = activeApps;
+  else if (currentSection === 'selected') displayedApps = selectedApps;
+  else if (currentSection === 'rejected') displayedApps = rejectedApps;
+  else if (currentSection === 'completed') displayedApps = completedApps;
+
   return (
     <div className="space-y-8 animate-in fade-in duration-300 text-[#4B5563]">
       {/* Banner */}
@@ -105,21 +150,67 @@ const Applications = () => {
         </p>
       </div>
 
-      {applications.length === 0 ? (
+      {/* Navigation Sections */}
+      <div className="flex flex-wrap border-b border-[#E5E7EB] gap-2 font-bold text-xs select-none">
+        <button
+          onClick={() => setCurrentSection('active')}
+          className={`pb-3 px-4 border-b-2 transition-all cursor-pointer ${
+            currentSection === 'active'
+              ? 'border-[#22C55E] text-[#22C55E]'
+              : 'border-transparent text-[#94A3B8] hover:text-[#4B5563]'
+          }`}
+        >
+          Active Applications ({activeApps.length})
+        </button>
+        <button
+          onClick={() => setCurrentSection('selected')}
+          className={`pb-3 px-4 border-b-2 transition-all cursor-pointer ${
+            currentSection === 'selected'
+              ? 'border-emerald-500 text-emerald-600'
+              : 'border-transparent text-[#94A3B8] hover:text-[#4B5563]'
+          }`}
+        >
+          Selected Jobs ({selectedApps.length})
+        </button>
+        <button
+          onClick={() => setCurrentSection('rejected')}
+          className={`pb-3 px-4 border-b-2 transition-all cursor-pointer ${
+            currentSection === 'rejected'
+              ? 'border-rose-500 text-rose-600'
+              : 'border-transparent text-[#94A3B8] hover:text-[#4B5563]'
+          }`}
+        >
+          Rejected Jobs ({rejectedApps.length})
+        </button>
+        <button
+          onClick={() => setCurrentSection('completed')}
+          className={`pb-3 px-4 border-b-2 transition-all cursor-pointer ${
+            currentSection === 'completed'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-[#94A3B8] hover:text-[#4B5563]'
+          }`}
+        >
+          Completed Applications ({completedApps.length})
+        </button>
+      </div>
+
+      {displayedApps.length === 0 ? (
         <div className="bg-white border border-[#E5E7EB] rounded-2xl p-20 text-center space-y-5 shadow-sm animate-slide-up">
           <p className="text-[#4B5563] text-sm font-semibold">
-            You haven't applied to any job drives yet.
+            No applications found in this section.
           </p>
-          <Link
-            to="/jobs"
-            className="inline-flex items-center gap-1 bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-sm active:scale-[0.98]"
-          >
-            Explore Active Drives <ChevronRight className="w-4 h-4 text-white" />
-          </Link>
+          {currentSection === 'active' && (
+            <Link
+              to="/jobs"
+              className="inline-flex items-center gap-1 bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-sm active:scale-[0.98]"
+            >
+              Explore Active Drives <ChevronRight className="w-4 h-4 text-white" />
+            </Link>
+          )}
         </div>
       ) : (
         <div className="space-y-6 animate-slide-up">
-          {applications.map((app) => {
+          {displayedApps.map((app) => {
             const job = getJobDetails(app.jobId);
             const isDrawerOpen = !!showSimulator[app.id];
 

@@ -104,6 +104,8 @@ const io = new Server(server, {
   },
 });
 
+app.set("socketio", io);
+
 io.on("connection", (socket) => {
   socket.on("join", (userId) => {
     socket.join(userId);

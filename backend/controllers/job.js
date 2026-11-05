@@ -15,69 +15,86 @@ const { analyzeResume } = require("../services/aiService");
 module.exports.getJobs = ErrorWrapper(async (req, res, next) => {
   if (req.user.role !== "student") {
     // If not a student, return all jobs populated with company info
-    const jobs = await Job.find().populate("companyId");
+    const jobs = await Job.find().populate("companyId").sort({ createdAt: -1 });
     return res.status(200).json({ jobs });
   }
 
-  // If a student, filter jobs using MongoDB Aggregation
+  // If a student, find student profile and return only eligible active jobs
   const student = await Student.findOne({ userId: req.user.id });
   if (!student) {
     throw new ErrorHandler(404, "Student profile not found");
   }
 
-  const eligibleJobs = await Job.aggregate([
-    {
-      $match: {
-        status: "active",
-        "eligibility.cgpa": { $lte: student.cgpa },
-        "eligibility.branches": student.branch,
-        "eligibility.years": student.year,
-        deadline: { $gte: new Date() },
-      },
-    },
-    {
-      $lookup: {
-        from: "companies",
-        localField: "companyId",
-        foreignField: "_id",
-        as: "companyInfo",
-      },
-    },
-    {
-      $unwind: "$companyInfo",
-    },
-    {
-      $lookup: {
-        from: "applications",
-        let: { jobId: "$_id" },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$jobId", "$$jobId"] },
-                  { $eq: ["$studentId", student._id] },
-                ],
-              },
-            },
-          },
-        ],
-        as: "existingApplication",
-      },
-    },
-    {
-      $addFields: {
-        applied: { $gt: [{ $size: "$existingApplication" }, 0] },
-      },
-    },
-    {
-      $project: {
-        existingApplication: 0,
-      },
-    },
-  ]);
+  const allActiveJobs = await Job.find({
+    status: "active",
+    deadline: { $gte: new Date() },
+  })
+    .populate("companyId")
+    .sort({ createdAt: -1 });
 
-  return res.status(200).json({ jobs: eligibleJobs });
+  let studentApplications = [];
+  studentApplications = await Application.find({ studentId: student._id }).select("jobId status");
+  const appliedJobIds = new Set(studentApplications.map((a) => a.jobId.toString()));
+
+  const studentBranch = student.branch ? student.branch.trim().toUpperCase() : "";
+  const studentYear = parseInt(student.year);
+  const studentCgpa = parseFloat(student.cgpa || 0);
+
+  // Filter only jobs the student is eligible for
+  const eligibleJobs = allActiveJobs.filter((job) => {
+    // 1. CGPA Check
+    const minCgpa = job.eligibility?.cgpa !== undefined ? parseFloat(job.eligibility.cgpa) : 0;
+    if (studentCgpa < minCgpa) return false;
+
+    // 2. Branch Check
+    const eligibleBranches = (job.eligibility?.branches || []).map((b) => b.trim().toUpperCase());
+    if (eligibleBranches.length > 0 && !eligibleBranches.includes("ALL") && !eligibleBranches.includes("ANY")) {
+      const cseAliases = ["CSE", "CS", "COMPUTER SCIENCE", "COMPUTER SCIENCE & ENGINEERING", "COMPUTER ENGINEERING"];
+      const itAliases = ["IT", "INFORMATION TECHNOLOGY"];
+      const eceAliases = ["ECE", "ELECTRONICS", "ELECTRONICS & COMMUNICATION"];
+      const eeeAliases = ["EEE", "ELECTRICAL", "ELECTRICAL & ELECTRONICS"];
+      const mechAliases = ["MECH", "MECHANICAL", "MECHANICAL ENGINEERING"];
+      const civilAliases = ["CIVIL", "CIVIL ENGINEERING"];
+      const groups = [cseAliases, itAliases, eceAliases, eeeAliases, mechAliases, civilAliases];
+
+      let branchMatched = eligibleBranches.includes(studentBranch);
+      if (!branchMatched) {
+        for (const group of groups) {
+          if (group.some((alias) => alias === studentBranch || studentBranch.includes(alias))) {
+            if (group.some((alias) => eligibleBranches.some((eb) => eb === alias || eb.includes(alias)))) {
+              branchMatched = true;
+              break;
+            }
+          }
+        }
+      }
+      if (!branchMatched) return false;
+    }
+
+    // 3. Year Check
+    const eligibleYears = job.eligibility?.years || [];
+    if (eligibleYears.length > 0) {
+      let yearMatched = eligibleYears.some((ey) => parseInt(ey) === studentYear);
+      if (!yearMatched) {
+        if (studentYear === 4 && (eligibleYears.includes(2026) || eligibleYears.includes(2027))) yearMatched = true;
+        if (studentYear === 3 && (eligibleYears.includes(2027) || eligibleYears.includes(2028))) yearMatched = true;
+        if (studentYear === 2 && (eligibleYears.includes(2028) || eligibleYears.includes(2029))) yearMatched = true;
+        if (studentYear === 1 && (eligibleYears.includes(2029) || eligibleYears.includes(2030))) yearMatched = true;
+      }
+      if (!yearMatched) return false;
+    }
+
+    return true;
+  });
+
+  const jobs = eligibleJobs.map((job) => {
+    const jobObj = job.toObject();
+    jobObj.applied = appliedJobIds.has(job._id.toString());
+    jobObj.companyInfo = jobObj.companyId || {};
+    return jobObj;
+  });
+
+  return res.status(200).json({ jobs });
 });
 
 // Get job details by ID
@@ -115,17 +132,50 @@ module.exports.applyJob = ErrorWrapper(async (req, res, next) => {
   }
 
   // 2. Check CGPA eligibility
-  if (student.cgpa < job.eligibility.cgpa) {
+  if (student.cgpa !== undefined && job.eligibility?.cgpa !== undefined && student.cgpa < job.eligibility.cgpa) {
     throw new ErrorHandler(400, `Ineligible: CGPA requirement is ${job.eligibility.cgpa}`);
   }
 
-  // 3. Check Branch eligibility
-  if (job.eligibility.branches.length > 0 && !job.eligibility.branches.includes(student.branch)) {
+  // 3. Check Branch eligibility (smart alias matching)
+  const studentBranch = student.branch ? student.branch.trim().toUpperCase() : "";
+  const eligibleBranches = (job.eligibility?.branches || []).map((b) => b.trim().toUpperCase());
+
+  const isBranchEligible = () => {
+    if (eligibleBranches.length === 0 || eligibleBranches.includes("ALL") || eligibleBranches.includes("ANY")) return true;
+    if (eligibleBranches.includes(studentBranch)) return true;
+    const cseAliases = ["CSE", "CS", "COMPUTER SCIENCE", "COMPUTER SCIENCE & ENGINEERING", "COMPUTER ENGINEERING"];
+    const itAliases = ["IT", "INFORMATION TECHNOLOGY"];
+    const eceAliases = ["ECE", "ELECTRONICS", "ELECTRONICS & COMMUNICATION"];
+    const eeeAliases = ["EEE", "ELECTRICAL", "ELECTRICAL & ELECTRONICS"];
+    const mechAliases = ["MECH", "MECHANICAL", "MECHANICAL ENGINEERING"];
+    const civilAliases = ["CIVIL", "CIVIL ENGINEERING"];
+    const groups = [cseAliases, itAliases, eceAliases, eeeAliases, mechAliases, civilAliases];
+    for (const group of groups) {
+      if (group.some((alias) => alias === studentBranch || studentBranch.includes(alias))) {
+        if (group.some((alias) => eligibleBranches.some((eb) => eb === alias || eb.includes(alias)))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  if (!isBranchEligible()) {
     throw new ErrorHandler(400, `Ineligible: Open only to branches: ${job.eligibility.branches.join(", ")}`);
   }
 
-  // 4. Check Graduation Year eligibility
-  if (job.eligibility.years.length > 0 && !job.eligibility.years.includes(student.year)) {
+  // 4. Check Graduation Year eligibility (supports academic year 3, 4 and calendar graduation years)
+  const eligibleYears = job.eligibility?.years || [];
+  const isYearEligible = () => {
+    if (eligibleYears.length === 0) return true;
+    if (eligibleYears.includes(student.year)) return true;
+    if (student.year === 4 && (eligibleYears.includes(2026) || eligibleYears.includes(2027))) return true;
+    if (student.year === 3 && (eligibleYears.includes(2027) || eligibleYears.includes(2028))) return true;
+    if (student.year === 2 && (eligibleYears.includes(2028) || eligibleYears.includes(2029))) return true;
+    return false;
+  };
+
+  if (!isYearEligible()) {
     throw new ErrorHandler(400, `Ineligible: Open only to year cohorts: ${job.eligibility.years.join(", ")}`);
   }
 
@@ -176,12 +226,20 @@ module.exports.applyJob = ErrorWrapper(async (req, res, next) => {
     };
   }
 
-  // Create ResumeAnalysis record
+  // Create ResumeAnalysis record with extended Ollama fields
   const analysisDoc = new ResumeAnalysis({
     applicationId: newApplication._id,
     studentId: student._id,
     jobId: job._id,
     atsScore: analysisResult.atsScore,
+    overallScore: analysisResult.overallScore !== undefined ? analysisResult.overallScore : analysisResult.atsScore,
+    recommendation: analysisResult.recommendation || "Consider",
+    educationScore: analysisResult.educationScore !== undefined ? analysisResult.educationScore : 0,
+    projectScore: analysisResult.projectScore !== undefined ? analysisResult.projectScore : 0,
+    experienceScore: analysisResult.experienceScore !== undefined ? analysisResult.experienceScore : 0,
+    skillScore: analysisResult.skillScore !== undefined ? analysisResult.skillScore : 0,
+    finalRankScore: analysisResult.finalRankScore !== undefined ? analysisResult.finalRankScore : analysisResult.atsScore,
+    reason: analysisResult.reason || "",
     matchPercentage: analysisResult.matchPercentage,
     skillsMatch: analysisResult.skillsMatch,
     missingSkills: analysisResult.missingSkills,
@@ -199,206 +257,48 @@ module.exports.applyJob = ErrorWrapper(async (req, res, next) => {
   });
   await analysisDoc.save();
 
-  // Apply decision
-  let progressStatus = "AI Screening";
-  let roundsList = [...newApplication.rounds];
-  let finalStatus = "Applied";
-
-  if (analysisResult.status === "Shortlisted") {
-    finalStatus = "Shortlisted";
-    
-    // Add Resume Screening to roundsList
-    roundsList.push({
-      name: "Resume Screening",
+  // Set initial status to Under Review
+  newApplication.status = "Under Review";
+  newApplication.rounds = [
+    {
+      name: "Applied",
       result: "Passed",
       scheduledAt: new Date(),
-      notes: `Passed automatic AI resume screening (Score: ${analysisResult.atsScore}%).`
-    });
-
-    // Find the first interview round if any
-    const firstRound = await Round.findOne({ jobId: job._id }).sort({ sequence: 1 });
-    
-    let currentRoundId = null;
-    if (firstRound) {
-      currentRoundId = firstRound._id;
-      progressStatus = `Round 1: ${firstRound.name}`;
-      
-      // Add first round to application rounds
-      roundsList.push({
-        name: firstRound.name,
-        result: "Pending",
-        scheduledAt: firstRound.date,
-        roundType: firstRound.mode || "Online",
-        testLink: firstRound.meetingLink || "",
-        notes: firstRound.instructions || "",
-        venue: firstRound.mode === "Physical" ? (firstRound.meetingLink || "TPO Office") : ""
-      });
-    } else {
-      progressStatus = "Shortlisted";
-    }
-
-    // Save StudentProgress
-    const progress = new StudentProgress({
-      applicationId: newApplication._id,
-      studentId: student._id,
-      jobId: job._id,
-      currentRoundIndex: 0,
-      currentRoundId,
-      status: progressStatus,
-    });
-    await progress.save();
-
-    newApplication.status = "Shortlisted";
-    newApplication.rounds = roundsList;
-    await newApplication.save();
-
-    // Send notifications
-    const shortNotif = new Notification({
-      userId: req.user.id,
-      message: `Congratulations! You have been Shortlisted by AI for "${job.title}" at ${job.companyId.name} with an ATS score of ${analysisResult.atsScore}%.`,
-      type: "application_status",
-    });
-    await shortNotif.save();
-
-    await sendEmail({
-      to: student.email,
-      subject: `Application Shortlisted: ${job.title} at ${job.companyId.name}`,
-      html: `
-        <h2>Congratulations ${student.name}!</h2>
-        <p>Your resume has been successfully screened by our AI system and you have been <strong>Shortlisted</strong>.</p>
-        <p><strong>ATS Score:</strong> ${analysisResult.atsScore}%</p>
-        <p><strong>Next Step:</strong> ${progressStatus}</p>
-        <p>Log in to PlacementConnect to check details and link schedule.</p>
-      `
-    });
-  } else if (analysisResult.status === "Borderline") {
-    finalStatus = "Applied";
-    progressStatus = "AI Screening (Borderline)";
-
-    // Add Resume Screening as Pending in roundsList
-    roundsList.push({
+      notes: "Application submitted and resume screened by AI.",
+    },
+    {
       name: "Resume Screening",
       result: "Pending",
       scheduledAt: new Date(),
-      notes: `Application is Borderline (Score: ${analysisResult.atsScore}%). Placed in queue for manual recruiter review.`
-    });
-
-    // Save StudentProgress
-    const progress = new StudentProgress({
-      applicationId: newApplication._id,
-      studentId: student._id,
-      jobId: job._id,
-      currentRoundIndex: 0,
-      status: progressStatus,
-      history: [
-        {
-          roundName: "AI Screening",
-          result: "Pending",
-          remarks: `ATS Score: ${analysisResult.atsScore}%. Placed in borderline queue for manual review.`
-        }
-      ]
-    });
-    await progress.save();
-
-    newApplication.status = "Applied"; // Keep under Applied status for recruiter review
-    newApplication.rounds = roundsList;
-    await newApplication.save();
-
-    // Send notifications
-    const borderlineNotif = new Notification({
-      userId: req.user.id,
-      message: `Application Update: Your application for "${job.title}" at ${job.companyId.name} is in borderline review (Score: ${analysisResult.atsScore}%).`,
-      type: "application_status",
-    });
-    await borderlineNotif.save();
-
-    await sendEmail({
-      to: student.email,
-      subject: `Application Update: ${job.title} at ${job.companyId.name}`,
-      html: `
-        <p>Dear ${student.name},</p>
-        <p>Your application for the <strong>${job.title}</strong> role at <strong>${job.companyId.name}</strong> has been received.</p>
-        <p>Your resume matches the requirements with a score of <strong>${analysisResult.atsScore}%</strong>, placing your application in our <strong>Borderline/Manual Review</strong> queue.</p>
-        <p>Recruiters will manually review your profile and update your status shortly. Good luck!</p>
-      `
-    });
-  } else {
-    // Rejected
-    finalStatus = "Rejected";
-    progressStatus = "Rejected";
-
-    // Save StudentProgress
-    const progress = new StudentProgress({
-      applicationId: newApplication._id,
-      studentId: student._id,
-      jobId: job._id,
-      currentRoundIndex: 0,
-      status: progressStatus,
-      history: [
-        {
-          roundName: "AI Screening",
-          result: "Rejected",
-          remarks: analysisResult.rejectionReason || "Failed to meet ATS threshold score."
-        }
-      ]
-    });
-    await progress.save();
-
-    // Add rejection notes to application rounds list
-    roundsList.push({
-      name: "Resume Screening",
-      result: "Failed",
-      scheduledAt: new Date(),
-      notes: `Rejected because: ${analysisResult.rejectionReason || "Below required score."}`
-    });
-
-    newApplication.status = "Rejected";
-    newApplication.rounds = roundsList;
-    await newApplication.save();
-
-    // Send notifications
-    const rejNotif = new Notification({
-      userId: req.user.id,
-      message: `Application Update: Your application for "${job.title}" at ${job.companyId.name} was not shortlisted.`,
-      type: "application_status",
-    });
-    await rejNotif.save();
-
-    // Send detailed rejection feedback via email
-    let suggestionsHtml = "";
-    if (analysisResult.recommendedLearning && analysisResult.recommendedLearning.length > 0) {
-      suggestionsHtml = `<h4>Suggestions to Improve:</h4><ul>` + 
-        analysisResult.recommendedLearning.map(topic => `<li>${topic}</li>`).join("") + `</ul>`;
+      notes: `AI Screened with score: ${analysisResult.atsScore}%. Pending recruiter approval.`,
     }
+  ];
+  await newApplication.save();
 
-    await sendEmail({
-      to: student.email,
-      subject: `Application Status: ${job.title} at ${job.companyId.name}`,
-      html: `
-        <p>Dear ${student.name},</p>
-        <p>Thank you for applying to the <strong>${job.title}</strong> role at <strong>${job.companyId.name}</strong>.</p>
-        <p>Unfortunately, your application was not selected for further evaluation as your resume score did not meet our threshold.</p>
-        <p><strong>Resume Match Score:</strong> ${analysisResult.atsScore}% (Threshold: ${job.atsThreshold}%)</p>
-        <h4>Reason for Rejection:</h4>
-        <p>${analysisResult.rejectionReason || "Lacked matching skills or eligibility metrics."}</p>
-        ${suggestionsHtml}
-        <br/>
-        <p>We wish you the very best in your next application!</p>
-      `
-    });
-  }
-
-  // Notify recruiter
-  const company = job.companyId;
-  const recruiterNotification = new Notification({
-    userId: company.recruiterId,
-    message: `New applicant ${student.name} screened. Status: ${analysisResult.status} (ATS: ${analysisResult.atsScore}%) for job: ${job.title}`,
-    type: "general",
+  // Create StudentProgress record set to Under Review
+  const progress = new StudentProgress({
+    applicationId: newApplication._id,
+    studentId: student._id,
+    jobId: job._id,
+    currentRoundIndex: 0,
+    status: "Under Review",
+    history: [
+      {
+        roundName: "Applied",
+        result: "Passed",
+        remarks: "Resume uploaded and screened by AI."
+      },
+      {
+        roundName: "Resume Screening",
+        result: "Pending",
+        remarks: `ATS Screening Score: ${analysisResult.atsScore}%. Staged for recruiter approval.`
+      }
+    ]
   });
-  await recruiterNotification.save();
+  await progress.save();
 
   return res.status(201).json({
-    message: `Applied successfully. AI screening complete: ${analysisResult.status}`,
+    message: "Applied successfully. Your application has been screened and is under manual review.",
     application: newApplication,
     analysis: analysisDoc,
   });

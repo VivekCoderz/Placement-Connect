@@ -96,17 +96,17 @@ module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
       );
     }
 
-    // Create User (Company) - initial isApproved is false, needs admin approval!
+    // Create User (Company) - auto-approved upon registration
     const newUser = new User({
       name,
       email,
       password,
       role,
-      isApproved: false,
+      isApproved: true,
     });
     savedUser = await newUser.save();
 
-    // Create Company Profile
+    // Create Company Profile - auto-approved
     const newCompany = new Company({
       name: companyName,
       recruiterId: savedUser._id,
@@ -116,7 +116,7 @@ module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
       hrContactName,
       hrContactPhone,
       address,
-      approved: false,
+      approved: true,
     });
     const savedCompany = await newCompany.save();
 
@@ -128,7 +128,7 @@ module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
     return res.status(201).json({
       success: true,
       message:
-        "Company recruiter registered successfully. Pending admin approval.",
+        "Company recruiter registered and approved successfully.",
       data: {
         userId: savedUser._id,
         companyId: savedCompany._id,

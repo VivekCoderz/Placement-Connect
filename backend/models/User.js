@@ -35,10 +35,7 @@ const userSchema = new mongoose.Schema(
     },
     isApproved: {
       type: Boolean,
-      default: function () {
-        // Automatically approved unless role is company
-        return this.role !== "company";
-      },
+      default: true,
     },
     isActive: {
       type: Boolean,

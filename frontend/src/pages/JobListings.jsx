@@ -10,7 +10,6 @@ const JobListings = () => {
   const [applications, setApplications] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [salaryFilter, setSalaryFilter] = useState('all'); // all | high (>= 20 LPA) | mid (5-20 LPA) | entry (< 5 LPA)
-  const [showIneligible, setShowIneligible] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,7 +23,7 @@ const JobListings = () => {
           eligibility: {
             minCgpa: job.eligibility?.cgpa !== undefined ? job.eligibility.cgpa : 6.0,
             eligibleBranches: job.eligibility?.branches || ['CSE', 'IT', 'ECE'],
-            eligibleYears: job.eligibility?.years || [4]
+            eligibleYears: job.eligibility?.years || [3, 4]
           }
         }));
         setJobs(mapped);
@@ -42,27 +41,66 @@ const JobListings = () => {
       }
     };
 
-    if (user) {
-      fetchData();
-    }
+    fetchData();
   }, [user]);
+
+  const isBranchMatch = (studentBranch, eligibleBranches) => {
+    if (!eligibleBranches || eligibleBranches.length === 0) return true;
+    if (!studentBranch) return true;
+    const sBranch = studentBranch.trim().toUpperCase();
+    const cseKeywords = ['CSE', 'CS', 'COMPUTER SCIENCE', 'COMPUTER SCIENCE & ENGINEERING', 'COMPUTER ENGINEERING'];
+    const itKeywords = ['IT', 'INFORMATION TECHNOLOGY'];
+    const eceKeywords = ['ECE', 'ELECTRONICS', 'ELECTRONICS & COMMUNICATION', 'ELECTRONICS AND COMMUNICATION'];
+    const eeeKeywords = ['EEE', 'ELECTRICAL', 'ELECTRICAL & ELECTRONICS', 'ELECTRICAL AND ELECTRONICS'];
+    const mechKeywords = ['MECH', 'MECHANICAL', 'MECHANICAL ENGINEERING'];
+    const civilKeywords = ['CIVIL', 'CIVIL ENGINEERING'];
+
+    const getGroup = (b) => {
+      const ub = b.trim().toUpperCase();
+      if (cseKeywords.some(k => ub === k || ub.includes(k))) return 'CSE';
+      if (itKeywords.some(k => ub === k || ub.includes(k))) return 'IT';
+      if (eceKeywords.some(k => ub === k || ub.includes(k))) return 'ECE';
+      if (eeeKeywords.some(k => ub === k || ub.includes(k))) return 'EEE';
+      if (mechKeywords.some(k => ub === k || ub.includes(k))) return 'MECH';
+      if (civilKeywords.some(k => ub === k || ub.includes(k))) return 'CIVIL';
+      return ub;
+    };
+
+    const studentGroup = getGroup(sBranch);
+    return eligibleBranches.some(eb => {
+      const ebUpper = eb.trim().toUpperCase();
+      if (ebUpper === 'ALL' || ebUpper === 'ANY' || ebUpper === 'OPEN TO ALL') return true;
+      if (ebUpper === sBranch) return true;
+      return getGroup(ebUpper) === studentGroup;
+    });
+  };
+
+  const isYearMatch = (studentYear, eligibleYears) => {
+    if (!eligibleYears || eligibleYears.length === 0) return true;
+    if (!studentYear) return true;
+    const sYear = parseInt(studentYear);
+    return eligibleYears.some(ey => {
+      const num = parseInt(ey);
+      if (num === sYear) return true;
+      if (sYear === 4 && (num === 2026 || num === 2027)) return true;
+      if (sYear === 3 && (num === 2027 || num === 2028)) return true;
+      if (sYear === 2 && (num === 2028 || num === 2029)) return true;
+      if (sYear === 1 && (num === 2029 || num === 2030)) return true;
+      return false;
+    });
+  };
 
   const checkEligibility = (job) => {
     if (!user) return { eligible: false, reason: 'Not logged in' };
     
-    const cgpaEligible = user.cgpa >= job.eligibility.minCgpa;
-    const branchEligible = job.eligibility.eligibleBranches.some(
-      b => b.toUpperCase() === user.branch.toUpperCase()
-    );
+    const userCgpa = user.cgpa !== undefined && user.cgpa !== null ? parseFloat(user.cgpa) : 10;
+    const minCgpa = job.eligibility?.minCgpa !== undefined ? parseFloat(job.eligibility.minCgpa) : 0;
+    const cgpaEligible = isNaN(userCgpa) || userCgpa >= minCgpa;
+    const branchEligible = isBranchMatch(user.branch, job.eligibility?.eligibleBranches);
+    const yearEligible = isYearMatch(user.year, job.eligibility?.eligibleYears);
 
-    if (!cgpaEligible && !branchEligible) {
-      return { eligible: false, reason: `Requires ${job.eligibility.minCgpa} CGPA & ${job.eligibility.eligibleBranches.join('/')} branch` };
-    }
-    if (!cgpaEligible) {
-      return { eligible: false, reason: `Requires minimum ${job.eligibility.minCgpa} CGPA (You have ${user.cgpa})` };
-    }
-    if (!branchEligible) {
-      return { eligible: false, reason: `Requires branch: ${job.eligibility.eligibleBranches.join(', ')}` };
+    if (!cgpaEligible || !branchEligible || !yearEligible) {
+      return { eligible: false };
     }
 
     return { eligible: true };
@@ -70,7 +108,7 @@ const JobListings = () => {
 
   const filteredJobs = jobs.filter(job => {
     const { eligible } = checkEligibility(job);
-    if (!showIneligible && !eligible) return false;
+    if (!eligible) return false;
 
     const matchesSearch = 
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -110,7 +148,7 @@ const JobListings = () => {
             Available Placement Drives
           </h1>
           <p className="text-xs text-[#4B5563] font-medium mt-1.5 leading-relaxed">
-            Hi <span className="text-[#22C55E] bg-[#22C55E]/10 border border-[#22C55E]/20 px-2 py-0.5 rounded font-bold">{user.name}</span>! Showing jobs matching your branch (<strong className="text-[#111827]">{user.branch}</strong>) and CGPA (<strong className="text-[#111827]">{user.cgpa}</strong>).
+            Hi <span className="text-[#22C55E] bg-[#22C55E]/10 border border-[#22C55E]/20 px-2 py-0.5 rounded font-bold">{user?.name || 'Student'}</span>! Showing active jobs for branch (<strong className="text-[#111827]">{user?.branch || 'All Branches'}</strong>) and CGPA (<strong className="text-[#111827]">{user?.cgpa || 'N/A'}</strong>).
           </p>
         </div>
         <div className="flex items-center gap-2 bg-[#22C55E]/10 px-4 py-2 rounded-xl border border-[#22C55E]/20 text-xs text-[#22C55E] font-semibold shadow-sm">
@@ -119,8 +157,8 @@ const JobListings = () => {
         </div>
       </div>
 
-      {/* Search and Filters Bar - Spacious layout */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+      {/* Search and Filters Bar */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
         {/* Search */}
         <div className="md:col-span-2 relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
@@ -147,20 +185,6 @@ const JobListings = () => {
             <option value="mid" className="bg-white text-[#4B5563]">Dream Jobs (5 - 20 LPA)</option>
             <option value="entry" className="bg-white text-[#4B5563]">Regular (Below 5 LPA)</option>
           </select>
-        </div>
-
-        {/* Show Ineligible Toggle */}
-        <div className="flex items-center justify-start md:justify-end gap-3 px-1">
-          <label className="text-xs text-[#4B5563] cursor-pointer font-bold select-none" htmlFor="ineligible-toggle">
-            Show ineligible drives
-          </label>
-          <input
-            type="checkbox"
-            id="ineligible-toggle"
-            checked={showIneligible}
-            onChange={(e) => setShowIneligible(e.target.checked)}
-            className="h-4.5 w-4.5 rounded border-[#E5E7EB] text-[#22C55E] bg-white focus:ring-[#22C55E]/10 cursor-pointer"
-          />
         </div>
       </div>
 

@@ -55,12 +55,43 @@ const JobDetail = () => {
     }
   }, [id, user]);
 
+  const isBranchMatch = (studentBranch, eligibleBranches) => {
+    if (!eligibleBranches || eligibleBranches.length === 0) return true;
+    if (!studentBranch) return true;
+    const sBranch = studentBranch.trim().toUpperCase();
+    const cseKeywords = ['CSE', 'CS', 'COMPUTER SCIENCE', 'COMPUTER SCIENCE & ENGINEERING', 'COMPUTER ENGINEERING'];
+    const itKeywords = ['IT', 'INFORMATION TECHNOLOGY'];
+    const eceKeywords = ['ECE', 'ELECTRONICS', 'ELECTRONICS & COMMUNICATION', 'ELECTRONICS AND COMMUNICATION'];
+    const eeeKeywords = ['EEE', 'ELECTRICAL', 'ELECTRICAL & ELECTRONICS', 'ELECTRICAL AND ELECTRONICS'];
+    const mechKeywords = ['MECH', 'MECHANICAL', 'MECHANICAL ENGINEERING'];
+    const civilKeywords = ['CIVIL', 'CIVIL ENGINEERING'];
+
+    const getGroup = (b) => {
+      const ub = b.trim().toUpperCase();
+      if (cseKeywords.some(k => ub === k || ub.includes(k))) return 'CSE';
+      if (itKeywords.some(k => ub === k || ub.includes(k))) return 'IT';
+      if (eceKeywords.some(k => ub === k || ub.includes(k))) return 'ECE';
+      if (eeeKeywords.some(k => ub === k || ub.includes(k))) return 'EEE';
+      if (mechKeywords.some(k => ub === k || ub.includes(k))) return 'MECH';
+      if (civilKeywords.some(k => ub === k || ub.includes(k))) return 'CIVIL';
+      return ub;
+    };
+
+    const studentGroup = getGroup(sBranch);
+    return eligibleBranches.some(eb => {
+      const ebUpper = eb.trim().toUpperCase();
+      if (ebUpper === 'ALL' || ebUpper === 'ANY' || ebUpper === 'OPEN TO ALL') return true;
+      if (ebUpper === sBranch) return true;
+      return getGroup(ebUpper) === studentGroup;
+    });
+  };
+
   const checkEligibility = () => {
     if (!job || !user) return { eligible: false };
-    const cgpaEligible = user.cgpa >= job.eligibility.minCgpa;
-    const branchEligible = job.eligibility.eligibleBranches.some(
-      b => b.toUpperCase() === user.branch.toUpperCase()
-    );
+    const userCgpa = user.cgpa !== undefined && user.cgpa !== null ? parseFloat(user.cgpa) : 10;
+    const minCgpa = job.eligibility?.minCgpa !== undefined ? parseFloat(job.eligibility.minCgpa) : 0;
+    const cgpaEligible = isNaN(userCgpa) || userCgpa >= minCgpa;
+    const branchEligible = isBranchMatch(user.branch, job.eligibility?.eligibleBranches);
     return {
       eligible: cgpaEligible && branchEligible,
       cgpaEligible,

@@ -11,6 +11,8 @@ router.post("/jobs", jwtVerify, authorizeRoles("recruiter", "company"), getAssoc
 router.get("/applications/:jobId", jwtVerify, authorizeRoles("recruiter", "company"), getAssociatedDetails, companyController.getApplications);
 router.post("/propose-schedule", jwtVerify, authorizeRoles("recruiter", "company"), getAssociatedDetails, companyController.proposeSchedule);
 router.post("/submit-shortlist", jwtVerify, authorizeRoles("recruiter", "company"), getAssociatedDetails, companyController.submitShortlist);
+router.post("/applications/bulk-action", jwtVerify, authorizeRoles("recruiter", "company"), getAssociatedDetails, companyController.bulkAction);
+router.post("/jobs/:jobId/approve-selection", jwtVerify, authorizeRoles("recruiter", "company"), getAssociatedDetails, companyController.approveSelection);
 
 router.post("/jobs/:jobId/ats-shortlist", jwtVerify, authorizeRoles("recruiter", "company"), getAssociatedDetails, companyController.atsShortlist);
 router.post("/jobs/:jobId/upload-results", jwtVerify, authorizeRoles("recruiter", "company"), getAssociatedDetails, uploadMemory.single("file"), companyController.uploadRoundResults);
