@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { 
   User, Mail, FileSpreadsheet, Clipboard, Percent, 
   Plus, Trash2, ExternalLink, Upload, Eye, FileText, 
-  Briefcase, GraduationCap, Award, PlusCircle, Check, ArrowRight
+  Briefcase, GraduationCap, Award, PlusCircle, Check, ArrowRight, Lock
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setUser } from '../redux/authSlice';
-import api from '../utils/api';
+import api, { getErrorMessage } from '../utils/api';
+import { normalizeCerts, toCertPayload, safeUrl, certKey } from '../utils/certifications';
 
 const Profile = () => {
   const user = useSelector((state) => state.auth.user);
@@ -24,11 +25,12 @@ const Profile = () => {
   });
 
   const [skills, setSkills] = useState(user?.skills || []);
-  const [certifications, setCertifications] = useState(user?.certifications || []);
+  const [certifications, setCertifications] = useState(() => normalizeCerts(user?.certifications));
   const [projects, setProjects] = useState(user?.projects || []);
 
   const [skillInput, setSkillInput] = useState('');
-  const [certInput, setCertInput] = useState('');
+  const [certInput, setCertInput] = useState({ name: '', issuer: '', date: '', url: '' });
+  const [certError, setCertError] = useState('');
   
   const [newProject, setNewProject] = useState({
     title: '',
@@ -42,8 +44,6 @@ const Profile = () => {
   const [resumeUrl, setResumeUrl] = useState(user?.resumeUrl || '');
   const [isUploading, setIsUploading] = useState(false);
 
-  const branches = ['CSE', 'ECE', 'EEE', 'IT', 'MECH', 'CIVIL'];
-  const years = [1, 2, 3, 4];
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -64,15 +64,31 @@ const Profile = () => {
 
   const handleAddCert = (e) => {
     e.preventDefault();
-    if (certInput.trim() && !certifications.includes(certInput.trim())) {
-      const updated = [...certifications, certInput.trim()];
-      setCertifications(updated);
-      setCertInput('');
+    setCertError('');
+    const name = certInput.name.trim();
+    const issuer = certInput.issuer.trim();
+    const url = certInput.url.trim();
+    if (!name) {
+      setCertError('Enter the certification name.');
+      return;
     }
+    if (url && !safeUrl(url)) {
+      setCertError('Certificate link must start with http:// or https://');
+      return;
+    }
+    const isDuplicate = certifications.some(
+      (c) => c.name.toLowerCase() === name.toLowerCase() && c.issuer.toLowerCase() === issuer.toLowerCase()
+    );
+    if (isDuplicate) {
+      setCertError('This certification is already listed.');
+      return;
+    }
+    setCertifications([...certifications, { name, issuer, date: certInput.date, url }]);
+    setCertInput({ name: '', issuer: '', date: '', url: '' });
   };
 
-  const handleRemoveCert = (certToRemove) => {
-    setCertifications(certifications.filter(c => c !== certToRemove));
+  const handleRemoveCert = (index) => {
+    setCertifications(certifications.filter((_, i) => i !== index));
   };
 
   const handleAddProject = (e) => {
@@ -155,26 +171,21 @@ const Profile = () => {
     if (e) e.preventDefault();
     setSuccessMsg('');
 
-    const parsedCgpa = parseFloat(formData.cgpa);
-    if (isNaN(parsedCgpa) || parsedCgpa < 0 || parsedCgpa > 10) {
-      alert('CGPA must be a valid number between 0 and 10');
-      return;
-    }
-
     try {
       // 1. Update Name/Email
       await api.put('/api/students/updateEmailName', { name: formData.name, email: formData.email });
 
-      // 2. Update Branch, Year, Roll Number
-      await api.put('/api/students/updateBranchYearRollNumber', { branch: formData.branch, year: parseInt(formData.year), rollNumber: formData.rollNumber });
+      // Academic fields (CGPA, branch, year, roll number) are verified by the
+      // Placement Cell and can only be changed by TPO/admin, so they are not sent.
 
-      // 3. Update CGPA
-      await api.put('/api/students/updateCgpa', { cgpa: parsedCgpa });
+      // 2. Update Profile Details (skills, projects, certifications)
+      await api.put('/api/students/profile', {
+        skills,
+        projects,
+        certifications: certifications.map(toCertPayload).filter(Boolean),
+      });
 
-      // 4. Update Profile Details (skills, projects, certifications)
-      await api.put('/api/students/profile', { skills, projects, certifications });
-
-      // 5. Fetch me again to get fresh unified profile
+      // 3. Fetch me again to get fresh unified profile
       const meResponse = await api.get('/api/auth/me');
       const meRes = meResponse.data;
 
@@ -186,9 +197,10 @@ const Profile = () => {
 
       localStorage.setItem('user', JSON.stringify(combinedUser));
       dispatch(setUser(combinedUser));
+      setCertifications(normalizeCerts(combinedUser.certifications));
       setSuccessMsg('Profile updated successfully! All eligible placement jobs synchronized.');
     } catch (err) {
-      alert(err.response?.data?.message || err.message || 'Profile update failed');
+      alert(getErrorMessage(err, 'Profile update failed'));
     }
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -255,8 +267,9 @@ const Profile = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2">Full Name</label>
+                  <label htmlFor="profile-name" className="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2">Full Name</label>
                   <input
+                    id="profile-name"
                     type="text"
                     name="name"
                     value={formData.name}
@@ -267,8 +280,9 @@ const Profile = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2">Email Address</label>
+                  <label htmlFor="profile-email" className="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2">Email Address</label>
                   <input
+                    id="profile-email"
                     type="email"
                     name="email"
                     value={formData.email}
@@ -278,60 +292,26 @@ const Profile = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2">Roll Number / ID</label>
-                  <input
-                    type="text"
-                    name="rollNumber"
-                    value={formData.rollNumber}
-                    onChange={handleInputChange}
-                    className="block w-full px-4 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-xs font-semibold"
-                    required
-                  />
-                </div>
+              </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2">Branch</label>
-                  <select
-                    name="branch"
-                    value={formData.branch}
-                    onChange={handleInputChange}
-                    className="block w-full px-4 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#4B5563] focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-xs font-semibold"
-                  >
-                    {branches.map(b => (
-                      <option key={b} value={b} className="bg-white text-[#4B5563]">{b}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2">Current Year</label>
-                  <select
-                    name="year"
-                    value={formData.year}
-                    onChange={handleInputChange}
-                    className="block w-full px-4 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#4B5563] focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-xs font-semibold"
-                  >
-                    {years.map(y => (
-                      <option key={y} value={y} className="bg-white text-[#4B5563]">{y === 4 ? '4th Year (Final)' : `${y}nd Year`}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2">CGPA</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="10"
-                    name="cgpa"
-                    value={formData.cgpa}
-                    onChange={handleInputChange}
-                    className="block w-full px-4 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-xs font-semibold"
-                    required
-                  />
-                </div>
+              <div className="space-y-3">
+                <dl className="grid grid-cols-2 md:grid-cols-4 gap-3" aria-label="Academic details">
+                  {[
+                    { label: 'Roll Number', value: formData.rollNumber },
+                    { label: 'Branch', value: formData.branch },
+                    { label: 'Current Year', value: formData.year ? `Year ${formData.year}` : '' },
+                    { label: 'CGPA', value: formData.cgpa !== '' && formData.cgpa != null ? `${formData.cgpa} / 10` : '' },
+                  ].map((field) => (
+                    <div key={field.label} className="rounded-xl border border-[#E5E7EB] bg-slate-50 px-4 py-3">
+                      <dt className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">{field.label}</dt>
+                      <dd className="mt-1 text-sm font-semibold text-[#111827] break-words">{field.value || 'Not set'}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="flex items-start gap-2 text-xs text-[#6B7280]">
+                  <Lock className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-[#0B3D91]" aria-hidden="true" />
+                  Verified by the Placement Cell. Contact the TPO to correct this.
+                </p>
               </div>
             </div>
 
@@ -552,43 +532,95 @@ const Profile = () => {
                 Certifications
               </h2>
 
-              <form onSubmit={handleAddCert} className="flex gap-2.5">
-                <input
-                  type="text"
-                  placeholder="AWS, FreeCodeCamp..."
-                  value={certInput}
-                  onChange={(e) => setCertInput(e.target.value)}
-                  className="flex-grow px-3 py-2 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] text-xs font-semibold"
-                />
-                <button
-                  type="submit"
-                  className="p-2.5 bg-[#22C55E] hover:bg-[#16A34A] text-white rounded-xl transition-all shadow-sm"
-                >
-                  <Plus className="w-4 h-4 text-white" />
+              <form onSubmit={handleAddCert} className="space-y-3" noValidate>
+                <div>
+                  <label htmlFor="cert-name" className="pc-label">Certification name</label>
+                  <input
+                    id="cert-name"
+                    type="text"
+                    placeholder="e.g. AWS Cloud Practitioner"
+                    value={certInput.name}
+                    onChange={(e) => setCertInput({ ...certInput, name: e.target.value })}
+                    className="pc-input text-xs"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="cert-issuer" className="pc-label">Issuer <span className="font-normal text-[#94A3B8]">(optional)</span></label>
+                    <input
+                      id="cert-issuer"
+                      type="text"
+                      placeholder="e.g. Amazon Web Services"
+                      value={certInput.issuer}
+                      onChange={(e) => setCertInput({ ...certInput, issuer: e.target.value })}
+                      className="pc-input text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="cert-date" className="pc-label">Date <span className="font-normal text-[#94A3B8]">(optional)</span></label>
+                    <input
+                      id="cert-date"
+                      type="date"
+                      value={certInput.date}
+                      onChange={(e) => setCertInput({ ...certInput, date: e.target.value })}
+                      className="pc-input text-xs"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="cert-url" className="pc-label">Certificate link <span className="font-normal text-[#94A3B8]">(optional)</span></label>
+                  <input
+                    id="cert-url"
+                    type="url"
+                    placeholder="https://"
+                    value={certInput.url}
+                    onChange={(e) => setCertInput({ ...certInput, url: e.target.value })}
+                    className="pc-input text-xs"
+                  />
+                </div>
+                {certError && <p className="text-xs font-semibold text-rose-600" role="alert">{certError}</p>}
+                <button type="submit" className="pc-btn-secondary w-full text-xs">
+                  <Plus className="w-4 h-4" aria-hidden="true" /> Add certification
                 </button>
               </form>
 
-              <div className="space-y-3 pt-2">
+              <ul className="space-y-3 pt-2">
                 {certifications.length === 0 ? (
-                  <span className="text-xs text-[#94A3B8] italic font-medium">No certifications listed.</span>
+                  <li className="text-xs text-[#94A3B8] italic font-medium">No certifications listed.</li>
                 ) : (
-                  certifications.map((cert) => (
-                    <div 
-                      key={cert} 
-                      className="flex items-center justify-between bg-[#F8FAFC] border border-[#E5E7EB] px-4 py-3 rounded-xl text-xs text-[#4B5563] font-semibold"
-                    >
-                      <span className="truncate max-w-[85%]">{cert}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCert(cert)}
-                        className="text-[#94A3B8] hover:text-rose-600 transition-colors p-1"
+                  certifications.map((cert, index) => {
+                    const href = safeUrl(cert.url);
+                    return (
+                      <li
+                        key={certKey(cert, index)}
+                        className="flex items-start justify-between gap-3 bg-[#F8FAFC] border border-[#E5E7EB] px-4 py-3 rounded-xl text-xs text-[#4B5563]"
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))
+                        <div className="min-w-0">
+                          <p className="font-semibold text-[#111827] break-words">{cert.name}</p>
+                          {(cert.issuer || cert.date) && (
+                            <p className="mt-0.5 text-[11px] text-[#6B7280]">
+                              {[cert.issuer, cert.date].filter(Boolean).join(' · ')}
+                            </p>
+                          )}
+                          {href && (
+                            <a href={href} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-[#0B3D91] hover:underline">
+                              View certificate <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                            </a>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCert(index)}
+                          className="text-[#94A3B8] hover:text-rose-600 transition-colors p-1 rounded-lg"
+                          aria-label={`Remove ${cert.name}`}
+                        >
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
+                        </button>
+                      </li>
+                    );
+                  })
                 )}
-              </div>
+              </ul>
             </div>
 
             {/* Save Buttons */}
@@ -702,10 +734,13 @@ const Profile = () => {
                   {certifications.length === 0 ? (
                     <span className="text-xs text-[#94A3B8] italic font-medium">No certifications listed</span>
                   ) : (
-                    certifications.map((cert) => (
-                      <div key={cert} className="flex gap-2.5 items-start text-xs text-[#4B5563] bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB] font-semibold">
-                        <Check className="w-3.5 h-3.5 text-[#22C55E] flex-shrink-0 mt-0.5" />
-                        <span>{cert}</span>
+                    certifications.map((cert, index) => (
+                      <div key={certKey(cert, index)} className="flex gap-2.5 items-start text-xs text-[#4B5563] bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB] font-semibold">
+                        <Check className="w-3.5 h-3.5 text-[#22C55E] flex-shrink-0 mt-0.5" aria-hidden="true" />
+                        <span className="min-w-0 break-words">
+                          {cert.name}
+                          {cert.issuer && <span className="block text-[11px] font-medium text-[#6B7280]">{cert.issuer}</span>}
+                        </span>
                       </div>
                     ))
                   )}
