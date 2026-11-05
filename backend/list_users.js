@@ -1,22 +1,22 @@
+// Development helper: list users (name, email, role) from a LOCAL database.
+// Guarded like the seed script: requires NODE_ENV=development + localhost URI, or --force.
+require("dotenv").config();
 const mongoose = require("mongoose");
 const User = require("./models/User");
-require("dotenv").config();
+const { assertSafeTarget } = require("./scripts/guard");
 
 const run = async () => {
-  const uri = process.env.mongoURI;
-  if (!uri) {
-    console.error("mongoURI environment variable not found in .env");
-    return;
-  }
+  const uri = assertSafeTarget({ scriptName: "list_users", destructive: true });
   await mongoose.connect(uri);
-  console.log("Connected. Fetching users...");
-  
-  const users = await User.find({}, "name email role");
-  console.log("USERS_LIST_START");
-  console.log(JSON.stringify(users, null, 2));
-  console.log("USERS_LIST_END");
-  
+
+  const users = await User.find({}, "name email role isActive isApproved").lean();
+  console.table(users.map(({ _id, ...rest }) => ({ id: String(_id), ...rest })));
+
   await mongoose.disconnect();
 };
 
-run().catch(console.error);
+run().catch(async (err) => {
+  console.error("list_users failed:", err.message);
+  await mongoose.disconnect().catch(() => {});
+  process.exit(1);
+});

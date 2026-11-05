@@ -7,11 +7,19 @@ const Application = require("./models/application");
 const Notification = require("./models/notification");
 const Message = require("./models/message");
 require("dotenv").config();
+const { assertSafeTarget } = require("./scripts/guard");
+
+// DESTRUCTIVE: wipes Users, Students, Companies, Jobs, Applications, Notifications and
+// Messages, then loads demo data. Only for local development:
+//   NODE_ENV=development MONGO_URI=mongodb://127.0.0.1:27017/placementconnect-dev \
+//   SEED_PASSWORD='choose-a-demo-password' npm run seed:demo
+// All demo accounts share SEED_PASSWORD.
+const SEED_PASSWORD = process.env.SEED_PASSWORD;
 
 const run = async () => {
-  const uri = process.env.mongoURI;
-  if (!uri) {
-    console.error("MongoDB URI missing in process.env");
+  const uri = assertSafeTarget({ scriptName: "seed_all", destructive: true });
+  if (!SEED_PASSWORD || SEED_PASSWORD.length < 8) {
+    console.error("SEED_PASSWORD (min 8 characters) must be set for the demo accounts.");
     process.exit(1);
   }
   
@@ -34,7 +42,7 @@ const run = async () => {
   const adminUser = new User({
     name: "System Administrator",
     email: "admin@placementconnect.com",
-    password: "admin123",
+    password: SEED_PASSWORD,
     role: "admin",
     isActive: true
   });
@@ -43,7 +51,7 @@ const run = async () => {
   const cellUser = new User({
     name: "Placement Cell Staff",
     email: "placementcell@placementconnect.com",
-    password: "cell123",
+    password: SEED_PASSWORD,
     role: "placementCell",
     isActive: true
   });
@@ -55,7 +63,7 @@ const run = async () => {
   const googleRecruiter = new User({
     name: "Sundar Pichai",
     email: "recruiter.google@placementconnect.com",
-    password: "recruiter123",
+    password: SEED_PASSWORD,
     role: "company",
     isApproved: true,
     isActive: true
@@ -74,7 +82,7 @@ const run = async () => {
   const microsoftRecruiter = new User({
     name: "Satya Nadella",
     email: "recruiter.microsoft@placementconnect.com",
-    password: "recruiter123",
+    password: SEED_PASSWORD,
     role: "company",
     isApproved: true,
     isActive: true
@@ -93,7 +101,7 @@ const run = async () => {
   const tcsRecruiter = new User({
     name: "Rajesh Gopinathan",
     email: "recruiter.tcs@placementconnect.com",
-    password: "recruiter123",
+    password: SEED_PASSWORD,
     role: "company",
     isApproved: true,
     isActive: true
@@ -173,7 +181,7 @@ const run = async () => {
   const studentCseUser = new User({
     name: "Shivam Kumar",
     email: "student.cse@placementconnect.com",
-    password: "student123",
+    password: SEED_PASSWORD,
     role: "student",
     isActive: true
   });
@@ -205,7 +213,7 @@ const run = async () => {
   const studentItUser = new User({
     name: "Rahul Sharma",
     email: "student.it@placementconnect.com",
-    password: "student123",
+    password: SEED_PASSWORD,
     role: "student",
     isActive: true
   });
@@ -236,7 +244,7 @@ const run = async () => {
   const studentEceUser = new User({
     name: "Aman Verma",
     email: "student.ece@placementconnect.com",
-    password: "student123",
+    password: SEED_PASSWORD,
     role: "student",
     isActive: true
   });
@@ -260,7 +268,7 @@ const run = async () => {
   const studentMeUser = new User({
     name: "Vikram Singh",
     email: "student.me@placementconnect.com",
-    password: "student123",
+    password: SEED_PASSWORD,
     role: "student",
     isActive: true
   });
@@ -284,7 +292,7 @@ const run = async () => {
   const studentCeUser = new User({
     name: "Deepak Kumar",
     email: "student.ce@placementconnect.com",
-    password: "student123",
+    password: SEED_PASSWORD,
     role: "student",
     isActive: true
   });
@@ -389,11 +397,11 @@ const run = async () => {
 
   console.log("Database seeded successfully with all mock entities!");
   console.log("Test Logins available:");
-  console.log("- Admin: admin@placementconnect.com / admin123");
-  console.log("- Coordinator: placementcell@placementconnect.com / cell123");
-  console.log("- Student (CSE): student.cse@placementconnect.com / student123");
-  console.log("- Student (IT): student.it@placementconnect.com / student123");
-  console.log("- Recruiter (Google): recruiter.google@placementconnect.com / recruiter123");
+  console.log("- Admin: admin@placementconnect.com (password: $SEED_PASSWORD)");
+  console.log("- Coordinator: placementcell@placementconnect.com (password: $SEED_PASSWORD)");
+  console.log("- Student (CSE): student.cse@placementconnect.com (password: $SEED_PASSWORD)");
+  console.log("- Student (IT): student.it@placementconnect.com (password: $SEED_PASSWORD)");
+  console.log("- Recruiter (Google): recruiter.google@placementconnect.com (password: $SEED_PASSWORD)");
 
   await mongoose.disconnect();
 };
