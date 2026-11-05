@@ -6,6 +6,7 @@ const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
 const { sendEmail, generateICS } = require("../utils/email");
 const { assertApplicationOwner } = require("../utils/ownership");
+const { sanitizeHtml } = require("../utils/sanitizeHtml");
 
 module.exports.getMyApplications = ErrorWrapper(async (req, res, next) => {
   const student = await Student.findOne({ userId: req.user.id });
@@ -255,7 +256,8 @@ module.exports.issueOffer = ErrorWrapper(async (req, res, next) => {
     if (!offerLetterContent) {
       throw new ErrorHandler(400, "Offer letter content or PDF upload is required");
     }
-    app.offerLetterContent = offerLetterContent;
+    // Stored HTML is rendered by the frontend, so it is sanitized on save.
+    app.offerLetterContent = sanitizeHtml(offerLetterContent);
     app.offerLetterUrl = ""; // Clear PDF link if template text is used
   }
 

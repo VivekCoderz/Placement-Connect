@@ -15,6 +15,7 @@ const RoundResult = require("../models/RoundResult");
 const StudentProgress = require("../models/StudentProgress");
 const { processCandidateResult } = require("../services/roundEngine");
 const { sendEmail } = require("../utils/email");
+const { sanitizeHtml } = require("../utils/sanitizeHtml");
 const {
   assertJobOwner,
   assertApplicationOwner,
@@ -468,7 +469,10 @@ module.exports.updateOfferTemplate = ErrorWrapper(async (req, res, next) => {
   if (!company) {
     throw new ErrorHandler(404, "Recruiter company details not found");
   }
-  company.offerLetterTemplate = offerLetterTemplate;
+  if (typeof offerLetterTemplate !== "string" || offerLetterTemplate.length > 100000) {
+    throw new ErrorHandler(400, "offerLetterTemplate must be a string up to 100000 characters");
+  }
+  company.offerLetterTemplate = sanitizeHtml(offerLetterTemplate);
   await company.save();
   return res.status(200).json({
     message: "Offer letter template updated successfully",
@@ -1295,7 +1299,9 @@ module.exports.approveSelection = ErrorWrapper(async (req, res, next) => {
       }
       else if (actionType === "Send Email") {
         emailSubject = details?.subject || `Update from ${company.name}`;
-        emailHtml = details?.body || `<p>Dear ${student.name}, you have a new message from the recruiter.</p>`;
+        emailHtml = details?.body
+          ? sanitizeHtml(details.body)
+          : `<p>Dear ${student.name}, you have a new message from the recruiter.</p>`;
         notifMessage = `New email from ${company.name} recruiter: ${emailSubject.substring(0, 30)}...`;
         notifType = "general";
       }
