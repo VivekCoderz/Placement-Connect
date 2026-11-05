@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, DollarSign, Award, Calendar, ChevronRight, CheckCircle2, AlertTriangle, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Calendar, ChevronRight, CheckCircle2, AlertTriangle, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import api from '../utils/api';
 

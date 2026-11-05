@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Sparkles, CheckCircle2, XCircle, ListChecks, Calendar, FileText, Bell, Award } from 'lucide-react';
+import { ChevronRight, Sparkles, CheckCircle2, XCircle, ListChecks, Calendar, FileText } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import Stepper from '../components/Stepper';
 import api from '../utils/api';
@@ -78,7 +78,7 @@ const Applications = () => {
           const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-120.wav');
           audio.volume = 0.4;
           audio.play().catch(() => {});
-        } catch (e) {}
+        } catch {}
       }
     });
 

@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
-  Building2, Briefcase, Users, Calendar, DollarSign, Award, Plus, Check, Eye, FileText, ArrowRight, Clock, MapPin, 
-  Globe, Phone, User, AlertCircle, RefreshCw, CheckCircle2, XCircle, ChevronRight, Download, Send, Lock, Upload, Sparkles, ListChecks
+  Building2, Briefcase, Users, Calendar, DollarSign, Award, Plus, FileText, ArrowRight, Clock, Globe, Phone, AlertCircle, RefreshCw, CheckCircle2, XCircle, ChevronRight, Download, Send, Lock, Upload, Sparkles, ListChecks
 } from 'lucide-react';
 import { setUser } from '../redux/authSlice';
 import api from '../utils/api';
@@ -20,8 +19,8 @@ const RecruiterDashboard = () => {
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
   const [isLoadingApplicants, setIsLoadingApplicants] = useState(false);
   const [submittingJob, setSubmittingJob] = useState(false);
-  const [actionSuccess, setActionSuccess] = useState('');
-  const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [, setActionSuccess] = useState('');
+  const [actionLoadingId] = useState(null);
   
   // Job Post Form State
   const [jobForm, setJobForm] = useState({
@@ -84,7 +83,6 @@ const RecruiterDashboard = () => {
   const [isAtsProcessing, setIsAtsProcessing] = useState(false);
 
   const [isCsvResultModalOpen, setIsCsvResultModalOpen] = useState(false);
-  const [csvResultRound, setCsvResultRound] = useState('Aptitude Test');
   const [csvResultRoundId, setCsvResultRoundId] = useState('');
   const [csvResultFile, setCsvResultFile] = useState(null);
   const [isUploadingCsvResults, setIsUploadingCsvResults] = useState(false);
@@ -565,7 +563,7 @@ const RecruiterDashboard = () => {
   };
 
   // Fetch drives posted by recruiter
-  const fetchMyDrives = async () => {
+  const fetchMyDrives = useCallback(async () => {
     setIsLoadingJobs(true);
     setSelectedApplicants([]);
     try {
@@ -585,11 +583,11 @@ const RecruiterDashboard = () => {
     } finally {
       setIsLoadingJobs(false);
     }
-  };
+  }, [dispatch]);
 
   useEffect(() => {
     fetchMyDrives();
-  }, []);
+  }, [fetchMyDrives]);
 
   const handleFetchApplicants = async (job, silent = false) => {
     setSelectedJob(job);
@@ -609,37 +607,6 @@ const RecruiterDashboard = () => {
       if (!silent) {
         setIsLoadingApplicants(false);
       }
-    }
-  };
-
-  const handleUpdateStatus = async (appId, status) => {
-    setActionSuccess('');
-    setActionLoadingId(`${appId}-${status}`);
-    try {
-      const response = await api.put(`/api/applications/${appId}/status`, { status });
-      if (response.status === 200) {
-        setApplicants(prev => prev.map(app => app._id === appId ? { ...app, status } : app));
-        setActionSuccess(`Application status successfully updated to ${status}!`);
-        
-        // Play selection or rejection audio alerts
-        try {
-          const { playSuccessFanfare, playFailureBuzz } = await import('../utils/audio');
-          if (status === 'Selected' || status === 'Shortlisted') {
-            playSuccessFanfare();
-          } else if (status === 'Rejected') {
-            playFailureBuzz();
-          }
-        } catch (audioErr) {}
-
-        if (selectedJob) {
-          handleFetchApplicants(selectedJob, true);
-        }
-        setTimeout(() => setActionSuccess(''), 4000);
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || err.message || 'Status update failed');
-    } finally {
-      setActionLoadingId(null);
     }
   };
 
@@ -1918,7 +1885,7 @@ const RecruiterDashboard = () => {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {jobRounds.map((round, idx) => (
+                        {jobRounds.map((round) => (
                           <div key={round._id} className="p-5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-sm transition-all">
                             <div className="space-y-2 flex-1">
                               <div className="flex items-center gap-2">

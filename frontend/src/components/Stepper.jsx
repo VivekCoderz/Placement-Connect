@@ -1,7 +1,7 @@
 import React from 'react';
 import { Check, X, ClipboardCheck, Code, Users, UserCheck, CheckCircle2, FileText } from 'lucide-react';
 
-const Stepper = ({ currentStatus, rounds, appRounds }) => {
+const Stepper = ({ currentStatus, appRounds }) => {
   const steps = [
     { label: 'Applied', key: 'Applied', desc: 'Application Received', icon: ClipboardCheck },
     { label: 'Resume Screening', key: 'ResumeScreening', desc: 'AI screening & scoring', icon: FileText },
@@ -167,7 +167,6 @@ const Stepper = ({ currentStatus, rounds, appRounds }) => {
           const isCompleted = stepStatus === 'Completed';
           const isActive = stepStatus === 'Active';
           const isFailed = stepStatus === 'Failed';
-          const isDisabled = stepStatus === 'Disabled';
 
           const showLine = index < steps.length - 1;
           const lineCompleted = isCompleted;

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  User, Mail, FileSpreadsheet, Clipboard, Percent, 
-  Plus, Trash2, ExternalLink, Upload, Eye, FileText, 
+  User, Mail, Plus, Trash2, ExternalLink, Upload, Eye, FileText, 
   Briefcase, GraduationCap, Award, PlusCircle, Check, ArrowRight, Lock
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -160,7 +159,7 @@ const Profile = () => {
       try {
         const { playFailureBuzz } = await import('../utils/audio');
         playFailureBuzz();
-      } catch (audioErr) {}
+      } catch {}
       alert(err.response?.data?.message || err.message || 'Resume upload failed');
     } finally {
       setIsUploading(false);

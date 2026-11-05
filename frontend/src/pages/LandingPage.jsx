@@ -3,12 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { 
   GraduationCap, 
-  Briefcase, 
   Building2, 
-  ShieldCheck, 
-  TrendingUp, 
   FileText, 
-  Calendar, 
   Clock, 
   ArrowRight, 
   CheckCircle2, 
@@ -17,7 +13,6 @@ import {
   Users, 
   Zap, 
   Sparkles, 
-  ChevronRight,
   Menu,
   X
 } from 'lucide-react';

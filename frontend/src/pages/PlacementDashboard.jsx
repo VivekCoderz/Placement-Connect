@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { 
-  Building2, Briefcase, Users, Calendar, DollarSign, Award, Plus, Check, Eye, FileText, ArrowRight, Clock, MapPin, 
-  Globe, Phone, User, AlertCircle, RefreshCw, CheckCircle2, XCircle, ChevronRight, Download, Send, Search, BarChart3,
-  Upload, Filter, TrendingUp, GraduationCap, BellRing, Sparkles, Info
+  Building2, Briefcase, Users, Calendar, Award, Eye, FileText, Clock, AlertCircle, RefreshCw, CheckCircle2, XCircle, ChevronRight, Download, Send, Search, BarChart3,
+  Upload, TrendingUp, GraduationCap, BellRing, Sparkles, Info
 } from 'lucide-react';
 import api from '../utils/api';
 import { sanitizeHtml, writePrintDocument } from '../utils/sanitize';
@@ -74,7 +73,7 @@ const PlacementDashboard = () => {
   const [students, setStudents] = useState([]);
   const [proposals, setProposals] = useState([]);
   const [shortlists, setShortlists] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   const [analyserMode, setAnalyserMode] = useState('stats'); // stats | talent
   const [detailedStats, setDetailedStats] = useState(null);
   const [analyticsSubTab, setAnalyticsSubTab] = useState('overview'); // overview | companyStats | skills
@@ -115,7 +114,6 @@ const PlacementDashboard = () => {
 
   // Result Approvals State
   const [resultApprovals, setResultApprovals] = useState([]);
-  const [isLoadingApprovals, setIsLoadingApprovals] = useState(false);
   const [approvalRejectionReason, setApprovalRejectionReason] = useState("");
   const [rejectionModalId, setRejectionModalId] = useState(null); // id of ResultApproval being rejected
   const [isSubmittingApprovalAction, setIsSubmittingApprovalAction] = useState(false);
@@ -461,7 +459,7 @@ const PlacementDashboard = () => {
             const pad = (n) => n.toString().padStart(2, '0');
             roundDate = `${parsed.getFullYear()}-${pad(parsed.getMonth()+1)}-${pad(parsed.getDate())}T${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
           }
-        } catch (e) {}
+        } catch {}
       }
     });
 
@@ -1578,7 +1576,7 @@ const PlacementDashboard = () => {
                               try {
                                 const { playSuccessFanfare } = await import('../utils/audio');
                                 playSuccessFanfare();
-                              } catch (audioErr) {}
+                              } catch {}
                               alert("Evaluation round successfully scheduled and student notifications dispatched!");
                               fetchDashboardData(); // Refresh list
                             }
@@ -1586,7 +1584,7 @@ const PlacementDashboard = () => {
                             try {
                               const { playFailureBuzz } = await import('../utils/audio');
                               playFailureBuzz();
-                            } catch (audioErr) {}
+                            } catch {}
                             alert(err.response?.data?.message || err.message || "Failed to schedule shortlist round");
                           }
                         }} className="space-y-4">

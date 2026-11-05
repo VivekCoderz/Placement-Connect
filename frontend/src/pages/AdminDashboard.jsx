@@ -3,73 +3,16 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, GraduationCap, Building2, Briefcase, FileText, Target,
-  FileCheck2, BarChart3, Megaphone, CalendarDays, Award, Bell,
+  FileCheck2, BarChart3, Megaphone, Award, Bell,
   Settings, Search, Filter, RefreshCw, CheckCircle2, AlertCircle, X, Check,
-  XCircle, Power, ArrowRight, FileSpreadsheet, Plus, Download, Mail, ShieldAlert,
-  Clock, MapPin, Eye, Trash2, Edit3, CheckSquare, PlusCircle, Calendar, Sparkles, 
-  Send, Upload, ChevronRight, ChevronLeft, Lock, UserCheck, MessageSquare, Info,
-  LogOut, Star, User, Sliders, Server, Shield, Sun, Moon
+  XCircle, Power, FileSpreadsheet, Plus, Download, ShieldAlert,
+  Clock, MapPin, Eye, Trash2, CheckSquare, PlusCircle, Sparkles, 
+  Upload, ChevronRight, ChevronLeft, Lock, UserCheck, MessageSquare, Info,
+  LogOut, Star, User, Server, Shield, Sun, Moon
 } from 'lucide-react';
 import api from '../utils/api';
 import { writePrintDocument } from '../utils/sanitize';
 import { clearUser } from '../redux/authSlice';
-
-// Helper component for Company analytics row expansion
-const CompanyTableRow = ({ co }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  return (
-    <React.Fragment>
-      <tr className="border-b border-slate-50 hover:bg-slate-50/50">
-        <td className="py-3 pl-2 font-bold text-slate-800">{co.companyName}</td>
-        <td className="py-3 text-slate-500">{co.industry}</td>
-        <td className="py-3 text-center font-bold text-slate-700">{co.totalDrives}</td>
-        <td className="py-3 text-center font-bold text-slate-700">{co.uniqueAppliedStudents}</td>
-        <td className="py-3 text-center font-bold text-[#6D5EF7]">{co.uniquePlacedStudents}</td>
-        <td className="py-3 text-right font-black text-emerald-600">
-          {co.uniquePlacedStudents > 0 ? `${co.lowestPackage} - ${co.highestPackage}` : 'N/A'}
-        </td>
-        <td className="py-3 pr-2 text-right">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-[10px] font-bold px-2 py-1 rounded bg-[#6D5EF7]/10 text-[#6D5EF7] hover:bg-[#6D5EF7]/20 transition-all cursor-pointer"
-          >
-            {isExpanded ? 'Hide Placements' : 'View Placements'}
-          </button>
-        </td>
-      </tr>
-      {isExpanded && (
-        <tr>
-          <td colSpan="7" className="bg-slate-50/60 p-4 border-b border-slate-100 rounded-lg">
-            <div className="space-y-3">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Placed Students list:</span>
-                <span className="text-[10px] bg-emerald-50 border border-emerald-250 text-emerald-600 px-2 py-0.5 rounded font-black">{co.placedStudentsList.length} placed</span>
-              </div>
-              {co.placedStudentsList.length === 0 ? (
-                <p className="text-[11px] text-slate-400 font-medium">No students placed yet under this recruiter.</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {co.placedStudentsList.map((stud, sIdx) => (
-                    <div key={sIdx} className="bg-white border border-slate-200/60 p-3 rounded-xl flex justify-between items-center shadow-sm">
-                      <div>
-                        <h6 className="font-bold text-slate-800 text-xs">{stud.studentName}</h6>
-                        <p className="text-[10px] text-slate-405 font-mono mt-0.5">{stud.rollNumber} · {stud.branch}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[9px] bg-emerald-50 border border-emerald-200 text-emerald-600 px-2 py-0.5 rounded font-black">{stud.package} LPA</span>
-                        <p className="text-[9px] text-slate-500 font-semibold mt-0.5">{stud.jobTitle}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </td>
-        </tr>
-      )}
-    </React.Fragment>
-  );
-};
 
 const AdminDashboard = () => {
   const user = useSelector((state) => state.auth.user) || { name: 'Admin Coordinator', role: 'admin' };
@@ -79,12 +22,12 @@ const AdminDashboard = () => {
   // Active Tab & Structural Navigation States
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [, setMobileMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
 
   // Notifications and messages panel toggle states
-  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [, setShowNotifPanel] = useState(false);
   const [showMsgPanel, setShowMsgPanel] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
@@ -122,8 +65,7 @@ const AdminDashboard = () => {
   // Modals States
   const [activeModal, setActiveModal] = useState(null); // 'createDrive' | 'addStudent' | 'announcement' | 'report' | 'csvUpload' | 'interview' | 'confirmDelete' | 'viewStudent'
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [selectedRecruiter, setSelectedRecruiter] = useState(null);
-  const [selectedDrive, setSelectedDrive] = useState(null);
+  const [, setSelectedDrive] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'student' | 'recruiter' | 'drive', id: any }
 
   // Form states
@@ -147,11 +89,8 @@ const AdminDashboard = () => {
   });
 
   // Resume Verification feedback state
-  const [feedbackText, setFeedbackText] = useState('');
-  const [resumeVerificationTabId, setResumeVerificationTabId] = useState(1); // active resume ID
 
   // Calendar Date State (Simulating July 2026)
-  const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date(2026, 6, 16));
 
   // --- DATABASE-DRIVEN REAL DATA STATES ---
   const [stats, setStats] = useState({
@@ -174,8 +113,8 @@ const AdminDashboard = () => {
   const [companies, setCompanies] = useState([]);
   const [drives, setDrives] = useState([]);
   const [applications, setApplications] = useState([]);
-  const [resumes, setResumes] = useState([]);
-  const [interviews, setInterviews] = useState([]);
+  const [, setResumes] = useState([]);
+  const [, setInterviews] = useState([]);
   const [shortlists, setShortlists] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [notificationsList, setNotificationsList] = useState([]);
@@ -183,7 +122,6 @@ const AdminDashboard = () => {
   const [recentLogins, setRecentLogins] = useState([]);
   const [detailedStats, setDetailedStats] = useState(null);
   const [analyticsSubTab, setAnalyticsSubTab] = useState('overview'); // overview | companyStats | skills
-  const [analyticsSearchQuery, setAnalyticsSearchQuery] = useState('');
   const [selectedSkillGapDept, setSelectedSkillGapDept] = useState('CSE');
   const [companySearch, setCompanySearch] = useState('');
   const [riskSearch, setRiskSearch] = useState('');
@@ -208,7 +146,7 @@ const AdminDashboard = () => {
   const [studentStatusFilter, setStudentStatusFilter] = useState('All');
   const [studentCgpafilter, setStudentCgpafilter] = useState(0);
   const [recruiterSearch, setRecruiterSearch] = useState('');
-  const [driveSearch, setDriveSearch] = useState('');
+  const [driveSearch] = useState('');
   const [companySearchQuery, setCompanySearchQuery] = useState('');
 
   // Pagination for Students
@@ -597,29 +535,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Resume Verification actions
-  const handleApproveResume = (id) => {
-    setStudents(prev => prev.map(s => {
-      const targetResume = resumes.find(r => r.id === id);
-      if (s.name === targetResume?.studentName) {
-        return { ...s, resumeStatus: 'Verified' };
-      }
-      return s;
-    }));
-    addToast('success', 'Resume marked as verified. AI Score registered.');
-  };
-
-  const handleRejectResume = (id) => {
-    setStudents(prev => prev.map(s => {
-      const targetResume = resumes.find(r => r.id === id);
-      if (s.name === targetResume?.studentName) {
-        return { ...s, resumeStatus: 'Rejected' };
-      }
-      return s;
-    }));
-    addToast('danger', 'Resume rejected. Feedback logs dispatched to student.');
-  };
-
   // Modal Submission Forms
   const handleCreateDriveSubmit = (e) => {
     e.preventDefault();
@@ -829,7 +744,7 @@ const AdminDashboard = () => {
               <p>GEETA UNIVERSITY · PLACEMENT INTELLIGENCE HUB</p>
             </div>
             <div class="report-info">
-              <p>Date Generated: \${dateStr}</p>
+              <p>Date Generated: ${dateStr}</p>
               <p>Role: System Administrator</p>
             </div>
           </div>
@@ -841,19 +756,19 @@ const AdminDashboard = () => {
           <div class="kpi-grid">
             <div class="kpi-card">
               <span>Placement Rate</span>
-              <h3>\${detailedStats.overview.placementRate}%</h3>
+              <h3>${detailedStats.overview.placementRate}%</h3>
             </div>
             <div class="kpi-card">
               <span>Placed / Eligible</span>
-              <h3>\${detailedStats.overview.placedStudents} / \${detailedStats.overview.totalStudents}</h3>
+              <h3>${detailedStats.overview.placedStudents} / ${detailedStats.overview.totalStudents}</h3>
             </div>
             <div class="kpi-card">
               <span>Avg Package</span>
-              <h3>\${detailedStats.overview.averagePackage} LPA</h3>
+              <h3>${detailedStats.overview.averagePackage} LPA</h3>
             </div>
             <div class="kpi-card">
               <span>Highest Package</span>
-              <h3>\${detailedStats.overview.highestPackage} LPA</h3>
+              <h3>${detailedStats.overview.highestPackage} LPA</h3>
             </div>
           </div>
           
@@ -871,7 +786,7 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              \${deptRows}
+              ${deptRows}
             </tbody>
           </table>
           
@@ -888,7 +803,7 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              \${topPlacementsRows}
+              ${topPlacementsRows}
             </tbody>
           </table>
           
@@ -905,17 +820,17 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              \${riskRows}
+              ${riskRows}
             </tbody>
           </table>
           
           <h3 class="section-title">AI Actionable Recommendations</h3>
           <div>
-            \${recsHtml}
+            ${recsHtml}
           </div>
           
           <div class="footer">
-            <p>© \${new Date().getFullYear()} Geeta University Training & Placement Cell. Confidential Document.</p>
+            <p>© ${new Date().getFullYear()} Geeta University Training & Placement Cell. Confidential Document.</p>
             <p>Authorized Signature: _______________________</p>
           </div>`,
     });
@@ -1129,55 +1044,6 @@ const AdminDashboard = () => {
     return { branch: branchName, total, placed, pct };
   });
 
-  const companyCounts = {};
-  applications.forEach(app => {
-    if (app.status === 'Selected') {
-      const co = app.company || 'Other';
-      companyCounts[co] = (companyCounts[co] || 0) + 1;
-    }
-  });
-  const companyHiring = Object.entries(companyCounts).map(([name, count]) => ({
-    name,
-    count
-  })).sort((a, b) => b.count - a.count).slice(0, 5);
-
-  const totalSelections = companyHiring.reduce((sum, c) => sum + c.count, 0);
-
-  const selectionsByMonth = [0, 0, 0, 0, 0, 0, 0]; // Jan to Jul
-  applications.forEach(app => {
-    if (app.status === 'Selected' && app.appliedDate) {
-      const dateParts = app.appliedDate.split('-');
-      if (dateParts.length >= 2) {
-        const monthNum = parseInt(dateParts[1]);
-        if (monthNum >= 1 && monthNum <= 7) {
-          selectionsByMonth[monthNum - 1]++;
-        }
-      }
-    }
-  });
-
-  const maxPlacementsInMonth = Math.max(...selectionsByMonth, 1);
-  const monthlyPoints = selectionsByMonth.map((count, idx) => {
-    const x = 20 + idx * 76.6;
-    const y = 180 - (count / maxPlacementsInMonth) * 140;
-    return { x, y };
-  });
-
-  let monthlyPathD = `M ${monthlyPoints[0].x} ${monthlyPoints[0].y}`;
-  for (let i = 1; i < monthlyPoints.length; i++) {
-    monthlyPathD += ` L ${monthlyPoints[i].x} ${monthlyPoints[i].y}`;
-  }
-  const monthlyAreaD = `${monthlyPathD} L ${monthlyPoints[monthlyPoints.length - 1].x} 180 L ${monthlyPoints[0].x} 180 Z`;
-
-  const topDrives = [...drives]
-    .filter(d => d.ctc && d.ctc !== 'N/A')
-    .map(d => ({
-      companyName: d.company,
-      ctcVal: parseFloat(d.ctc) || 0,
-      ctcStr: d.ctc
-    }))
-    .sort((a, b) => b.ctcVal - a.ctcVal)
-    .slice(0, 3);
 
   // Helper arrays
   const sidebarItems = [

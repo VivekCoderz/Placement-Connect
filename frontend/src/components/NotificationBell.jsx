@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, Check, Info, Briefcase, Calendar } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -11,7 +11,7 @@ const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const fetchNotifications = async (isInitial = false) => {
+  const fetchNotifications = useCallback(async (isInitial = false) => {
     if (user) {
       try {
         const response = await api.get('/api/notifications');
@@ -36,7 +36,7 @@ const NotificationBell = () => {
         console.error("Failed to fetch notifications:", err);
       }
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchNotifications(true);
@@ -54,7 +54,7 @@ const NotificationBell = () => {
       clearInterval(interval);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [user]);
+  }, [fetchNotifications]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

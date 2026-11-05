@@ -1,60 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Check, Trash2, MailOpen, Info, Calendar, Clock, BellRing, Send,
-  Briefcase, Bell, BellOff, CheckCircle2, ChevronRight, X
+  Check, Trash2, MailOpen, Info, Clock, BellRing, Send,
+  Briefcase, Bell, BellOff, CheckCircle2
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import api from '../utils/api';
+import { playNotificationChime as playNotificationSound, playClickSound } from '../utils/audio';
 
 const Notifications = () => {
   const user = useSelector((state) => state.auth.user);
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('all'); // all | unread
 
-  // Double chime sound for new unread notifications using browser Web Audio API
-  const playNotificationSound = () => {
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const playBeep = (freq, startTime, duration) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, startTime);
-        gain.gain.setValueAtTime(0.12, startTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(startTime);
-        osc.stop(startTime + duration);
-      };
-
-      const now = audioCtx.currentTime;
-      playBeep(880, now, 0.12);
-      playBeep(1320, now + 0.08, 0.18);
-    } catch (e) {
-      console.warn("Audio Context block:", e);
-    }
-  };
-
-  // Subtle satisfying click sound for marking actions
-  const playClickSound = () => {
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(550, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(250, audioCtx.currentTime + 0.07);
-      gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.07);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.07);
-    } catch (e) {}
-  };
-
-  const fetchNotifs = async (isInitial = false) => {
+  const fetchNotifs = useCallback(async (isInitial = false) => {
     if (!user) return;
     try {
       const response = await api.get('/api/notifications');
@@ -79,13 +37,13 @@ const Notifications = () => {
     } catch (err) {
       console.error("Failed to fetch notifications:", err);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchNotifs(true);
     const interval = setInterval(() => fetchNotifs(false), 5000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [fetchNotifs]);
 
   const handleMarkRead = async (id) => {
     playClickSound();

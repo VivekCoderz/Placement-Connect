@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Calendar, Award, DollarSign, ArrowUpRight, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Search, Calendar, Award, DollarSign, ArrowUpRight } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import api from '../utils/api';
 
