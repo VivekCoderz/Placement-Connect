@@ -770,7 +770,7 @@ const RecruiterDashboard = () => {
       )}
       
       {/* Recruiter Welcome Header - High Fidelity Emerald Dashboard Card */}
-      <div className="bg-[#4C1D95] text-white rounded-2xl p-8 md:p-10 border border-[#5B21B6] shadow-xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative overflow-hidden">
+      <div className="bg-[#0B3D91] text-white rounded-2xl p-5 sm:p-8 md:p-10 border border-[#082F70] shadow-xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#22C55E]/10 rounded-full blur-[150px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[#7C3AED]/10 rounded-full blur-[100px] pointer-events-none" />
         
@@ -806,7 +806,7 @@ const RecruiterDashboard = () => {
         </div>
 
         {/* Stats card */}
-        <div className="relative z-10 flex items-center gap-5 bg-[#5B21B6]/60 p-6 px-8 rounded-xl border border-[#7C3AED]/40 shadow-sm self-stretch lg:self-auto min-w-[200px] justify-center text-center">
+        <div className="relative z-10 flex items-center gap-5 bg-[#5B21B6]/60 p-6 px-5 sm:px-8 rounded-xl border border-[#7C3AED]/40 shadow-sm self-stretch lg:self-auto min-w-[200px] justify-center text-center">
           <div>
             <p className="text-[10px] font-bold text-purple-200 uppercase tracking-widest">Active Openings</p>
             <p className="text-4xl font-bold text-white mt-2 tracking-tight">{drives.length}</p>
@@ -883,7 +883,7 @@ const RecruiterDashboard = () => {
                 <div className="animate-spin rounded-full h-7 w-7 border-t-2 border-b-2 border-[#22C55E]"></div>
               </div>
             ) : drives.length === 0 ? (
-              <div className="bg-white border border-[#E5E7EB] p-10 text-center rounded-2xl shadow-sm">
+              <div className="bg-white border border-[#E5E7EB] p-5 sm:p-10 text-center rounded-2xl shadow-sm">
                 <div className="h-10 w-10 rounded-xl bg-[#F8FAFC] border border-[#E5E7EB] flex items-center justify-center mx-auto mb-4 text-[#94A3B8]">
                   <Briefcase className="w-5 h-5" />
                 </div>
@@ -1958,7 +1958,7 @@ const RecruiterDashboard = () => {
       )}
 
       {activeTab === 'post' && (
-        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-8 max-w-3xl mx-auto space-y-8 shadow-sm animate-in fade-in duration-300">
+        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 sm:p-8 max-w-3xl mx-auto space-y-8 shadow-sm animate-in fade-in duration-300">
           <div className="border-b border-[#E5E7EB] pb-5">
             <h2 className="text-lg font-bold text-[#111827] tracking-tight">Post New Placement Drive</h2>
             <p className="text-xs text-[#4B5563] font-medium mt-1">Specify eligibility benchmarks, compensation packages, and submission timelines.</p>
@@ -2249,7 +2249,7 @@ const RecruiterDashboard = () => {
 
       {/* PROPOSE SCHEDULE FORM TAB */}
       {activeTab === 'propose' && (
-        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-8 max-w-3xl mx-auto space-y-8 shadow-sm animate-in fade-in duration-300">
+        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 sm:p-8 max-w-3xl mx-auto space-y-8 shadow-sm animate-in fade-in duration-300">
           <div className="border-b border-[#E5E7EB] pb-5">
             <h2 className="text-lg font-bold text-[#111827] tracking-tight">Propose Round Schedule to Placement Cell</h2>
             <p className="text-xs text-[#4B5563] font-medium mt-1">Submit proposed dates, round count, and target selection intake directly to the T&P Cell coordinators.</p>
@@ -2362,7 +2362,7 @@ const RecruiterDashboard = () => {
 
       {/* OFFER LETTER TEMPLATE TAB */}
       {activeTab === 'template' && (
-        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-8 max-w-3xl mx-auto space-y-8 shadow-sm animate-in fade-in duration-300">
+        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 sm:p-8 max-w-3xl mx-auto space-y-8 shadow-sm animate-in fade-in duration-300">
           <div className="border-b border-[#E5E7EB] pb-5">
             <h2 className="text-lg font-bold text-[#111827] tracking-tight">Configure Offer Letter Template</h2>
             <p className="text-xs text-[#4B5563] font-medium mt-1">Set up a default structure for your company's offer letters. Use placeholders to dynamically inject student details when issuing.</p>
@@ -2497,7 +2497,7 @@ const RecruiterDashboard = () => {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4 p-8 bg-slate-50 border border-dashed border-slate-300 rounded-2xl text-center">
+                <div className="space-y-4 p-5 sm:p-8 bg-slate-50 border border-dashed border-slate-300 rounded-2xl text-center">
                   <Upload className="w-12 h-12 text-slate-400 mx-auto" />
                   <div className="space-y-1">
                     <p className="text-xs font-bold text-slate-700">Upload candidate's custom PDF offer letter</p>
@@ -2938,7 +2938,7 @@ const RecruiterDashboard = () => {
               </div>
             ) : (
               <form onSubmit={handleManualResultsSubmit} className="space-y-4">
-                <div className="max-h-[350px] overflow-y-auto border border-slate-150 rounded-xl shadow-inner">
+                <div className="max-h-[350px] overflow-auto border border-slate-200 rounded-xl shadow-inner">
                   <table className="w-full text-xs font-semibold">
                     <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 text-slate-700 font-bold">
                       <tr>

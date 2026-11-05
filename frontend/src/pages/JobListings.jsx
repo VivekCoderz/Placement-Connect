@@ -142,7 +142,7 @@ const JobListings = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-300 text-[#4B5563]">
       {/* Welcome Banner */}
-      <div className="bg-white border border-[#E5E7EB] p-8 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
+      <div className="bg-white border border-[#E5E7EB] p-5 sm:p-8 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-[#111827] tracking-tight">
             Available Placement Drives
@@ -219,7 +219,7 @@ const JobListings = () => {
                     : 'bg-[#F8FAFC]/70 border-[#E5E7EB] opacity-70'
                 }`}
               >
-                {/* Header info - increased padding to p-8 */}
+                {/* Header info - increased padding to p-5 sm:p-8 */}
                 <div className="p-6 md:p-8 space-y-5">
                   <div className="flex justify-between items-start gap-3">
                     <div className="flex items-center gap-3.5">

@@ -172,7 +172,7 @@ const JobDetail = () => {
       {/* Main Drive Info Panel */}
       <div className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden shadow-sm">
         {/* Banner area */}
-        <div className="bg-[#F8FAFC] p-8 md:p-10 border-b border-[#E5E7EB]">
+        <div className="bg-[#F8FAFC] p-5 sm:p-8 md:p-10 border-b border-[#E5E7EB]">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center font-bold text-[#7C3AED] text-sm flex-shrink-0 shadow-sm">
@@ -201,7 +201,7 @@ const JobDetail = () => {
         </div>
 
         {/* Detailed Layout */}
-        <div className="p-8 md:p-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="p-5 sm:p-8 md:p-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Left / Center content */}
           <div className="lg:col-span-2 space-y-8">
             <div className="space-y-3.5">

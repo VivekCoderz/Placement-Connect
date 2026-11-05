@@ -481,10 +481,10 @@ const PlacementDashboard = () => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8 font-sans px-4 sm:px-6 py-6 text-[#4B5563]">
+    <div className="w-full max-w-7xl mx-auto space-y-6 sm:space-y-8 font-sans px-0 sm:px-6 py-2 sm:py-6 text-[#4B5563]">
       
       {/* Welcome Header */}
-      <div className="bg-[#5B4FCF] text-white rounded-2xl p-8 border border-[#7C6AE6] shadow-xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative overflow-hidden">
+      <div className="bg-[#5B4FCF] text-white rounded-2xl p-5 sm:p-8 border border-[#7C6AE6] shadow-xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#22C55E]/10 rounded-full blur-[150px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-white/5 rounded-full blur-[100px] pointer-events-none" />
 
@@ -1268,7 +1268,7 @@ const PlacementDashboard = () => {
 
       {/* 4. SEND UPDATE / BROADCAST NOTIFICATION */}
       {activeTab === 'notify' && (
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-8 max-w-2xl mx-auto space-y-6 shadow-sm animate-in fade-in duration-300">
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 sm:p-8 max-w-2xl mx-auto space-y-6 shadow-sm animate-in fade-in duration-300">
           <div className="border-b border-[#E5E7EB] pb-5">
             <h2 className="text-lg font-bold text-[#111827] tracking-tight">Broadcast Placement Cell Updates</h2>
             <p className="text-xs text-[#4B5563] font-medium mt-1">Send round schedules, guidelines, or announcements directly to student profiles and emails.</p>
@@ -1370,7 +1370,7 @@ const PlacementDashboard = () => {
 
       {/* 5. UPLOAD SHORTLIST CSV */}
       {activeTab === 'csv' && (
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-8 max-w-2xl mx-auto space-y-6 shadow-sm animate-in fade-in duration-300">
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 sm:p-8 max-w-2xl mx-auto space-y-6 shadow-sm animate-in fade-in duration-300">
           <div className="border-b border-[#E5E7EB] pb-5">
             <h2 className="text-lg font-bold text-[#111827] tracking-tight">Upload Round-wise Shortlist CSV</h2>
             <p className="text-xs text-[#4B5563] font-medium mt-1">Upload student roll numbers or emails. System matches student records, updates round results, and emails notifications automatically.</p>
@@ -2112,9 +2112,9 @@ const PlacementDashboard = () => {
               {/* Left 2 Columns: Rendered preview */}
               <div className="lg:col-span-2 space-y-3">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Offer Document Preview</label>
-                <div className="p-8 bg-slate-50 border border-slate-200 rounded-xl overflow-y-auto min-h-[350px]">
+                <div className="p-5 sm:p-8 bg-slate-50 border border-slate-200 rounded-xl overflow-y-auto min-h-[350px]">
                   {selectedAppForReview.offerLetterUrl ? (
-                    <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-sm text-center space-y-4">
+                    <div className="bg-white p-5 sm:p-8 rounded-lg border border-slate-100 shadow-sm text-center space-y-4">
                       <FileText className="w-16 h-16 text-[#7C3AED] mx-auto" />
                       <h4 className="text-sm font-bold text-slate-800">A custom PDF offer letter has been uploaded.</h4>
                       <p className="text-xs text-slate-500">You can view or download this PDF file directly using the link below.</p>
@@ -2129,7 +2129,7 @@ const PlacementDashboard = () => {
                     </div>
                   ) : (
                     <div 
-                      className="prose prose-sm max-w-none text-slate-700 font-sans text-xs bg-white p-8 rounded-lg border border-slate-100 shadow-sm"
+                      className="prose prose-sm max-w-none text-slate-700 font-sans text-xs bg-white p-5 sm:p-8 rounded-lg border border-slate-100 shadow-sm"
                       dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedAppForReview.offerLetterContent) }} 
                     />
                   )}

@@ -257,7 +257,7 @@ const Profile = () => {
         <form onSubmit={handleSaveProfile} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Personal info form */}
           <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white border border-[#E5E7EB] p-8 rounded-2xl space-y-6 shadow-sm">
+            <div className="bg-white border border-[#E5E7EB] p-5 sm:p-8 rounded-2xl space-y-6 shadow-sm">
               <h2 className="text-base font-bold text-[#111827] flex items-center gap-2.5 pb-4 border-b border-[#E5E7EB]">
                 <GraduationCap className="w-4.5 h-4.5 text-[#22C55E]" />
                 Academic & Personal Information
@@ -314,7 +314,7 @@ const Profile = () => {
             </div>
 
             {/* Projects Management */}
-            <div className="bg-white border border-[#E5E7EB] p-8 rounded-2xl space-y-6 shadow-sm">
+            <div className="bg-white border border-[#E5E7EB] p-5 sm:p-8 rounded-2xl space-y-6 shadow-sm">
               <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
                 <h2 className="text-base font-bold text-[#111827] flex items-center gap-2.5">
                   <Briefcase className="w-4.5 h-4.5 text-[#22C55E]" />
@@ -430,7 +430,7 @@ const Profile = () => {
           {/* Right Column: Skills, certifications, resume */}
           <div className="space-y-8">
             {/* Resume Upload Box */}
-            <div className="bg-white border border-[#E5E7EB] p-8 rounded-2xl space-y-5 shadow-sm">
+            <div className="bg-white border border-[#E5E7EB] p-5 sm:p-8 rounded-2xl space-y-5 shadow-sm">
               <h2 className="text-base font-bold text-[#111827] flex items-center gap-2.5 pb-4 border-b border-[#E5E7EB]">
                 <FileText className="w-4.5 h-4.5 text-[#22C55E]" />
                 Resume Document
@@ -478,7 +478,7 @@ const Profile = () => {
             </div>
 
             {/* Skills tags list */}
-            <div className="bg-white border border-[#E5E7EB] p-8 rounded-2xl space-y-5 shadow-sm">
+            <div className="bg-white border border-[#E5E7EB] p-5 sm:p-8 rounded-2xl space-y-5 shadow-sm">
               <h2 className="text-base font-bold text-[#111827] flex items-center gap-2.5 pb-4 border-b border-[#E5E7EB]">
                 <Award className="w-4.5 h-4.5 text-[#22C55E]" />
                 Technical Skills
@@ -524,7 +524,7 @@ const Profile = () => {
             </div>
 
             {/* Certifications list */}
-            <div className="bg-white border border-[#E5E7EB] p-8 rounded-2xl space-y-5 shadow-sm">
+            <div className="bg-white border border-[#E5E7EB] p-5 sm:p-8 rounded-2xl space-y-5 shadow-sm">
               <h2 className="text-base font-bold text-[#111827] flex items-center gap-2.5 pb-4 border-b border-[#E5E7EB]">
                 <Award className="w-4.5 h-4.5 text-[#22C55E]" />
                 Certifications
@@ -638,7 +638,7 @@ const Profile = () => {
         /* Professional CV Preview Mode - Light theme redesign */
         <div className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden shadow-sm animate-in fade-in duration-300">
           {/* Header Banner */}
-          <div className="bg-[#F8FAFC] p-10 border-b border-[#E5E7EB] relative">
+          <div className="bg-[#F8FAFC] p-5 sm:p-10 border-b border-[#E5E7EB] relative">
             <div className="absolute top-8 right-8 flex gap-2">
               {resumeUrl && (
                 <a
@@ -671,7 +671,7 @@ const Profile = () => {
             </div>
           </div>
 
-          <div className="p-10 grid grid-cols-1 md:grid-cols-3 gap-10">
+          <div className="p-5 sm:p-10 grid grid-cols-1 md:grid-cols-3 gap-10">
             {/* Left preview sidebar */}
             <div className="space-y-8 border-b md:border-b-0 md:border-r border-[#E5E7EB] pb-8 md:pb-0 md:pr-8">
               {/* Academics card */}

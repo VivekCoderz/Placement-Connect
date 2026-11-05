@@ -122,7 +122,7 @@ const RecruiterSignup = () => {
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-[#7C3AED]/8 blur-[100px] pointer-events-none z-0 animate-float-medium" />
 
       {/* Main Glassmorphic Panel */}
-      <div className="max-w-2xl w-full space-y-8 bg-white border border-[#E5E7EB] p-8 sm:p-12 rounded-2xl shadow-xl relative z-10 animate-slide-up">
+      <div className="max-w-2xl w-full space-y-8 bg-white border border-[#E5E7EB] p-5 sm:p-8 sm:p-12 rounded-2xl shadow-xl relative z-10 animate-slide-up">
         
         {isSuccess && !isApproved ? (
           <div className="text-center space-y-6 py-6 font-sans" role="status">
@@ -174,7 +174,7 @@ const RecruiterSignup = () => {
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 to="/recruiter/dashboard"
-                className="inline-flex items-center gap-2 justify-center w-full sm:w-auto px-8 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-[#22C55E] hover:bg-[#16A34A] shadow-md transition-all active:scale-[0.98]"
+                className="inline-flex items-center gap-2 justify-center w-full sm:w-auto px-5 sm:px-8 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-[#22C55E] hover:bg-[#16A34A] shadow-md transition-all active:scale-[0.98]"
               >
                 Go to Recruiter Dashboard <ArrowRight className="w-4 h-4 text-white" />
               </Link>

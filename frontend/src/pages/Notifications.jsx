@@ -217,7 +217,7 @@ const Notifications = () => {
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8 animate-in fade-in duration-300 text-[#4B5563]">
       {/* Header Info Banner */}
-      <div className="bg-[#4C1D95] text-white p-8 rounded-3xl border border-[#5B21B6] shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-[#4C1D95] text-white p-5 sm:p-8 rounded-3xl border border-[#5B21B6] shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#22C55E]/15 rounded-full blur-[100px] pointer-events-none" />
         
         <div className="relative z-10 space-y-2">

@@ -6,9 +6,9 @@ import {
   FileCheck2, BarChart3, Megaphone, Award, Bell,
   Settings, Search, Filter, RefreshCw, CheckCircle2, AlertCircle, X, Check,
   XCircle, Power, FileSpreadsheet, Plus, Download, ShieldAlert,
-  Clock, MapPin, Eye, Trash2, CheckSquare, PlusCircle, Sparkles, 
+  Clock, MapPin, Eye, Trash2, CheckSquare, Sparkles, 
   Upload, ChevronRight, ChevronLeft, Lock, UserCheck, MessageSquare, Info,
-  LogOut, Star, User, Server, Shield, Sun, Moon
+  LogOut, Star, User, Server, Shield, Sun, Moon, Menu
 } from 'lucide-react';
 import api from '../utils/api';
 import { writePrintDocument } from '../utils/sanitize';
@@ -1097,10 +1097,10 @@ const AdminDashboard = () => {
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-slate-800 text-sm tracking-tight leading-none">PlacementConnect</span>
-                <span className="text-[10px] text-slate-450 font-semibold uppercase tracking-wider mt-0.5">GEETA UNIVERSITY</span>
+                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">GEETA UNIVERSITY</span>
               </div>
             </div>
-            <button className="md:hidden p-1.5 hover:bg-slate-50 rounded-lg" onClick={() => setSidebarOpen(false)}>
+            <button type="button" aria-label="Close navigation" className="md:hidden p-1.5 hover:bg-slate-50 rounded-lg" onClick={() => setSidebarOpen(false)}>
               <X className="w-4 h-4 text-slate-400" />
             </button>
           </div>
@@ -1164,22 +1164,24 @@ const AdminDashboard = () => {
       <div className="flex-1 md:pl-64 flex flex-col min-w-0">
 
         {/* ---------------- NAVBAR ---------------- */}
-        <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-[#E2E8F0]/60 px-6 sm:px-8 h-16 flex items-center justify-between">
+        <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-[#E2E8F0]/60 px-3 sm:px-8 h-16 flex items-center justify-between gap-2">
           
           <div className="flex items-center gap-3">
-            <button 
+            <button
+              type="button"
               onClick={() => setSidebarOpen(true)}
+              aria-label="Open navigation"
               className="md:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
             >
-              <PlusCircle className="w-5 h-5 rotate-45" />
+              <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-sm sm:text-base font-bold text-slate-800 capitalize">
+            <h1 className="text-sm sm:text-base font-bold text-slate-800 capitalize truncate">
               {activeTab === 'dashboard' ? 'Placement Dashboard' : activeTab.replace(/([A-Z])/g, ' $1')}
             </h1>
           </div>
 
-          <div className="flex items-center gap-4">
-            
+          <div className="flex items-center gap-1.5 sm:gap-4 flex-shrink-0">
+
             {/* Search Bar */}
             <div className="hidden sm:flex items-center gap-2 bg-[#F8FAFC] border border-slate-200/80 rounded-xl px-3 py-1.5 w-64 hover:border-slate-300 transition-colors">
               <Search className="w-3.5 h-3.5 text-slate-400" />
@@ -1269,9 +1271,10 @@ const AdminDashboard = () => {
             </button>
 
             {/* Quick Settings Icon */}
-            <button 
+            <button
               onClick={() => setActiveTab('settings')}
-              className="p-2 hover:bg-slate-50 rounded-xl border border-slate-100 transition-colors"
+              aria-label="Settings"
+              className="hidden sm:inline-flex p-2 hover:bg-slate-50 rounded-xl border border-slate-100 transition-colors"
             >
               <Settings className="w-4 h-4 text-slate-500" />
             </button>
@@ -1312,7 +1315,7 @@ const AdminDashboard = () => {
         </header>
 
         {/* ---------------- MAIN CONTENT AREA ---------------- */}
-        <main className="flex-grow p-6 sm:p-8 max-w-7xl w-full mx-auto space-y-6 overflow-y-auto">
+        <main className="flex-grow p-3 sm:p-8 max-w-7xl w-full min-w-0 mx-auto space-y-6 overflow-y-auto">
 
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 space-y-4">
@@ -1511,7 +1514,7 @@ const AdminDashboard = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h5 className="text-xs font-bold text-slate-800 truncate">{drive.name}</h5>
-                            <p className="text-[10px] text-slate-450 truncate">{drive.role} • {drive.ctc}</p>
+                            <p className="text-[10px] text-slate-400 truncate">{drive.role} • {drive.ctc}</p>
                           </div>
                           <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${drive.status === 'Open' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-50 text-slate-500'}`}>
                             {drive.status}
@@ -1694,7 +1697,7 @@ const AdminDashboard = () => {
               
               {/* Header and Add Student CTA */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Configure Student Profiles & Placement Status</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Configure Student Profiles & Placement Status</p>
                 <button
                   onClick={() => setActiveModal('addStudent')}
                   className="bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-[#6D5EF7]/10 cursor-pointer"
@@ -1829,7 +1832,7 @@ const AdminDashboard = () => {
                               {student.placementStatus === 'Placed' ? (
                                 <div>
                                   <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded text-[10px] font-bold inline-block font-sans">Placed</span>
-                                  <p className="text-[9px] font-bold text-slate-450 mt-1 uppercase">{student.company} • {student.ctc}</p>
+                                  <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase">{student.company} • {student.ctc}</p>
                                 </div>
                               ) : (
                                 <span className="bg-slate-50 text-slate-400 border border-slate-200 px-2 py-0.5 rounded text-[10px] font-bold">Unplaced</span>
@@ -1905,7 +1908,7 @@ const AdminDashboard = () => {
               
               {/* Header description */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Verify Recruiter Agency Registrations & Job Pipelines</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Verify Recruiter Agency Registrations & Job Pipelines</p>
                 <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 w-64 shadow-sm">
                   <Search className="w-3.5 h-3.5 text-slate-400" />
                   <input
@@ -1919,7 +1922,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Recruiters table */}
-              <div className="bg-white border border-slate-200/80 rounded-[18px] overflow-hidden shadow-sm">
+              <div className="bg-white border border-slate-200/80 rounded-[18px] overflow-x-auto shadow-sm">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50/70 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -2009,7 +2012,7 @@ const AdminDashboard = () => {
               
               {/* Header and search */}
               <div className="flex justify-between items-center pb-2 border-b border-slate-105">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Corporate Partners & Hiring metrics</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Corporate Partners & Hiring metrics</p>
                 <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 w-64 shadow-sm">
                   <Search className="w-3.5 h-3.5 text-slate-400" />
                   <input
@@ -2082,7 +2085,7 @@ const AdminDashboard = () => {
               
               {/* Header action */}
               <div className="flex justify-between items-center">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Active Placement Operations & Timelines</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Active Placement Operations & Timelines</p>
                 <button
                   onClick={() => setActiveModal('createDrive')}
                   className="bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-[#6D5EF7]/10 cursor-pointer"
@@ -2092,7 +2095,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Drives Table */}
-              <div className="bg-white border border-slate-200/80 rounded-[18px] overflow-hidden shadow-sm">
+              <div className="bg-white border border-slate-200/80 rounded-[18px] overflow-x-auto shadow-sm">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50/70 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -2177,7 +2180,7 @@ const AdminDashboard = () => {
             <div className="space-y-6 animate-in fade-in duration-300">
               
               <div className="pb-2 border-b border-slate-100">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Audit Active Corporate Vacancy Postings</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Audit Active Corporate Vacancy Postings</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2231,7 +2234,7 @@ const AdminDashboard = () => {
             <div className="space-y-6 animate-in fade-in duration-300">
               
               <div className="pb-2 border-b border-slate-100 flex justify-between items-center">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Candidate Recruitment Pipeline Audits</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Candidate Recruitment Pipeline Audits</p>
                 <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 w-64 shadow-sm">
                   <Search className="w-3.5 h-3.5 text-slate-400" />
                   <input
@@ -2245,7 +2248,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Applications list table */}
-              <div className="bg-white border border-slate-200/80 rounded-[18px] overflow-hidden shadow-sm">
+              <div className="bg-white border border-slate-200/80 rounded-[18px] overflow-x-auto shadow-sm">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50/70 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -2329,7 +2332,7 @@ const AdminDashboard = () => {
             <div className="space-y-6 animate-in fade-in duration-300">
               
               <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Placement Drive Selection Shortlists Logs</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Placement Drive Selection Shortlists Logs</p>
                 <button
                   onClick={() => setActiveModal('csvUpload')}
                   className="bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer"
@@ -2348,7 +2351,7 @@ const AdminDashboard = () => {
                         </div>
                         <div>
                           <h4 className="text-xs font-black text-slate-800">{list.driveName}</h4>
-                          <span className="text-[10px] text-slate-450 font-semibold">{list.companyName}</span>
+                          <span className="text-[10px] text-slate-400 font-semibold">{list.companyName}</span>
                         </div>
                       </div>
                       <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-bold px-2 py-0.5 rounded">
@@ -2483,7 +2486,7 @@ const AdminDashboard = () => {
               {!detailedStats ? (
                 <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[20px] p-12 text-center flex flex-col items-center justify-center space-y-4">
                   <RefreshCw className="w-8 h-8 text-[#6D5EF7] animate-spin" />
-                  <p className="text-slate-550 dark:text-slate-450 text-xs font-bold uppercase tracking-wider">Compiling institutional data intelligence...</p>
+                  <p className="text-slate-550 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Compiling institutional data intelligence...</p>
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -2495,7 +2498,7 @@ const AdminDashboard = () => {
                       {/* Overview Cards Grid */}
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
-                          <span className="text-[10px] text-slate-450 dark:text-slate-400 font-bold uppercase">Placement Success Rate</span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase">Placement Success Rate</span>
                           <div className="mt-2 flex items-baseline gap-2">
                             <span className="text-2xl font-extrabold text-[#6D5EF7] dark:text-[#8175F9]">{detailedStats.overview.placementRate}%</span>
                             <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500">({detailedStats.overview.placedStudents}/{detailedStats.overview.totalStudents})</span>
@@ -2506,7 +2509,7 @@ const AdminDashboard = () => {
                         </div>
 
                         <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
-                          <span className="text-[10px] text-slate-450 dark:text-slate-400 font-bold uppercase">Total Offers Released</span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase">Total Offers Released</span>
                           <div className="mt-2 flex items-baseline gap-2">
                             <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">{detailedStats.overview.totalOffers} Selections</span>
                             <span className="text-[10px] font-bold text-slate-400">Campaign Total</span>
@@ -2521,7 +2524,7 @@ const AdminDashboard = () => {
                               <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-500">{detailedStats.overview.averagePackage} LPA</span>
                               <span className="text-[10px] text-slate-400 font-bold uppercase">AVG</span>
                             </div>
-                            <div className="text-[10px] font-bold text-slate-500 dark:text-slate-450 mt-1">
+                            <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1">
                               Median Package: <span className="text-emerald-600 dark:text-emerald-500 font-extrabold">{detailedStats.overview.medianPackage} LPA</span>
                             </div>
                           </div>
@@ -2534,7 +2537,7 @@ const AdminDashboard = () => {
                               <span className="text-2xl font-extrabold text-indigo-650 dark:text-indigo-400">{detailedStats.overview.highestPackage} LPA</span>
                               <span className="text-[10px] text-slate-400 font-bold uppercase">MAX</span>
                             </div>
-                            <div className="text-[10px] font-bold text-slate-500 dark:text-slate-450 mt-1">
+                            <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1">
                               Lowest Package: <span className="text-rose-500 font-extrabold">{detailedStats.overview.lowestPackage} LPA</span>
                             </div>
                           </div>
@@ -2596,7 +2599,7 @@ const AdminDashboard = () => {
                         <div className="overflow-x-auto">
                           <table className="w-full text-left border-collapse text-xs">
                             <thead>
-                              <tr className="border-b border-slate-100 dark:border-slate-700 text-slate-450 dark:text-slate-400 font-bold uppercase text-[9px] tracking-wider">
+                              <tr className="border-b border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-400 font-bold uppercase text-[9px] tracking-wider">
                                 <th className="pb-3 pl-2">Rank</th>
                                 <th className="pb-3">Student Name</th>
                                 <th className="pb-3">Department</th>
@@ -2609,7 +2612,7 @@ const AdminDashboard = () => {
                             <tbody>
                               {detailedStats.highestPackages.map((p, idx) => (
                                 <tr key={idx} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
-                                  <td className="py-3 pl-2 font-bold text-slate-450">#{idx + 1}</td>
+                                  <td className="py-3 pl-2 font-bold text-slate-400">#{idx + 1}</td>
                                   <td className="py-3 font-bold text-slate-850 dark:text-slate-200">{p.studentName}</td>
                                   <td className="py-3 font-medium text-slate-550 dark:text-slate-400">
                                     <span className="px-2 py-0.5 bg-indigo-50/60 dark:bg-indigo-950/20 text-[#6D5EF7] dark:text-[#8175F9] border border-indigo-100/40 rounded text-[10px] font-bold">
@@ -2642,7 +2645,7 @@ const AdminDashboard = () => {
                         <div className="overflow-x-auto">
                           <table className="w-full text-left border-collapse text-xs">
                             <thead>
-                              <tr className="border-b border-slate-100 dark:border-slate-700 text-slate-450 dark:text-slate-400 font-bold uppercase text-[9px] tracking-wider">
+                              <tr className="border-b border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-400 font-bold uppercase text-[9px] tracking-wider">
                                 <th className="pb-3 pl-2">Department / Branch</th>
                                 <th className="pb-3 text-center">Total Students</th>
                                 <th className="pb-3 text-center">Eligible Students</th>
@@ -2772,7 +2775,7 @@ const AdminDashboard = () => {
                         {companySearch && (
                           <button
                             onClick={() => setCompanySearch('')}
-                            className="text-xs text-slate-450 hover:text-slate-650 font-bold"
+                            className="text-xs text-slate-400 hover:text-slate-650 font-bold"
                           >
                             Clear
                           </button>
@@ -2787,7 +2790,7 @@ const AdminDashboard = () => {
                         <div className="overflow-x-auto">
                           <table className="w-full text-left border-collapse text-xs">
                             <thead>
-                              <tr className="border-b border-slate-100 dark:border-slate-700 text-slate-450 dark:text-slate-400 font-bold uppercase text-[9px] tracking-wider">
+                              <tr className="border-b border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-400 font-bold uppercase text-[9px] tracking-wider">
                                 <th className="pb-3 pl-2">Company Name</th>
                                 <th className="pb-3 text-center">Placed Student Hires</th>
                                 <th className="pb-3 text-center">Avg Package Offered</th>
@@ -2902,7 +2905,7 @@ const AdminDashboard = () => {
                         {riskSearch && (
                           <button
                             onClick={() => setRiskSearch('')}
-                            className="text-xs text-slate-450 hover:text-slate-650 font-bold"
+                            className="text-xs text-slate-400 hover:text-slate-650 font-bold"
                           >
                             Clear
                           </button>
@@ -2921,7 +2924,7 @@ const AdminDashboard = () => {
                         <div className="overflow-x-auto">
                           <table className="w-full text-left border-collapse text-xs">
                             <thead>
-                              <tr className="border-b border-slate-100 dark:border-slate-700 text-slate-450 dark:text-slate-400 font-bold uppercase text-[9px] tracking-wider">
+                              <tr className="border-b border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-400 font-bold uppercase text-[9px] tracking-wider">
                                 <th className="pb-3 pl-2">Student Name</th>
                                 <th className="pb-3">Roll Number</th>
                                 <th className="pb-3">Department</th>
@@ -3007,7 +3010,7 @@ const AdminDashboard = () => {
                                   <span className="w-5 h-5 rounded bg-indigo-50 dark:bg-indigo-950/20 text-[#6D5EF7] flex items-center justify-center font-bold text-xs">#{idx+1}</span>
                                   <div>
                                     <h6 className="font-extrabold text-slate-850 dark:text-slate-200 text-xs">{st.name}</h6>
-                                    <p className="text-[9px] text-slate-450 uppercase mt-0.5">{st.detail}</p>
+                                    <p className="text-[9px] text-slate-400 uppercase mt-0.5">{st.detail}</p>
                                   </div>
                                 </div>
                                 <span className="font-black text-indigo-600 dark:text-indigo-400 text-xs bg-indigo-50 dark:bg-indigo-950/30 px-2.5 py-1 rounded-lg border border-indigo-100/45">{st.score}</span>
@@ -3251,7 +3254,7 @@ const AdminDashboard = () => {
             <div className="space-y-6 animate-in fade-in duration-300">
               
               <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Broadcast Notices & placement alerts</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Broadcast Notices & placement alerts</p>
                 <button
                   onClick={() => setActiveModal('announcement')}
                   className="bg-[#6D5EF7] hover:bg-[#5B4EE0] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer"
@@ -3300,7 +3303,7 @@ const AdminDashboard = () => {
               
               <div className="pb-2 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Audit System Alerts & Event logs</p>
+                  <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Audit System Alerts & Event logs</p>
                 </div>
                 {notificationsList.some(n => !n.read) && (
                   <button 
@@ -3361,7 +3364,7 @@ const AdminDashboard = () => {
                         </div>
                         <div className="flex-1">
                           <p className={`text-slate-700 font-medium ${isUnread ? 'font-bold text-slate-900' : ''}`}>{n.text}</p>
-                          <span className="text-[10px] text-slate-450 block mt-1">{n.time}</span>
+                          <span className="text-[10px] text-slate-400 block mt-1">{n.time}</span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {isUnread && (
@@ -3393,7 +3396,7 @@ const AdminDashboard = () => {
             <div className="space-y-6 animate-in fade-in duration-300">
               
               <div className="pb-2 border-b border-slate-100">
-                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Configure System credentials & notifications</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Configure System credentials & notifications</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -4121,7 +4124,7 @@ const AdminDashboard = () => {
                 </div>
                 <div className="space-y-1">
                   <h4 className="font-bold text-slate-800 text-sm">Are you absolutely sure?</h4>
-                  <p className="text-xs text-slate-450 leading-relaxed">
+                  <p className="text-xs text-slate-400 leading-relaxed">
                     This action is final and will permanently modify database configurations. Candidate logs and drive registers will be cleared.
                   </p>
                 </div>
@@ -4177,7 +4180,7 @@ const AdminDashboard = () => {
                   {selectedStudent.placementStatus === 'Placed' ? (
                     <div className="text-xs">
                       <span className="text-emerald-755 font-bold block">Placed at {selectedStudent.company}</span>
-                      <span className="text-[10px] text-slate-450 block mt-0.5">Package CTC: {selectedStudent.ctc}</span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">Package CTC: {selectedStudent.ctc}</span>
                     </div>
                   ) : (
                     <span className="text-slate-455 font-bold text-xs">Unplaced / Active in Drive Pools</span>

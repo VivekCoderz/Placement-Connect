@@ -116,7 +116,7 @@ const Applications = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-300 text-[#4B5563]">
       {/* Banner */}
-      <div className="bg-white border border-[#E5E7EB] p-8 rounded-2xl shadow-sm">
+      <div className="bg-white border border-[#E5E7EB] p-5 sm:p-8 rounded-2xl shadow-sm">
         <h1 className="text-xl md:text-2xl font-bold text-[#111827] tracking-tight">
           My Applications
         </h1>
@@ -479,9 +479,9 @@ const Applications = () => {
             </div>
 
             {/* Modal Body */}
-            <div className="p-8 bg-slate-50 overflow-y-auto max-h-[60vh] flex justify-center">
+            <div className="p-5 sm:p-8 bg-slate-50 overflow-y-auto max-h-[60vh] flex justify-center">
               <div 
-                className="prose prose-sm max-w-none text-slate-700 font-sans text-xs bg-white p-10 rounded-lg border border-slate-100 shadow-md w-full"
+                className="prose prose-sm max-w-none text-slate-700 font-sans text-xs bg-white p-5 sm:p-10 rounded-lg border border-slate-100 shadow-md w-full"
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedOfferContent) }} 
               />
             </div>

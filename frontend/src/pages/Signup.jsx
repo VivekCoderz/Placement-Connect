@@ -114,7 +114,7 @@ const Signup = () => {
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-[#22C55E]/10 blur-[100px] pointer-events-none z-0 animate-float-slow" />
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-[#7C3AED]/8 blur-[100px] pointer-events-none z-0 animate-float-medium" />
 
-      <div className="max-w-2xl w-full space-y-8 bg-white border border-[#E5E7EB] p-10 sm:p-12 rounded-2xl shadow-xl relative z-10 animate-slide-up">
+      <div className="max-w-2xl w-full space-y-8 bg-white border border-[#E5E7EB] p-5 sm:p-10 sm:p-12 rounded-2xl shadow-xl relative z-10 animate-slide-up">
         <div className="text-center space-y-2">
           <div className="mx-auto h-12 w-12 rounded-xl bg-[#22C55E] flex items-center justify-center shadow-md mb-4">
             <GraduationCap className="h-6 w-6 text-white" />
