@@ -24,7 +24,10 @@ const Profile = () => {
   });
 
   const [skills, setSkills] = useState(user?.skills || []);
-  const [certifications, setCertifications] = useState(user?.certifications || []);
+  // Backend stores certifications as objects ({ title, ... }); this page works with title strings.
+  const [certifications, setCertifications] = useState(
+    (user?.certifications || []).map((c) => (typeof c === 'string' ? c : c?.title)).filter(Boolean)
+  );
   const [projects, setProjects] = useState(user?.projects || []);
 
   const [skillInput, setSkillInput] = useState('');

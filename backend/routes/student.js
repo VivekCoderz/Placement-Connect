@@ -2,16 +2,18 @@ const router = require("express").Router();
 const studentController = require("../controllers/student");
 const { jwtVerify, authorizeRoles } = require("../middleware/jwtVerify");
 const { uploadResume, uploadImage } = require("../middleware/upload");
+const validate = require("../middleware/validate");
+const { profileUpdateSchema } = require("../validators/schemas");
 
 const studentOnly = [jwtVerify, authorizeRoles("student")];
 
 // SPEC ENDPOINTS
-router.post("/profile", ...studentOnly, studentController.updateProfile); // Create/Update profile
+router.post("/profile", ...studentOnly, validate(profileUpdateSchema), studentController.updateProfile); // Create/Update profile
 router.put("/resume", ...studentOnly, uploadResume.single("resume"), studentController.uploadResume); // Upload resume (PDF, 5 MB)
 
 // SKELETON & EXTENSION ENDPOINTS
 router.get("/profile", ...studentOnly, studentController.getProfile);
-router.put("/profile", ...studentOnly, studentController.updateProfile);
+router.put("/profile", ...studentOnly, validate(profileUpdateSchema), studentController.updateProfile);
 router.post("/uploadResume", ...studentOnly, uploadResume.single("resume"), studentController.uploadResume);
 router.post("/uploadProfilePicture", ...studentOnly, uploadImage.single("image"), studentController.uploadProfilePicture);
 router.post("/uploadProject", ...studentOnly, studentController.uploadProject);
