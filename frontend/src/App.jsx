@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setUser, setLoading } from './redux/authSlice';
@@ -6,21 +6,24 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import api from './utils/api';
 
-// Pages
+// Eagerly loaded: the public entry points.
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Profile from './pages/Profile';
-import JobListings from './pages/JobListings';
-import JobDetail from './pages/JobDetail';
-import Applications from './pages/Applications';
-import Notifications from './pages/Notifications';
-import RecruiterSignup from './pages/RecruiterSignup';
-import RecruiterDashboard from './pages/RecruiterDashboard';
-import PlacementDashboard from './pages/PlacementDashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
+import PageLoader from './components/PageLoader';
+
+// Route-level code splitting: each of these becomes its own chunk.
+const Signup = lazy(() => import('./pages/Signup'));
+const RecruiterSignup = lazy(() => import('./pages/RecruiterSignup'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Profile = lazy(() => import('./pages/Profile'));
+const JobListings = lazy(() => import('./pages/JobListings'));
+const JobDetail = lazy(() => import('./pages/JobDetail'));
+const Applications = lazy(() => import('./pages/Applications'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const RecruiterDashboard = lazy(() => import('./pages/RecruiterDashboard'));
+const PlacementDashboard = lazy(() => import('./pages/PlacementDashboard'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 
 function App() {
   const dispatch = useDispatch();
@@ -54,6 +57,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Suspense fallback={<PageLoader />}>
       <Routes>
           {/* Public Auth Routes */}
           <Route path="/login" element={<Login />} />
@@ -152,6 +156,7 @@ function App() {
           {/* Fallback redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

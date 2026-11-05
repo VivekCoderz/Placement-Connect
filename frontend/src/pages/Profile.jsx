@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setUser } from '../redux/authSlice';
+import { playSuccessFanfare, playFailureBuzz } from '../utils/audio';
 import api, { getErrorMessage } from '../utils/api';
 import { normalizeCerts, toCertPayload, safeUrl, certKey } from '../utils/certifications';
 
@@ -141,7 +142,6 @@ const Profile = () => {
       setResumeUrl(data.resumeUrl);
 
       // Play upload success sound
-      const { playSuccessFanfare } = await import('../utils/audio');
       playSuccessFanfare();
 
       // fetch fresh combined me data
@@ -157,7 +157,6 @@ const Profile = () => {
     } catch (err) {
       // Play failure buzz sound
       try {
-        const { playFailureBuzz } = await import('../utils/audio');
         playFailureBuzz();
       } catch {}
       alert(err.response?.data?.message || err.message || 'Resume upload failed');

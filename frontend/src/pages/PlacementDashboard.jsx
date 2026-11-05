@@ -4,6 +4,7 @@ import {
   Building2, Briefcase, Users, Calendar, Award, Eye, FileText, Clock, AlertCircle, RefreshCw, CheckCircle2, XCircle, ChevronRight, Download, Send, Search, BarChart3,
   Upload, TrendingUp, GraduationCap, BellRing, Sparkles, Info
 } from 'lucide-react';
+import { playSuccessFanfare, playFailureBuzz } from '../utils/audio';
 import api from '../utils/api';
 import { sanitizeHtml, writePrintDocument } from '../utils/sanitize';
 
@@ -1574,7 +1575,6 @@ const PlacementDashboard = () => {
                             });
                             if (res.status === 200) {
                               try {
-                                const { playSuccessFanfare } = await import('../utils/audio');
                                 playSuccessFanfare();
                               } catch {}
                               alert("Evaluation round successfully scheduled and student notifications dispatched!");
@@ -1582,7 +1582,6 @@ const PlacementDashboard = () => {
                             }
                           } catch (err) {
                             try {
-                              const { playFailureBuzz } = await import('../utils/audio');
                               playFailureBuzz();
                             } catch {}
                             alert(err.response?.data?.message || err.message || "Failed to schedule shortlist round");
