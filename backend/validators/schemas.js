@@ -134,7 +134,7 @@ const manualResultsSchema = z.object({
 
 const overrideSchema = z.object({
   status: z.enum(["Shortlisted", "Rejected"], {
-    errorMap: () => ({ message: "Invalid status override. Must be Shortlisted or Rejected" }),
+    message: "Invalid status override. Must be Shortlisted or Rejected",
   }),
   reason: shortText(2000).optional(),
 });
