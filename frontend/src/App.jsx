@@ -19,6 +19,8 @@ import RecruiterSignup from './pages/RecruiterSignup';
 import RecruiterDashboard from './pages/RecruiterDashboard';
 import PlacementDashboard from './pages/PlacementDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 function App() {
   const dispatch = useDispatch();
@@ -57,6 +59,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/recruiter/signup" element={<RecruiterSignup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Protected Recruiter Portal Routes */}
           <Route
