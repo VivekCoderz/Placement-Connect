@@ -4,7 +4,8 @@ import { ChevronRight, Sparkles, CheckCircle2, XCircle, ListChecks, Calendar, Fi
 import { useSelector } from 'react-redux';
 import Stepper from '../components/Stepper';
 import api from '../utils/api';
-import { io } from 'socket.io-client';
+import { createSocket } from '../utils/socket';
+import { sanitizeHtml, writePrintDocument } from '../utils/sanitize';
 
 const Applications = () => {
   const user = useSelector((state) => state.auth.user);
@@ -17,34 +18,17 @@ const Applications = () => {
 
   const handlePrintOffer = (content) => {
     const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Offer Letter</title>
-          <style>
+    writePrintDocument(printWindow, {
+      title: `Offer Letter`,
+      styles: `
             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748; padding: 40px; }
             .letter-content { line-height: 1.6; font-size: 14px; }
             @media print {
               body { padding: 0; }
             }
-          </style>
-        </head>
-        <body>
-          <div class="letter-content">
-            \${content}
-          </div>
-          <script>
-            window.onload = function() {
-              window.print();
-              window.onafterprint = function() {
-                window.close();
-              };
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+          `,
+      body: `<div class="letter-content">${sanitizeHtml(content)}</div>`,
+    });
   };
 
   const fetchApplicationsData = async () => {
@@ -83,17 +67,8 @@ const Applications = () => {
   useEffect(() => {
     if (!user) return;
 
-    const socketUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-      ? 'http://127.0.0.1:5000'
-      : window.location.origin;
-
-    const socket = io(socketUrl, {
-      transports: ['websocket'],
-      upgrade: false
-    });
-
-    const userId = user.id || user._id;
-    socket.emit('join', userId);
+    // Identity comes from the JWT on the server; it joins the user's own room.
+    const socket = createSocket();
 
     socket.on('application_status_update', (data) => {
       console.log('Real-time application status update received:', data);
@@ -507,7 +482,7 @@ const Applications = () => {
             <div className="p-8 bg-slate-50 overflow-y-auto max-h-[60vh] flex justify-center">
               <div 
                 className="prose prose-sm max-w-none text-slate-700 font-sans text-xs bg-white p-10 rounded-lg border border-slate-100 shadow-md w-full"
-                dangerouslySetInnerHTML={{ __html: selectedOfferContent }} 
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedOfferContent) }} 
               />
             </div>
 

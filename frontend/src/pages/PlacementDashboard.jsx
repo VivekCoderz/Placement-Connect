@@ -6,6 +6,7 @@ import {
   Upload, Filter, TrendingUp, GraduationCap, BellRing, Sparkles, Info
 } from 'lucide-react';
 import api from '../utils/api';
+import { sanitizeHtml, writePrintDocument } from '../utils/sanitize';
 
 // Helper component for Company analytics row expansion in Placement Dashboard
 const CompanyTableRow = ({ co }) => {
@@ -213,11 +214,9 @@ const PlacementDashboard = () => {
       </tr>
     `).join('');
 
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>${status} Students Report</title>
-          <style>
+    writePrintDocument(printWindow, {
+      title: `${status} Students Report`,
+      styles: `
             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748; margin: 40px; }
             .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #6D5EF7; padding-bottom: 20px; margin-bottom: 30px; }
             .logo-section h1 { margin: 0; font-size: 24px; color: #1A202C; }
@@ -230,9 +229,8 @@ const PlacementDashboard = () => {
             th { background-color: #F7FAFC; color: #4A5568; font-weight: bold; padding: 12px 10px; border-bottom: 2px solid #E2E8F0; text-align: left; text-transform: uppercase; }
             td { padding: 12px 10px; border-bottom: 1px solid #E2E8F0; color: #4A5568; }
             .footer { margin-top: 50px; display: flex; justify-content: space-between; font-size: 11px; color: #A0AEC0; border-top: 1px solid #E2E8F0; padding-top: 20px; }
-          </style>
-        </head>
-        <body>
+          `,
+      body: `
           <div class="header">
             <div class="logo-section">
               <h1>GEETA UNIVERSITY</h1>
@@ -271,20 +269,8 @@ const PlacementDashboard = () => {
           <div class="footer">
             <p>© ${new Date().getFullYear()} Geeta University PlacementConnect. Confidential Report.</p>
             <p>Authorized Signature: _______________________</p>
-          </div>
-          
-          <script>
-            window.onload = function() {
-              window.print();
-              window.onafterprint = function() {
-                window.close();
-              };
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+          </div>`,
+    });
   };
 
   const fetchDashboardData = async () => {
@@ -2147,7 +2133,7 @@ const PlacementDashboard = () => {
                   ) : (
                     <div 
                       className="prose prose-sm max-w-none text-slate-700 font-sans text-xs bg-white p-8 rounded-lg border border-slate-100 shadow-sm"
-                      dangerouslySetInnerHTML={{ __html: selectedAppForReview.offerLetterContent }} 
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedAppForReview.offerLetterContent) }} 
                     />
                   )}
                 </div>

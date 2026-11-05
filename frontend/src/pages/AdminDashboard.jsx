@@ -11,6 +11,7 @@ import {
   LogOut, Star, User, Sliders, Server, Shield, Sun, Moon
 } from 'lucide-react';
 import api from '../utils/api';
+import { writePrintDocument } from '../utils/sanitize';
 import { clearUser } from '../redux/authSlice';
 
 // Helper component for Company analytics row expansion
@@ -797,11 +798,9 @@ const AdminDashboard = () => {
       </div>
     `).join('');
 
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Placement Intelligence Hub Report</title>
-          <style>
+    writePrintDocument(printWindow, {
+      title: `Placement Intelligence Hub Report`,
+      styles: `
             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1E293B; margin: 40px; }
             .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #6D5EF7; padding-bottom: 20px; margin-bottom: 25px; }
             .logo-section h1 { margin: 0; font-size: 22px; color: #0F172A; }
@@ -822,9 +821,8 @@ const AdminDashboard = () => {
             td { padding: 8px 10px; border-bottom: 1px solid #E2E8F0; color: #334155; }
             
             .footer { margin-top: 40px; display: flex; justify-content: space-between; font-size: 10px; color: #94A3B8; border-top: 1px solid #E2E8F0; padding-top: 15px; }
-          </style>
-        </head>
-        <body>
+          `,
+      body: `
           <div class="header">
             <div class="logo-section">
               <h1>PLACEMENT CONNECT</h1>
@@ -919,20 +917,8 @@ const AdminDashboard = () => {
           <div class="footer">
             <p>© \${new Date().getFullYear()} Geeta University Training & Placement Cell. Confidential Document.</p>
             <p>Authorized Signature: _______________________</p>
-          </div>
-          
-          <script>
-            window.onload = function() {
-              window.print();
-              window.onafterprint = function() {
-                window.close();
-              };
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+          </div>`,
+    });
     addToast('success', 'Placement Intelligence PDF report exported.');
   };
 
@@ -984,11 +970,9 @@ const AdminDashboard = () => {
           </tr>
         `).join('');
 
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>${title}</title>
-              <style>
+        writePrintDocument(printWindow, {
+      title: `${title}`,
+      styles: `
                 body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748; margin: 40px; }
                 .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #6D5EF7; padding-bottom: 20px; margin-bottom: 30px; }
                 .logo-section h1 { margin: 0; font-size: 24px; color: #1A202C; }
@@ -1000,9 +984,8 @@ const AdminDashboard = () => {
                 th { background-color: #F7FAFC; color: #4A5568; font-weight: bold; padding: 12px 10px; border-bottom: 2px solid #E2E8F0; text-align: left; text-transform: uppercase; }
                 td { padding: 12px 10px; border-bottom: 1px solid #E2E8F0; color: #4A5568; }
                 .footer { margin-top: 50px; display: flex; justify-content: space-between; font-size: 11px; color: #A0AEC0; border-top: 1px solid #E2E8F0; padding-top: 20px; }
-              </style>
-            </head>
-            <body>
+              `,
+      body: `
               <div class="header">
                 <div class="logo-section">
                   <h1>GEETA UNIVERSITY</h1>
@@ -1034,19 +1017,8 @@ const AdminDashboard = () => {
               <div class="footer">
                 <p>© ${new Date().getFullYear()} Geeta University. Confidential.</p>
                 <p>Authorized Signature: _______________________</p>
-              </div>
-              <script>
-                window.onload = function() {
-                  window.print();
-                  window.onafterprint = function() {
-                    window.close();
-                  };
-                }
-              </script>
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
+              </div>`,
+    });
         addToast('success', `PDF report generated successfully.`);
       }
     }, 1000);

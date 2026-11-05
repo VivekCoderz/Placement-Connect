@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { setUser } from '../redux/authSlice';
 import api from '../utils/api';
+import { sanitizeHtml } from '../utils/sanitize';
 
 const RecruiterDashboard = () => {
   const dispatch = useDispatch();
@@ -2509,7 +2510,7 @@ const RecruiterDashboard = () => {
                     <div className="flex-1 p-6 bg-slate-50 border border-slate-200 rounded-xl overflow-y-auto select-none min-h-[300px]">
                       <div 
                         className="prose prose-sm max-w-none text-slate-700 font-sans text-xs bg-white p-6 rounded-lg border border-slate-100 shadow-sm"
-                        dangerouslySetInnerHTML={{ __html: generatedOfferContent }} 
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(generatedOfferContent) }} 
                       />
                     </div>
                   </div>
