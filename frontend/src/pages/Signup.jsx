@@ -8,8 +8,7 @@ import {
   Percent,
   Clipboard,
   AlertCircle,
-  GraduationCap,
-  ArrowRight
+  GraduationCap
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../redux/authSlice";
@@ -113,9 +112,9 @@ const Signup = () => {
     <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center py-16 px-6 sm:px-8 relative overflow-hidden text-[#4B5563]">
       {/* Floating ambient shapes */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-[#22C55E]/10 blur-[100px] pointer-events-none z-0 animate-float-slow" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-[#7C3AED]/8 blur-[100px] pointer-events-none z-0 animate-float-medium" />
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-[#0B3D91]/8 blur-[100px] pointer-events-none z-0 animate-float-medium" />
 
-      <div className="max-w-2xl w-full space-y-8 bg-white border border-[#E5E7EB] p-10 sm:p-12 rounded-2xl shadow-xl relative z-10 animate-slide-up">
+      <div className="max-w-2xl w-full space-y-8 bg-white border border-[#E5E7EB] p-5 sm:p-10 sm:p-12 rounded-2xl shadow-xl relative z-10 animate-slide-up">
         <div className="text-center space-y-2">
           <div className="mx-auto h-12 w-12 rounded-xl bg-[#22C55E] flex items-center justify-center shadow-md mb-4">
             <GraduationCap className="h-6 w-6 text-white" />
@@ -158,7 +157,7 @@ const Signup = () => {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-[#94A3B8] focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                  className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-[#94A3B8] focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                   placeholder="Rahul Sharma"
                 />
               </div>
@@ -183,7 +182,7 @@ const Signup = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-[#94A3B8] focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                  className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-[#94A3B8] focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                   placeholder="rahul@university.edu"
                 />
               </div>
@@ -208,7 +207,7 @@ const Signup = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-[#94A3B8] focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                  className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-[#94A3B8] focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                   placeholder="••••••••"
                 />
               </div>
@@ -233,7 +232,7 @@ const Signup = () => {
                   required
                   value={formData.rollNumber}
                   onChange={handleChange}
-                  className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-[#94A3B8] focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                  className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-[#94A3B8] focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                   placeholder="2022CSE1042"
                 />
               </div>
@@ -256,7 +255,7 @@ const Signup = () => {
                   name="branch"
                   value={formData.branch}
                   onChange={handleChange}
-                  className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                  className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                 >
                   {branches.map((b) => (
                     <option
@@ -288,7 +287,7 @@ const Signup = () => {
                   name="year"
                   value={formData.year}
                   onChange={handleChange}
-                  className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                  className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                 >
                   <option value="1" className="text-[#4B5563] bg-white">1st Year</option>
                   <option value="2" className="text-[#4B5563] bg-white">2nd Year</option>
@@ -320,7 +319,7 @@ const Signup = () => {
                   required
                   value={formData.cgpa}
                   onChange={handleChange}
-                  className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-[#94A3B8] focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-sm font-medium"
+                  className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-[#94A3B8] focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                   placeholder="8.50"
                 />
               </div>

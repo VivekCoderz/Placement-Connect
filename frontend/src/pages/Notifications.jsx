@@ -1,60 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Check, Trash2, MailOpen, Info, Calendar, Clock, BellRing, Send,
-  Briefcase, Bell, BellOff, CheckCircle2, ChevronRight, X
+  Check, Trash2, MailOpen, Info, Clock, BellRing, Send,
+  Briefcase, Bell, BellOff, CheckCircle2
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import api from '../utils/api';
+import { playNotificationChime as playNotificationSound, playClickSound } from '../utils/audio';
 
 const Notifications = () => {
   const user = useSelector((state) => state.auth.user);
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('all'); // all | unread
 
-  // Double chime sound for new unread notifications using browser Web Audio API
-  const playNotificationSound = () => {
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const playBeep = (freq, startTime, duration) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, startTime);
-        gain.gain.setValueAtTime(0.12, startTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(startTime);
-        osc.stop(startTime + duration);
-      };
-
-      const now = audioCtx.currentTime;
-      playBeep(880, now, 0.12);
-      playBeep(1320, now + 0.08, 0.18);
-    } catch (e) {
-      console.warn("Audio Context block:", e);
-    }
-  };
-
-  // Subtle satisfying click sound for marking actions
-  const playClickSound = () => {
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(550, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(250, audioCtx.currentTime + 0.07);
-      gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.07);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.07);
-    } catch (e) {}
-  };
-
-  const fetchNotifs = async (isInitial = false) => {
+  const fetchNotifs = useCallback(async (isInitial = false) => {
     if (!user) return;
     try {
       const response = await api.get('/api/notifications');
@@ -79,13 +37,13 @@ const Notifications = () => {
     } catch (err) {
       console.error("Failed to fetch notifications:", err);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchNotifs(true);
     const interval = setInterval(() => fetchNotifs(false), 5000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [fetchNotifs]);
 
   const handleMarkRead = async (id) => {
     playClickSound();
@@ -126,7 +84,7 @@ const Notifications = () => {
       case 'job_post':
         return <Briefcase className="w-4 h-4 text-[#F59E0B]" />;
       case 'interview_scheduled':
-        return <Clock className="w-4 h-4 text-[#8B5CF6]" />;
+        return <Clock className="w-4 h-4 text-[#3B6FD1]" />;
       case 'announcement':
         return <BellRing className="w-4 h-4 text-[#3B82F6]" />;
       case 'schedule_propose':
@@ -259,20 +217,20 @@ const Notifications = () => {
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8 animate-in fade-in duration-300 text-[#4B5563]">
       {/* Header Info Banner */}
-      <div className="bg-[#4C1D95] text-white p-8 rounded-3xl border border-[#5B21B6] shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-[#0B3D91] text-white p-5 sm:p-8 rounded-3xl border border-[#082F70] shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#22C55E]/15 rounded-full blur-[100px] pointer-events-none" />
         
         <div className="relative z-10 space-y-2">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-[#5B21B6] border border-white/10 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-xl bg-[#082F70] border border-white/10 flex items-center justify-center">
               <Bell className="w-5 h-5 text-[#22C55E]" />
             </div>
             <div>
-              <span className="text-[9px] font-bold text-white bg-[#5B21B6] border border-white/15 px-2.5 py-0.5 rounded-full uppercase tracking-wider">Alert Center</span>
+              <span className="text-[9px] font-bold text-white bg-[#082F70] border border-white/15 px-2.5 py-0.5 rounded-full uppercase tracking-wider">Alert Center</span>
               <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white mt-1">Notification Center</h1>
             </div>
           </div>
-          <p className="text-purple-200 font-medium text-xs max-w-md">Review announcements, evaluation updates, and scheduler triggers with dynamic sound alerts.</p>
+          <p className="text-blue-200 font-medium text-xs max-w-md">Review announcements, evaluation updates, and scheduler triggers with dynamic sound alerts.</p>
         </div>
 
         {/* Global actions */}

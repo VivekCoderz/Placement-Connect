@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, Check, Info, Briefcase, Calendar } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -11,7 +11,7 @@ const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const fetchNotifications = async (isInitial = false) => {
+  const fetchNotifications = useCallback(async (isInitial = false) => {
     if (user) {
       try {
         const response = await api.get('/api/notifications');
@@ -36,7 +36,7 @@ const NotificationBell = () => {
         console.error("Failed to fetch notifications:", err);
       }
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchNotifications(true);
@@ -54,7 +54,7 @@ const NotificationBell = () => {
       clearInterval(interval);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [user]);
+  }, [fetchNotifications]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -93,9 +93,9 @@ const NotificationBell = () => {
       case 'status':
       case 'schedule_propose':
       case 'announcement':
-        return <Calendar className="w-4 h-4 text-[#7C3AED]" />;
+        return <Calendar className="w-4 h-4 text-[#0B3D91]" />;
       default:
-        return <Info className="w-4 h-4 text-[#7C3AED]" />;
+        return <Info className="w-4 h-4 text-[#0B3D91]" />;
     }
   };
 
@@ -103,7 +103,7 @@ const NotificationBell = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => { playClickSound(); setIsOpen(!isOpen); }}
-        className="relative p-2.5 text-[#E9D5FF] hover:text-white rounded-full hover:bg-[#7C6AE6]/30 transition-all duration-200 focus:outline-none"
+        className="relative p-2.5 text-[#E9D5FF] hover:text-white rounded-full hover:bg-[#1E4FA8]/30 transition-all duration-200 focus:outline-none"
         aria-label="View notifications"
       >
         <Bell className="w-6 h-6" />
@@ -121,7 +121,7 @@ const NotificationBell = () => {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="text-xs text-[#5B4FCF] hover:text-[#7C6AE6] font-semibold transition-colors"
+                className="text-xs text-[#0B3D91] hover:text-[#1E4FA8] font-semibold transition-colors"
               >
                 Mark all read
               </button>
@@ -138,7 +138,7 @@ const NotificationBell = () => {
                 <div
                   key={notif.id}
                   className={`p-4.5 border-b border-[#E5E7EB] flex gap-3.5 hover:bg-[#F8FAFC] transition-colors ${
-                    !notif.read ? 'bg-[#5B4FCF]/5' : ''
+                    !notif.read ? 'bg-[#0B3D91]/5' : ''
                   }`}
                 >
                   <div className="mt-0.5 flex-shrink-0">
@@ -157,7 +157,7 @@ const NotificationBell = () => {
                       {!notif.read && (
                         <button
                           onClick={(e) => handleMarkOneRead(e, notif.id)}
-                          className="text-[10px] text-[#5B4FCF] hover:text-[#7C6AE6] font-bold"
+                          className="text-[10px] text-[#0B3D91] hover:text-[#1E4FA8] font-bold"
                         >
                           Mark read
                         </button>
@@ -172,7 +172,7 @@ const NotificationBell = () => {
           <Link
             to="/notifications"
             onClick={() => setIsOpen(false)}
-            className="block text-center py-4 text-xs font-bold text-[#94A3B8] hover:text-[#7C3AED] bg-[#F8FAFC] hover:bg-[#E5E7EB]/50 border-t border-[#E5E7EB] transition-colors"
+            className="block text-center py-4 text-xs font-bold text-[#94A3B8] hover:text-[#0B3D91] bg-[#F8FAFC] hover:bg-[#E5E7EB]/50 border-t border-[#E5E7EB] transition-colors"
           >
             See all notifications
           </Link>

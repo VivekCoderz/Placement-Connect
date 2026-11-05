@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, DollarSign, Award, Calendar, ChevronRight, CheckCircle2, AlertTriangle, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Calendar, ChevronRight, CheckCircle2, AlertTriangle, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import api from '../utils/api';
 
@@ -134,8 +134,20 @@ const JobDetail = () => {
 
   if (!job) {
     return (
-      <div className="flex-grow flex items-center justify-center py-24">
-        <div className="animate-spin rounded-full h-11 w-11 border-t-2 border-b-2 border-emerald-600"></div>
+      <div className="w-full max-w-4xl mx-auto space-y-6" role="status" aria-label="Loading drive details">
+        <div className="pc-skeleton h-4 w-32" />
+        <div className="pc-card p-6 sm:p-10 space-y-5">
+          <div className="flex items-center gap-4">
+            <div className="pc-skeleton h-12 w-12 rounded-xl" />
+            <div className="flex-1 space-y-2">
+              <div className="pc-skeleton h-3 w-1/4" />
+              <div className="pc-skeleton h-5 w-1/2" />
+            </div>
+          </div>
+          <div className="pc-skeleton h-3 w-full" />
+          <div className="pc-skeleton h-3 w-11/12" />
+          <div className="pc-skeleton h-3 w-4/5" />
+        </div>
       </div>
     );
   }
@@ -172,10 +184,10 @@ const JobDetail = () => {
       {/* Main Drive Info Panel */}
       <div className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden shadow-sm">
         {/* Banner area */}
-        <div className="bg-[#F8FAFC] p-8 md:p-10 border-b border-[#E5E7EB]">
+        <div className="bg-[#F8FAFC] p-5 sm:p-8 md:p-10 border-b border-[#E5E7EB]">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center font-bold text-[#7C3AED] text-sm flex-shrink-0 shadow-sm">
+              <div className="h-12 w-12 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center font-bold text-[#0B3D91] text-sm flex-shrink-0 shadow-sm">
                 {job.companyName.substring(0, 2).toUpperCase()}
               </div>
               <div className="space-y-1">
@@ -201,7 +213,7 @@ const JobDetail = () => {
         </div>
 
         {/* Detailed Layout */}
-        <div className="p-8 md:p-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="p-5 sm:p-8 md:p-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Left / Center content */}
           <div className="lg:col-span-2 space-y-8">
             <div className="space-y-3.5">

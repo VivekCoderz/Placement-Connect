@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Calendar, Award, DollarSign, ArrowUpRight, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Search, Calendar, Award, DollarSign, ArrowUpRight } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import api from '../utils/api';
+import api, { getErrorMessage } from '../utils/api';
 
 const JobListings = () => {
   const user = useSelector((state) => state.auth.user);
@@ -10,9 +10,14 @@ const JobListings = () => {
   const [applications, setApplications] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [salaryFilter, setSalaryFilter] = useState('all'); // all | high (>= 20 LPA) | mid (5-20 LPA) | entry (< 5 LPA)
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
+      setLoadError('');
       try {
         const jobsResponse = await api.get('/api/jobs');
         const jobsData = jobsResponse.data;
@@ -38,11 +43,14 @@ const JobListings = () => {
         setApplications(mappedApps);
       } catch (err) {
         console.error("Failed to fetch data:", err);
+        setLoadError(getErrorMessage(err, 'Could not load placement drives.'));
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [user]);
+  }, [user, reloadKey]);
 
   const isBranchMatch = (studentBranch, eligibleBranches) => {
     if (!eligibleBranches || eligibleBranches.length === 0) return true;
@@ -142,7 +150,7 @@ const JobListings = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-300 text-[#4B5563]">
       {/* Welcome Banner */}
-      <div className="bg-white border border-[#E5E7EB] p-8 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
+      <div className="bg-white border border-[#E5E7EB] p-5 sm:p-8 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-[#111827] tracking-tight">
             Available Placement Drives
@@ -169,7 +177,7 @@ const JobListings = () => {
             placeholder="Search role, company or keywords..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full pl-11 pr-4 py-2.5 bg-white border border-[#E5E7EB] focus:bg-[#F8FAFC] rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-xs font-semibold"
+            className="block w-full pl-11 pr-4 py-2.5 bg-white border border-[#E5E7EB] focus:bg-[#F8FAFC] rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-xs font-semibold"
           />
         </div>
 
@@ -178,7 +186,7 @@ const JobListings = () => {
           <select
             value={salaryFilter}
             onChange={(e) => setSalaryFilter(e.target.value)}
-            className="block w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#4B5563] focus:outline-none focus:ring-4 focus:ring-[#7C3AED]/10 focus:border-[#7C3AED] transition-all text-xs font-semibold"
+            className="block w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#4B5563] focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-xs font-semibold"
           >
             <option value="all" className="bg-white text-[#4B5563]">All CTC Packages</option>
             <option value="high" className="bg-white text-[#4B5563]">Super Dream (20+ LPA)</option>
@@ -189,17 +197,48 @@ const JobListings = () => {
       </div>
 
       {/* Grid of Job Cards */}
-      {filteredJobs.length === 0 ? (
-        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-20 text-center space-y-4 shadow-sm">
-          <p className="text-[#4B5563] text-sm font-semibold">
-            No active placement drives found matching your filter criteria.
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" role="status" aria-label="Loading drives">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="pc-card p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="pc-skeleton h-10 w-10 rounded-xl" />
+                <div className="flex-1 space-y-2">
+                  <div className="pc-skeleton h-3 w-1/3" />
+                  <div className="pc-skeleton h-4 w-2/3" />
+                </div>
+              </div>
+              <div className="pc-skeleton h-3 w-full" />
+              <div className="pc-skeleton h-3 w-5/6" />
+              <div className="pc-skeleton h-9 w-full rounded-xl" />
+            </div>
+          ))}
+        </div>
+      ) : loadError ? (
+        <div className="pc-alert-error" role="alert">
+          <span className="font-bold" aria-hidden="true">!</span>
+          <div className="flex-1">
+            <p>{loadError}</p>
+            <button type="button" onClick={() => setReloadKey((k) => k + 1)} className="mt-2 text-xs font-bold underline">
+              Try again
+            </button>
+          </div>
+        </div>
+      ) : filteredJobs.length === 0 ? (
+        <div className="pc-empty">
+          <p className="text-[#111827] text-sm font-semibold">
+            {jobs.length === 0 ? 'No placement drives are open right now.' : 'No drives match your search or filters.'}
           </p>
-          {salaryFilter !== 'all' && (
+          <p className="text-xs">
+            {jobs.length === 0 ? 'New drives appear here as soon as the Placement Cell publishes them.' : 'Try a different keyword or package range.'}
+          </p>
+          {(salaryFilter !== 'all' || searchTerm) && (
             <button
+              type="button"
               onClick={() => { setSalaryFilter('all'); setSearchTerm(''); }}
-              className="text-xs font-bold text-[#22C55E] hover:text-[#16A34A] transition-colors"
+              className="pc-btn-secondary mt-2 text-xs"
             >
-              Reset Filters
+              Reset filters
             </button>
           )}
         </div>
@@ -219,11 +258,11 @@ const JobListings = () => {
                     : 'bg-[#F8FAFC]/70 border-[#E5E7EB] opacity-70'
                 }`}
               >
-                {/* Header info - increased padding to p-8 */}
+                {/* Header info - increased padding to p-5 sm:p-8 */}
                 <div className="p-6 md:p-8 space-y-5">
                   <div className="flex justify-between items-start gap-3">
                     <div className="flex items-center gap-3.5">
-                      <div className="h-10 w-10 rounded-xl bg-[#F8FAFC] border border-[#E5E7EB] flex items-center justify-center font-bold text-[#7C3AED] text-xs flex-shrink-0 shadow-sm">
+                      <div className="h-10 w-10 rounded-xl bg-[#F8FAFC] border border-[#E5E7EB] flex items-center justify-center font-bold text-[#0B3D91] text-xs flex-shrink-0 shadow-sm">
                         {job.companyName.substring(0, 2).toUpperCase()}
                       </div>
                       <div>

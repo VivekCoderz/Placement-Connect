@@ -24,7 +24,7 @@ export const playNotificationChime = () => {
 
     playBeep(880, now, 0.12);
     playBeep(1320, now + 0.08, 0.18);
-  } catch (e) {}
+  } catch {}
 };
 
 export const playClickSound = () => {
@@ -44,7 +44,7 @@ export const playClickSound = () => {
     gain.connect(ctx.destination);
     osc.start();
     osc.stop(ctx.currentTime + 0.07);
-  } catch (e) {}
+  } catch {}
 };
 
 export const playSuccessFanfare = () => {
@@ -70,7 +70,7 @@ export const playSuccessFanfare = () => {
     playNote(659.25, now + 0.08, 0.15);
     playNote(783.99, now + 0.16, 0.15);
     playNote(1046.50, now + 0.24, 0.35);
-  } catch (e) {}
+  } catch {}
 };
 
 export const playFailureBuzz = () => {
@@ -98,5 +98,5 @@ export const playFailureBuzz = () => {
     
     osc.start();
     osc.stop(now + 0.25);
-  } catch (e) {}
+  } catch {}
 };

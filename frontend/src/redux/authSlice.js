@@ -4,7 +4,7 @@ const getInitialUser = () => {
   try {
     const cachedUser = localStorage.getItem('user');
     return cachedUser ? JSON.parse(cachedUser) : null;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
