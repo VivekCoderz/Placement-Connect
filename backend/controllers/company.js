@@ -503,8 +503,9 @@ module.exports.atsShortlist = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(403, "Access Denied: You do not own this job posting");
   }
 
-  // Fetch all applications in "Applied" state for this job
-  const applications = await Application.find({ jobId, status: "Applied" })
+  // Fetch applications still awaiting a decision. New applications are saved as
+  // "Under Review" after AI screening (see controllers/job.js), older ones as "Applied".
+  const applications = await Application.find({ jobId, status: { $in: ["Applied", "Under Review"] } })
     .populate({
       path: "studentId",
       select: "name email rollNumber branch year cgpa skills resumeUrl phone isPlaced projects userId",

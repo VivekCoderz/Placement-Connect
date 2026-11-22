@@ -172,6 +172,7 @@ module.exports.applyJob = ErrorWrapper(async (req, res, next) => {
     if (student.year === 4 && (eligibleYears.includes(2026) || eligibleYears.includes(2027))) return true;
     if (student.year === 3 && (eligibleYears.includes(2027) || eligibleYears.includes(2028))) return true;
     if (student.year === 2 && (eligibleYears.includes(2028) || eligibleYears.includes(2029))) return true;
+    if (student.year === 1 && (eligibleYears.includes(2029) || eligibleYears.includes(2030))) return true;
     return false;
   };
 

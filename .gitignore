@@ -6,3 +6,9 @@ node_modules/
 
 # build output
 frontend/dist/
+.env.*
+!.env.example
+**/.env.*
+!**/.env.example
+*.exe
+**/dist/
