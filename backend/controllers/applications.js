@@ -300,32 +300,37 @@ module.exports.approveOffer = ErrorWrapper(async (req, res, next) => {
   await app.save();
 
   const student = app.studentId;
+  // The student, job or company may have been deleted since the application was made;
+  // the approval is still saved, only the notification/email are skipped.
+  const jobTitle = app.jobId?.title || "the role";
+  const companyName = app.jobId?.companyId?.name || "the company";
+
   if (student) {
     student.isPlaced = true;
     await student.save();
-  }
 
-  // Notify student
-  const notif = new Notification({
-    userId: student.userId,
-    message: `Congratulations! Your offer letter for ${app.jobId.title} at ${app.jobId.companyId.name} has been approved and issued.`,
-    type: "application_status",
-  });
-  await notif.save();
+    // Notify student
+    const notif = new Notification({
+      userId: student.userId,
+      message: `Congratulations! Your offer letter for ${jobTitle} at ${companyName} has been approved and issued.`,
+      type: "application_status",
+    });
+    await notif.save();
 
-  // Send email
-  sendEmail({
-    to: student.email,
-    subject: `Congratulations! Approved Offer Letter: ${app.jobId.title} at ${app.jobId.companyId.name}`,
-    html: `
+    // Send email
+    sendEmail({
+      to: student.email,
+      subject: `Congratulations! Approved Offer Letter: ${jobTitle} at ${companyName}`,
+      html: `
       <h3>Dear ${student.name},</h3>
-      <p>We are pleased to inform you that your offer letter for <strong>${app.jobId.title}</strong> at <strong>${app.jobId.companyId.name}</strong> has been approved by the Placement Cell and issued!</p>
+      <p>We are pleased to inform you that your offer letter for <strong>${jobTitle}</strong> at <strong>${companyName}</strong> has been approved by the Placement Cell and issued!</p>
       <p>Log in to PlacementConnect to view and print your offer letter.</p>
       <br/>
       <p>Regards,</p>
       <p>Placement Cell, Geeta University</p>
     `,
-  }).catch(err => console.error("Email send error:", err));
+    }).catch(err => console.error("Email send error:", err));
+  }
 
   return res.status(200).json({
     message: "Offer letter approved successfully",
@@ -347,11 +352,11 @@ module.exports.rejectOffer = ErrorWrapper(async (req, res, next) => {
 
   // Notify recruiter / company user
   const Company = require("../models/company");
-  const company = await Company.findById(app.jobId.companyId);
+  const company = app.jobId ? await Company.findById(app.jobId.companyId) : null;
   if (company) {
     const notif = new Notification({
       userId: company.recruiterId,
-      message: `Placement Cell rejected the offer letter for ${app.studentId.name} (${app.jobId.title}). Reason: ${reason || "Not specified"}.`,
+      message: `Placement Cell rejected the offer letter for ${app.studentId?.name || "a candidate"} (${app.jobId.title}). Reason: ${reason || "Not specified"}.`,
       type: "general"
     });
     await notif.save();
