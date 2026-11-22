@@ -526,7 +526,7 @@ module.exports.getDetailedStats = ErrorWrapper(async (req, res, next) => {
     
     const compApps = applications.filter(a => a.jobId && a.jobId.companyId?.toString() === c._id.toString());
     const selected = compApps.filter(a => a.status === "Selected").length;
-    const pending = compApps.filter(a => ["Applied", "Shortlisted"].includes(a.status)).length;
+    const pending = compApps.filter(a => ["Applied", "Under Review", "Shortlisted"].includes(a.status)).length;
 
     let resTime = "3.5 days";
     if (c.name.toLowerCase().includes("google")) resTime = "4 days";

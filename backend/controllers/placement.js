@@ -118,7 +118,7 @@ module.exports.uploadShortlist = ErrorWrapper(async (req, res, next) => {
   if (shouldRejectOthers) {
     const activeApps = await Application.find({
       jobId: job._id,
-      status: { $in: ["Applied", "Shortlisted"] }
+      status: { $in: ["Applied", "Under Review", "Shortlisted"] }
     }).populate("studentId");
 
     for (const app of activeApps) {
