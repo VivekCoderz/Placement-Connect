@@ -4,8 +4,9 @@ import { LockKeyhole, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-reac
 import AuthShell from '../components/AuthShell';
 import api, { getErrorMessage } from '../utils/api';
 
-// Matches the User model's password minlength.
-const MIN_LENGTH = 6;
+import { passwordProblem, PASSWORD_HINT } from '../utils/password';
+
+const MIN_LENGTH = 8;
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -19,7 +20,8 @@ const ResetPassword = () => {
 
   const validate = () => {
     if (!token) return 'This reset link is invalid. Please request a new one.';
-    if (password.length < MIN_LENGTH) return `Password must be at least ${MIN_LENGTH} characters.`;
+    const problem = passwordProblem(password);
+    if (problem) return `${problem}.`;
     if (password !== confirm) return 'Passwords do not match.';
     return '';
   };
@@ -95,7 +97,7 @@ const ResetPassword = () => {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <p id="password-hint" className="mt-1.5 text-xs text-[#6B7280]">At least {MIN_LENGTH} characters.</p>
+          <p id="password-hint" className="mt-1.5 text-xs text-[#6B7280]">{PASSWORD_HINT}</p>
         </div>
         <div>
           <label htmlFor="confirm-password" className="pc-label">Confirm new password</label>

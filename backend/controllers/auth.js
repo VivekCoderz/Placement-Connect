@@ -7,6 +7,8 @@ const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
 const { sendEmail } = require("../utils/email");
 const { getClientBaseUrl } = require("../config/env");
+const { setAuthCookie, clearAuthCookie } = require("../utils/authToken");
+const { verifyGoogleCredential } = require("../utils/google");
 
 const PUBLIC_ROLES = ["student", "company"];
 const STAFF_ROLES = ["admin", "placementCell"];
@@ -17,11 +19,59 @@ const FORGOT_PASSWORD_RESPONSE = {
   data: {},
 };
 
-// Register handler
-module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
-  const { name, email, password, role } = req.body;
+// A real bcrypt hash compared against when the account does not exist, so a login
+// attempt takes the same time whether or not the email is registered.
+const DUMMY_PASSWORD_HASH = "$2b$12$OfHKzsijxINkXtTIz7EYhutQ9uA7i557FArKietLGu6pnBUKSB5fS";
 
-  if (!name || !email || !password || !role) {
+const LOCKED_MESSAGE = "Too many failed sign-in attempts. Please try again in a few minutes.";
+
+const publicUser = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  profileRef: user.profileRef,
+});
+
+// Checks shared by every sign-in method. On success sets the session cookie and returns
+// the token in the body as well (the SPA also sends it as a Bearer header).
+const issueSession = async (res, user, message = "Logged in successfully") => {
+  if (!user.isActive) {
+    throw new ErrorHandler(403, "Access Denied: Account is deactivated");
+  }
+  if (user.role === "company" && !user.isApproved) {
+    throw new ErrorHandler(403, "Access Denied: Company account is pending admin approval");
+  }
+
+  user.resetFailedLogins();
+  user.lastLogin = new Date();
+  await user.save({ validateBeforeSave: false });
+
+  const token = user.generateToken();
+  setAuthCookie(res, token);
+
+  return res.status(200).json({
+    success: true,
+    message,
+    data: { token, user: publicUser(user) },
+  });
+};
+
+// Register handler. Either a password or a Google credential (ID token) is required.
+// With Google, the email comes from the verified Google account, not from the form.
+module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
+  const { name, role, googleCredential } = req.body;
+  let { email, password } = req.body;
+  let googleId;
+
+  if (googleCredential) {
+    const identity = await verifyGoogleCredential(googleCredential);
+    email = identity.email;
+    googleId = identity.googleId;
+    password = undefined;
+  }
+
+  if (!name || !email || (!password && !googleId) || !role) {
     throw new ErrorHandler(400, "Name, email, password, and role are required");
   }
 
@@ -35,11 +85,22 @@ module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
   }
 
   // Check if user already exists
-  const cleanEmail = email ? email.trim().toLowerCase() : "";
-  const existingUser = await User.findOne({ email: cleanEmail });
+  const cleanEmail = email.trim().toLowerCase();
+  const existingUser = await User.findOne(
+    googleId ? { $or: [{ email: cleanEmail }, { googleId }] } : { email: cleanEmail },
+  );
   if (existingUser) {
     throw new ErrorHandler(400, "A user with this email already exists");
   }
+
+  const authFields = {
+    name,
+    email: cleanEmail,
+    password,
+    role,
+    googleId,
+    authProvider: googleId ? "google" : "local",
+  };
 
   let savedUser;
 
@@ -62,14 +123,14 @@ module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
     }
 
     // Create User
-    const newUser = new User({ name, email, password, role });
+    const newUser = new User(authFields);
     savedUser = await newUser.save();
 
     // Create Student Profile
     const newStudent = new Student({
       userId: savedUser._id,
       name,
-      email,
+      email: cleanEmail,
       branch,
       year,
       rollNumber,
@@ -111,20 +172,14 @@ module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
     }
 
     // Create User (Company) - pending admin approval
-    const newUser = new User({
-      name,
-      email,
-      password,
-      role,
-      isApproved: false,
-    });
+    const newUser = new User({ ...authFields, isApproved: false });
     savedUser = await newUser.save();
 
     // Create Company Profile - pending admin approval
     const newCompany = new Company({
       name: companyName,
       recruiterId: savedUser._id,
-      recruiterEmail: email,
+      recruiterEmail: cleanEmail,
       industry,
       website,
       hrContactName,
@@ -152,81 +207,7 @@ module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
   }
 });
 
-// Login handler
-// module.exports.postLogin = ErrorWrapper(async (req, res, next) => {
-//   const { email, rollNumber, password } = req.body;
-
-//   if ((!email && !rollNumber) || !password) {
-//     throw new ErrorHandler(400, "Please provide email or roll number, and password");
-//   }
-
-//   let user;
-
-//   // Find user by roll number or email
-//   if (rollNumber) {
-//     const student = await Student.findOne({ rollNumber });
-//     if (!student) {
-//       throw new ErrorHandler(404, "No student found with this roll number");
-//     }
-//     user = await User.findById(student.userId);
-//   } else {
-//     const cleanEmail = email ? email.trim().toLowerCase() : "";
-//     user = await User.findOne({ email: cleanEmail });
-//   }
-
-//   if (!user) {
-//     throw new ErrorHandler(404, "User not found");
-//   }
-
-//   // Check active status
-//   if (!user.isActive) {
-//     throw new ErrorHandler(403, "Access Denied: Account is deactivated");
-//   }
-
-//   // Check password
-//   const isMatch = await user.comparePassword(password);
-//   if (!isMatch) {
-//     throw new ErrorHandler(401, "Invalid credentials");
-//   }
-
-//   // Check company approval status
-//   if (user.role === "company") {
-//     if (!user.isApproved) {
-//       throw new ErrorHandler(403, "Access Denied: Company account is pending admin approval");
-//     }
-//   }
-
-//   // Update last login
-//   user.lastLogin = new Date();
-//   await user.save();
-
-//   // Generate Token
-//   const token = user.generateToken();
-
-//   // Set Cookie
-//   res.cookie("token", token, {
-//     httpOnly: true,
-//     secure: process.env.NODE_ENV === "production",
-//     sameSite: "lax",
-//     maxAge: 24 * 60 * 60 * 1000, // 1 day
-//   });
-
-//   return res.status(200).json({
-//     success: true,
-//     message: "Logged in successfully",
-//     data: {
-//       token,
-//       user: {
-//         id: user._id,
-//         name: user.name,
-//         email: user.email,
-//         role: user.role,
-//         profileRef: user.profileRef,
-//       },
-//     },
-//   });
-// });
-
+// Login handler (email or roll number + password)
 module.exports.postLogin = ErrorWrapper(async (req, res, next) => {
   const { email, rollNumber, password } = req.body;
 
@@ -238,74 +219,74 @@ module.exports.postLogin = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(400, "Please provide a password");
   }
 
-  let userExists;
+  let user;
 
   if (rollNumber) {
     const student = await Student.findOne({ rollNumber: String(rollNumber).trim() });
-    userExists = student ? await User.findById(student.userId) : null;
+    user = student ? await User.findById(student.userId) : null;
   } else {
     const cleanEmail = email ? email.trim().toLowerCase() : "";
-    userExists = await User.findOne({ email: cleanEmail });
+    user = await User.findOne({ email: cleanEmail });
   }
 
-  // Same response for unknown accounts and wrong passwords (no account enumeration).
-  if (!userExists) {
+  // Same response (and similar timing) for unknown accounts and wrong passwords,
+  // so the endpoint cannot be used to find out which emails are registered.
+  if (!user) {
+    await User.prototype.comparePassword.call({ password: DUMMY_PASSWORD_HASH }, password);
     throw new ErrorHandler(401, "Invalid credentials");
   }
 
-  // Check password
-  const isMatch = await userExists.comparePassword(password);
+  if (user.isLocked()) {
+    throw new ErrorHandler(429, LOCKED_MESSAGE);
+  }
+
+  const isMatch = await user.comparePassword(password);
   if (!isMatch) {
+    await user.registerFailedLogin();
+    if (user.isLocked()) {
+      throw new ErrorHandler(429, LOCKED_MESSAGE);
+    }
     throw new ErrorHandler(401, "Invalid credentials");
   }
-  // Check active status
-  if (!userExists.isActive) {
-    throw new ErrorHandler(403, "Access Denied: Account is deactivated");
-  }
 
-  // Check company approval status
-  if (userExists.role === "company") {
-    if (!userExists.isApproved) {
-      throw new ErrorHandler(
-        403,
-        "Access Denied: Company account is pending admin approval",
-      );
+  return issueSession(res, user);
+});
+
+// "Continue with Google". Signs in an existing account, linking the Google identity on
+// first use (Google has verified the email). For a new email nothing is created: the
+// client is told to finish registration by sending the same credential to /register.
+module.exports.postGoogleAuth = ErrorWrapper(async (req, res, next) => {
+  const identity = await verifyGoogleCredential(req.body.credential);
+
+  let user = await User.findOne({ googleId: identity.googleId });
+  if (!user) {
+    user = await User.findOne({ email: identity.email });
+    if (user) {
+      if (user.googleId && user.googleId !== identity.googleId) {
+        throw new ErrorHandler(401, "This account is linked to a different Google account");
+      }
+      user.googleId = identity.googleId;
     }
   }
 
-  // Update last login
-  userExists.lastLogin = new Date();
-  await userExists.save();
-
-  // Generate Token
-  const token = userExists.generateToken();
-
-  // Set Cookie
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-  return res.status(200).json({
-    success: true,
-    message: "Logged in successfully",
-    data: {
-      token,
-      user: {
-        id: userExists._id,
-        name: userExists.name,
-        email: userExists.email,
-        role: userExists.role,
-        profileRef: userExists.profileRef,
+  if (!user) {
+    return res.status(200).json({
+      success: true,
+      message: "No account exists for this Google email yet. Please complete registration.",
+      data: {
+        needsRegistration: true,
+        email: identity.email,
+        name: identity.name,
       },
-    },
-  });
+    });
+  }
+
+  return issueSession(res, user);
 });
 
-// Logout handler
+// Logout handler (this browser only)
 module.exports.postLogout = ErrorWrapper(async (req, res, next) => {
-  res.clearCookie("token");
+  clearAuthCookie(res);
   return res.status(200).json({
     success: true,
     message: "Logged out successfully",
@@ -313,9 +294,22 @@ module.exports.postLogout = ErrorWrapper(async (req, res, next) => {
   });
 });
 
+// Log out of every device: revokes all tokens issued so far.
+module.exports.postLogoutAll = ErrorWrapper(async (req, res, next) => {
+  await User.updateOne({ _id: req.user._id }, { $inc: { tokenVersion: 1 } });
+  clearAuthCookie(res);
+  return res.status(200).json({
+    success: true,
+    message: "Logged out from all devices",
+    data: {},
+  });
+});
+
 // Get current logged-in user profile info
 module.exports.me = ErrorWrapper(async (req, res, next) => {
-  const user = await User.findById(req.user.id).select("-password");
+  const user = await User.findById(req.user.id).select(
+    "-password -resetPasswordToken -resetPasswordExpire -tokenVersion -failedLoginAttempts -lockUntil",
+  );
   if (!user) {
     throw new ErrorHandler(404, "User not found");
   }
@@ -427,11 +421,14 @@ module.exports.resetPassword = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(400, "Invalid or expired reset token");
   }
 
-  // Set new password
+  // Set the new password and sign out every existing session.
   user.password = password;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
+  user.resetFailedLogins();
   await user.save();
+  clearAuthCookie(res);
 
   return res.status(200).json({
     success: true,
@@ -440,12 +437,13 @@ module.exports.resetPassword = ErrorWrapper(async (req, res, next) => {
   });
 });
 
-// Change Password handler
+// Change Password handler. Accounts created with Google have no password yet and may
+// set one without oldPassword. Other sessions are signed out; this one gets a new token.
 module.exports.changePassword = ErrorWrapper(async (req, res, next) => {
   const { oldPassword, newPassword } = req.body;
 
-  if (!oldPassword || !newPassword) {
-    throw new ErrorHandler(400, "Please provide old and new passwords");
+  if (!newPassword) {
+    throw new ErrorHandler(400, "Please provide a new password");
   }
 
   const user = await User.findById(req.user.id);
@@ -453,19 +451,29 @@ module.exports.changePassword = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(404, "User not found");
   }
 
-  // Check password
-  const isMatch = await user.comparePassword(oldPassword);
-  if (!isMatch) {
-    throw new ErrorHandler(401, "Incorrect current password");
+  if (user.password) {
+    if (!oldPassword) {
+      throw new ErrorHandler(400, "Please provide old and new passwords");
+    }
+    const isMatch = await user.comparePassword(oldPassword);
+    if (!isMatch) {
+      throw new ErrorHandler(401, "Incorrect current password");
+    }
+    if (await user.comparePassword(newPassword)) {
+      throw new ErrorHandler(400, "New password must be different from the current password");
+    }
   }
 
-  // Update password
   user.password = newPassword;
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
   await user.save();
+
+  const token = user.generateToken();
+  setAuthCookie(res, token);
 
   return res.status(200).json({
     success: true,
     message: "Password changed successfully",
-    data: {},
+    data: { token },
   });
 });

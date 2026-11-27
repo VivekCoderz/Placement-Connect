@@ -6,7 +6,15 @@ const objectId = z
   .refine((value) => mongoose.isValidObjectId(value), { message: "Invalid id" });
 
 const email = z.string().trim().toLowerCase().email("Invalid email").max(254);
-const password = z.string().min(6, "Password must be at least 6 characters").max(128);
+// New passwords: 8+ characters with at least one letter and one number.
+const password = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .max(128)
+  .refine((value) => /[A-Za-z]/.test(value) && /\d/.test(value), {
+    message: "Password must contain at least one letter and one number",
+  });
+const googleCredential = z.string().min(20).max(4096);
 const shortText = (max = 200) => z.string().trim().max(max);
 
 // ---------- Auth ----------
@@ -14,8 +22,10 @@ const shortText = (max = 200) => z.string().trim().max(max);
 const registerSchema = z
   .object({
     name: shortText(50).min(3, "Name must be at least 3 characters"),
-    email,
-    password,
+    // With googleCredential the email comes from Google and no password is needed.
+    email: email.optional(),
+    password: password.optional(),
+    googleCredential: googleCredential.optional(),
     role: z.string().trim(),
     // Student fields
     branch: shortText(100).optional(),
@@ -31,7 +41,12 @@ const registerSchema = z
     hrContactPhone: shortText(20).optional(),
     address: shortText(500).optional(),
   })
-  .strip();
+  .strip()
+  .refine((body) => body.googleCredential || (body.email && body.password), {
+    message: "Email and password are required",
+  });
+
+const googleAuthSchema = z.object({ credential: googleCredential });
 
 const loginSchema = z
   .object({
@@ -48,7 +63,8 @@ const forgotPasswordSchema = z.object({ email });
 const resetPasswordSchema = z.object({ password });
 
 const changePasswordSchema = z.object({
-  oldPassword: z.string().min(1).max(128),
+  // Optional only for Google-created accounts that have no password yet (checked in the controller).
+  oldPassword: z.string().min(1).max(128).optional(),
   newPassword: password,
 });
 
@@ -143,6 +159,7 @@ module.exports = {
   objectId,
   registerSchema,
   loginSchema,
+  googleAuthSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   changePasswordSchema,

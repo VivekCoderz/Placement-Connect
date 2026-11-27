@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   User,
   Mail,
@@ -11,13 +11,18 @@ import {
   GraduationCap
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { setUser } from "../redux/authSlice";
 import api from "../utils/api";
+import GoogleSignInButton from "../components/GoogleSignInButton";
+import { completeSignIn, homeForRole } from "../utils/session";
+import { passwordProblem, PASSWORD_HINT } from "../utils/password";
 
 const Signup = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useSelector((state) => state.auth.user);
+  // { credential, email, name } when signing up with Google (no password needed).
+  const [google, setGoogle] = useState(location.state?.google || null);
   
   useEffect(() => {
     if (user) {
@@ -26,8 +31,8 @@ const Signup = () => {
   }, [user, navigate]);
 
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
+    name: location.state?.google?.name || "",
+    email: location.state?.google?.email || "",
     password: "",
     rollNumber: "",
     branch: "CSE",
@@ -58,9 +63,17 @@ const Signup = () => {
     setError("");
 
     const { name, email, password, rollNumber, branch, year, cgpa } = formData;
-    if (!name || !email || !password || !rollNumber || !cgpa) {
+    if (!name || !email || (!google && !password) || !rollNumber || !cgpa) {
       setError("Please fill in all fields");
       return;
+    }
+
+    if (!google) {
+      const problem = passwordProblem(password);
+      if (problem) {
+        setError(problem);
+        return;
+      }
     }
 
     const parsedCgpa = parseFloat(cgpa);
@@ -71,38 +84,49 @@ const Signup = () => {
 
     setIsLoading(true);
     try {
-      await api.post("/api/auth/register", {
+      const profile = {
         name,
-        email,
-        password,
         rollNumber,
         branch,
         year: parseInt(year),
         cgpa: parsedCgpa,
         role: "student",
-      });
+      };
+      await api.post(
+        "/api/auth/register",
+        google ? { ...profile, googleCredential: google.credential } : { ...profile, email, password },
+      );
 
       // Log in automatically
-      const loginResponse = await api.post("/api/auth/login", { email, password });
-      const loginRes = loginResponse.data;
+      const loginResponse = google
+        ? await api.post("/api/auth/google", { credential: google.credential })
+        : await api.post("/api/auth/login", { email, password });
 
-      const { token } = loginRes.data;
-      localStorage.setItem("token", token);
-
-      const meResponse = await api.get("/api/auth/me");
-      const meRes = meResponse.data;
-
-      const combinedUser = {
-        ...meRes.data.user,
-        ...meRes.data.details,
-        id: meRes.data.user._id || meRes.data.user.id,
-      };
-
-      localStorage.setItem("user", JSON.stringify(combinedUser));
-      dispatch(setUser(combinedUser));
+      await completeSignIn(loginResponse.data.data.token, dispatch);
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.message || err.message || "Registration failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Google picked on this page: sign in if the account exists, otherwise prefill the form.
+  const handleGoogleCredential = async (credential) => {
+    setError("");
+    setIsLoading(true);
+    try {
+      const response = await api.post("/api/auth/google", { credential });
+      const data = response.data.data;
+      if (data.needsRegistration) {
+        setGoogle({ credential, email: data.email, name: data.name });
+        setFormData((prev) => ({ ...prev, email: data.email, name: prev.name || data.name || "", password: "" }));
+        return;
+      }
+      const signedIn = await completeSignIn(data.token, dispatch);
+      navigate(homeForRole(signedIn.role));
+    } catch (err) {
+      setError(err.response?.data?.message || "Google sign-in failed");
     } finally {
       setIsLoading(false);
     }
@@ -180,6 +204,7 @@ const Signup = () => {
                   name="email"
                   type="email"
                   required
+                  readOnly={Boolean(google)}
                   value={formData.email}
                   onChange={handleChange}
                   className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-[#94A3B8] focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
@@ -188,7 +213,12 @@ const Signup = () => {
               </div>
             </div>
 
-            {/* Password */}
+            {/* Password (not needed when signing up with Google) */}
+            {google ? (
+              <div className="flex items-center rounded-xl border border-[#22C55E]/30 bg-[#22C55E]/5 px-4 py-3 text-xs font-medium text-[#166534]">
+                Signing up with your Google account. No password needed.
+              </div>
+            ) : (
             <div>
               <label
                 htmlFor="password"
@@ -204,14 +234,18 @@ const Signup = () => {
                   id="password"
                   name="password"
                   type="password"
+                  autoComplete="new-password"
                   required
+                  minLength={8}
                   value={formData.password}
                   onChange={handleChange}
                   className="block w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-[#94A3B8] focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
                   placeholder="••••••••"
                 />
               </div>
+              <p className="mt-1.5 text-[11px] text-[#94A3B8]">{PASSWORD_HINT}</p>
             </div>
+            )}
 
             {/* Roll Number */}
             <div>
@@ -340,6 +374,8 @@ const Signup = () => {
             </button>
           </div>
         </form>
+
+        {!google && <GoogleSignInButton onCredential={handleGoogleCredential} disabled={isLoading} text="signup_with" />}
 
         <div className="text-center">
           <p className="text-sm text-[#4B5563] font-medium">

@@ -5,6 +5,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 
 const { assertRequiredEnv, isOriginAllowed } = require("./config/env");
+const sanitizeInput = require("./middleware/sanitizeInput");
 
 assertRequiredEnv();
 
@@ -46,6 +47,7 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
+app.use(sanitizeInput);
 
 // Route groups
 const authRoutes = require("./routes/auth");

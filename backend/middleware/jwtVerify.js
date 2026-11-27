@@ -1,5 +1,4 @@
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const { COOKIE_NAME, verifyAuthToken, AuthTokenError } = require("../utils/authToken");
 const Student = require("../models/student");
 const Company = require("../models/company");
 const ErrorHandler = require("../utils/ErrorHandle");
@@ -7,10 +6,10 @@ const ErrorWrapper = require("../utils/ErrorWrapper");
 const roleCheck = require("./roleCheck");
 
 const jwtVerify = ErrorWrapper(async (req, res, next) => {
-  let token = req.cookies?.token;
+  let token = req.cookies?.[COOKIE_NAME];
 
-  if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
-    token = req.headers.authorization.split(" ")[1];
+  if (!token && typeof req.headers.authorization === "string" && req.headers.authorization.startsWith("Bearer ")) {
+    token = req.headers.authorization.slice(7).trim();
   }
 
   if (!token) {
@@ -18,26 +17,14 @@ const jwtVerify = ErrorWrapper(async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Fetch user and check status
-    const user = await User.findById(decoded.id).select("-password");
-    if (!user) {
-      throw new ErrorHandler(401, "Unauthorized: User no longer exists");
-    }
-    
-    if (!user.isActive) {
-      throw new ErrorHandler(403, "Access Denied: Account is deactivated");
-    }
-
-    req.user = user;
-    next();
+    req.user = await verifyAuthToken(token);
   } catch (err) {
-    if (err instanceof ErrorHandler) {
-      throw err;
+    if (err instanceof AuthTokenError) {
+      throw new ErrorHandler(err.status, err.message);
     }
-    throw new ErrorHandler(401, "Unauthorized: Invalid or expired token");
+    throw err;
   }
+  next();
 });
 
 // Fetch associated student or company profile

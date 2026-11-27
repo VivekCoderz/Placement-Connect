@@ -6,6 +6,7 @@ const { authLimiter, passwordResetLimiter } = require("../middleware/rateLimit")
 const {
   registerSchema,
   loginSchema,
+  googleAuthSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   changePasswordSchema,
@@ -15,10 +16,12 @@ const router = express.Router();
 
 router.post("/register", authLimiter, validate(registerSchema), AuthController.postRegister);
 router.post("/login", authLimiter, validate(loginSchema), AuthController.postLogin);
+router.post("/google", authLimiter, validate(googleAuthSchema), AuthController.postGoogleAuth);
 router.post("/logout", AuthController.postLogout);
+router.post("/logout-all", jwtVerify, AuthController.postLogoutAll);
 router.get("/me", jwtVerify, AuthController.me);
 router.post("/forgot-password", passwordResetLimiter, validate(forgotPasswordSchema), AuthController.forgotPassword);
 router.post("/reset-password/:token", passwordResetLimiter, validate(resetPasswordSchema), AuthController.resetPassword);
-router.put("/change-password", jwtVerify, validate(changePasswordSchema), AuthController.changePassword);
+router.put("/change-password", authLimiter, jwtVerify, validate(changePasswordSchema), AuthController.changePassword);
 
 module.exports = router;

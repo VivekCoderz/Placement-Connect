@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, LogIn, AlertCircle, Clock } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle, Clock, GraduationCap, Building2 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUser } from '../redux/authSlice';
 import AuthShell from '../components/AuthShell';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 import api, { getErrorMessage } from '../utils/api';
-
-const homeForRole = (role) => {
-  if (role === 'company') return '/recruiter/dashboard';
-  if (role === 'placementCell') return '/placement/dashboard';
-  if (role === 'admin') return '/admin/dashboard';
-  return '/';
-};
+import { completeSignIn, clearLocalSession, homeForRole } from '../utils/session';
 
 const isPendingApproval = (status, message = '') =>
   status === 403 && /pending|approv/i.test(message);
@@ -25,6 +19,8 @@ const Login = () => {
   const [error, setError] = useState('');
   const [pendingMessage, setPendingMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  // Set when a Google account has no PlacementConnect account yet.
+  const [googleSignup, setGoogleSignup] = useState(null);
 
   useEffect(() => {
     if (user) navigate(homeForRole(user.role));
@@ -43,29 +39,41 @@ const Login = () => {
     setIsLoading(true);
     try {
       const response = await api.post('/api/auth/login', { email, password });
-      const { token } = response.data.data;
-      localStorage.setItem('token', token);
-
-      const meResponse = await api.get('/api/auth/me');
-      const meRes = meResponse.data;
-
-      const combinedUser = {
-        ...meRes.data.user,
-        ...meRes.data.details,
-        id: meRes.data.user._id || meRes.data.user.id,
-      };
-
-      localStorage.setItem('user', JSON.stringify(combinedUser));
-      dispatch(setUser(combinedUser));
-      navigate(homeForRole(combinedUser.role));
+      const signedIn = await completeSignIn(response.data.data.token, dispatch);
+      navigate(homeForRole(signedIn.role));
     } catch (err) {
-      const message = getErrorMessage(err, 'Login failed');
-      if (isPendingApproval(err?.response?.status, message)) {
-        localStorage.removeItem('token');
-        setPendingMessage(message);
-      } else {
-        setError(message);
+      handleSignInError(err, 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignInError = (err, fallback) => {
+    const message = getErrorMessage(err, fallback);
+    clearLocalSession();
+    if (isPendingApproval(err?.response?.status, message)) {
+      setPendingMessage(message);
+    } else {
+      setError(message);
+    }
+  };
+
+  const handleGoogleCredential = async (credential) => {
+    setError('');
+    setPendingMessage('');
+    setGoogleSignup(null);
+    setIsLoading(true);
+    try {
+      const response = await api.post('/api/auth/google', { credential });
+      const data = response.data.data;
+      if (data.needsRegistration) {
+        setGoogleSignup({ credential, email: data.email, name: data.name });
+        return;
       }
+      const signedIn = await completeSignIn(data.token, dispatch);
+      navigate(homeForRole(signedIn.role));
+    } catch (err) {
+      handleSignInError(err, 'Google sign-in failed');
     } finally {
       setIsLoading(false);
     }
@@ -102,6 +110,29 @@ const Login = () => {
               {pendingMessage.replace(/^Access Denied:\s*/i, '').replace(/\.?$/, '.')} You'll be able to
               sign in once your registration has been approved.
             </p>
+          </div>
+        </div>
+      )}
+
+      {googleSignup && (
+        <div className="rounded-xl border border-[#0B3D91]/20 bg-[#0B3D91]/5 p-4 text-sm" role="status">
+          <p className="font-semibold text-[#111827]">No account found for {googleSignup.email}</p>
+          <p className="mt-1 text-xs">Finish creating your account with Google:</p>
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              className="pc-btn-primary py-2.5"
+              onClick={() => navigate('/signup', { state: { google: googleSignup } })}
+            >
+              <GraduationCap className="h-4 w-4" aria-hidden="true" /> I'm a student
+            </button>
+            <button
+              type="button"
+              className="pc-btn-primary py-2.5"
+              onClick={() => navigate('/recruiter/signup', { state: { google: googleSignup } })}
+            >
+              <Building2 className="h-4 w-4" aria-hidden="true" /> I'm a recruiter
+            </button>
           </div>
         </div>
       )}
@@ -155,8 +186,6 @@ const Login = () => {
           </div>
         </div>
 
-        <p className="text-[11px] italic text-[#94A3B8]">Demo user: student@pc.com / password123</p>
-
         <button type="submit" disabled={isLoading} className="pc-btn-primary w-full py-3">
           {isLoading ? (
             <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" aria-label="Signing in" />
@@ -165,6 +194,8 @@ const Login = () => {
           )}
         </button>
       </form>
+
+      <GoogleSignInButton onCredential={handleGoogleCredential} disabled={isLoading} />
     </AuthShell>
   );
 };

@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { setUser, setLoading } from './redux/authSlice';
+import { setUser, setLoading, clearUser } from './redux/authSlice';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import api from './utils/api';
@@ -47,6 +47,7 @@ function App() {
           console.error("Session restore failed:", err);
           localStorage.removeItem('token');
           localStorage.removeItem('user');
+          dispatch(clearUser());
         } finally {
           dispatch(setLoading(false));
         }

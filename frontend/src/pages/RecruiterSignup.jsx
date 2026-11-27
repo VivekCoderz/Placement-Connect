@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Building2, Mail, Lock, User, Globe, Phone, MapPin, Briefcase, AlertCircle, ArrowRight, CheckCircle2, Clock } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUser } from '../redux/authSlice';
 import api, { getErrorMessage } from '../utils/api';
+import GoogleSignInButton from '../components/GoogleSignInButton';
+import { completeSignIn, clearLocalSession, homeForRole } from '../utils/session';
+import { passwordProblem, PASSWORD_HINT } from '../utils/password';
 
 const RecruiterSignup = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const authenticatedUser = useSelector((state) => state.auth.user);
+  // { credential, email, name } when signing up with Google (no password needed).
+  const [google, setGoogle] = useState(location.state?.google || null);
 
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
+    name: location.state?.google?.name || '',
+    email: location.state?.google?.email || '',
     password: '',
     companyName: '',
     industry: '',
@@ -45,6 +50,28 @@ const RecruiterSignup = () => {
     }
   }, [isSuccess, isApproved, navigate]);
 
+  // Google picked on this page: sign in if the account exists, otherwise prefill the form.
+  const handleGoogleCredential = async (credential) => {
+    setError('');
+    setIsLoading(true);
+    try {
+      const response = await api.post('/api/auth/google', { credential });
+      const data = response.data.data;
+      if (data.needsRegistration) {
+        setGoogle({ credential, email: data.email, name: data.name });
+        setFormData((prev) => ({ ...prev, email: data.email, name: prev.name || data.name || '', password: '' }));
+        return;
+      }
+      const signedIn = await completeSignIn(data.token, dispatch);
+      navigate(homeForRole(signedIn.role));
+    } catch (err) {
+      clearLocalSession();
+      setError(getErrorMessage(err, 'Google sign-in failed'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -57,17 +84,23 @@ const RecruiterSignup = () => {
     setError('');
 
     const { name, email, password, companyName, industry, website, phone, address } = formData;
-    if (!name || !email || !password || !companyName || !phone) {
+    if (!name || !email || (!google && !password) || !companyName || !phone) {
       setError('Please fill in all required fields (Name, Corporate Email, Password, Company Name, Contact Phone)');
       return;
     }
 
+    if (!google) {
+      const problem = passwordProblem(password);
+      if (problem) {
+        setError(problem);
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
-      await api.post('/api/auth/register', {
+      const profile = {
         name,
-        email,
-        password,
         role: 'company',
         companyName,
         industry,
@@ -75,30 +108,22 @@ const RecruiterSignup = () => {
         hrContactName: name,
         hrContactPhone: phone,
         address
-      });
+      };
+      await api.post(
+        '/api/auth/register',
+        google ? { ...profile, googleCredential: google.credential } : { ...profile, email, password },
+      );
 
       // Try to sign in straight away. If the company still needs admin
       // approval the backend answers 403 and we show a pending screen.
       let approved = true;
       try {
-        const loginResponse = await api.post('/api/auth/login', { email, password });
-        const loginRes = loginResponse.data;
-        const { token } = loginRes.data;
-        localStorage.setItem('token', token);
-
-        const meResponse = await api.get('/api/auth/me');
-        const meRes = meResponse.data;
-
-        const combinedUser = {
-          ...meRes.data.user,
-          ...meRes.data.details,
-          id: meRes.data.user._id || meRes.data.user.id,
-        };
-
-        localStorage.setItem('user', JSON.stringify(combinedUser));
-        dispatch(setUser(combinedUser));
+        const loginResponse = google
+          ? await api.post('/api/auth/google', { credential: google.credential })
+          : await api.post('/api/auth/login', { email, password });
+        await completeSignIn(loginResponse.data.data.token, dispatch);
       } catch (loginErr) {
-        localStorage.removeItem('token');
+        clearLocalSession();
         if (loginErr?.response?.status === 403) {
           approved = false;
         } else {
@@ -243,6 +268,7 @@ const RecruiterSignup = () => {
                         name="email"
                         type="email"
                         required
+                        readOnly={Boolean(google)}
                         value={formData.email}
                         onChange={handleChange}
                         className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
@@ -253,7 +279,12 @@ const RecruiterSignup = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  {/* Password */}
+                  {/* Password (not needed when signing up with Google) */}
+                  {google ? (
+                    <div className="flex items-center rounded-xl border border-[#22C55E]/30 bg-[#22C55E]/5 px-4 py-3 text-xs font-medium text-[#166534]">
+                      Signing up with your Google account. No password needed.
+                    </div>
+                  ) : (
                   <div className="space-y-1.5">
                     <label htmlFor="recruite-field-3" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Password *</label>
                     <div className="relative">
@@ -263,14 +294,18 @@ const RecruiterSignup = () => {
                       <input id="recruite-field-3"
                         name="password"
                         type="password"
+                        autoComplete="new-password"
                         required
+                        minLength={8}
                         value={formData.password}
                         onChange={handleChange}
                         className="pl-11 block w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] focus:bg-white rounded-xl text-[#111827] placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0B3D91]/10 focus:border-[#0B3D91] transition-all text-sm font-medium"
-                        placeholder="Minimum 6 characters"
+                        placeholder="Minimum 8 characters"
                       />
                     </div>
+                    <p className="text-[11px] text-[#94A3B8]">{PASSWORD_HINT}</p>
                   </div>
+                  )}
 
                   {/* Phone */}
                   <div className="space-y-1.5">
@@ -394,6 +429,12 @@ const RecruiterSignup = () => {
                 </button>
               </div>
             </form>
+
+            {!google && (
+              <div className="mt-6">
+                <GoogleSignInButton onCredential={handleGoogleCredential} disabled={isLoading} text="signup_with" />
+              </div>
+            )}
 
             <div className="text-center mt-6">
               <p className="text-sm text-[#4B5563] font-medium">

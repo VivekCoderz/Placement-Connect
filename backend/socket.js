@@ -1,6 +1,6 @@
 // Socket.io setup with JWT authentication.
 const { Server } = require("socket.io");
-const jwt = require("jsonwebtoken");
+const { verifyAuthToken } = require("./utils/authToken");
 const mongoose = require("mongoose");
 const User = require("./models/User");
 const Message = require("./models/message");
@@ -31,9 +31,7 @@ const socketAuth = async (socket, next) => {
     const token = extractToken(socket.handshake);
     if (!token) return next(new Error("Unauthorized"));
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("_id role isActive");
-    if (!user || !user.isActive) return next(new Error("Unauthorized"));
+    const user = await verifyAuthToken(token, { select: "_id role isActive tokenVersion" });
 
     socket.user = { id: user._id.toString(), role: user.role };
     return next();
