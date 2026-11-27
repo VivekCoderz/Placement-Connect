@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
   Building2, Briefcase, Users, Calendar, DollarSign, Award, Plus, FileText, ArrowRight, Clock, Globe, Phone, AlertCircle, RefreshCw, CheckCircle2, XCircle, ChevronRight, Download, Send, Lock, Upload, Sparkles, ListChecks
@@ -80,7 +80,6 @@ const RecruiterDashboard = () => {
   // ATS and Result Upload state
   const [isAtsModalOpen, setIsAtsModalOpen] = useState(false);
   const [atsThreshold, setAtsThreshold] = useState(70);
-  const [atsRoundName, setAtsRoundName] = useState('Aptitude Test');
   const [isAtsProcessing, setIsAtsProcessing] = useState(false);
 
   const [isCsvResultModalOpen, setIsCsvResultModalOpen] = useState(false);
@@ -249,7 +248,35 @@ const RecruiterDashboard = () => {
     }
   };
 
-  const handleCreateRound = async (e) => {
+  // Guards against double-clicks creating duplicate rounds or re-running ATS.
+  const inFlightRef = useRef({});
+  const runOnce = async (key, fn) => {
+    if (inFlightRef.current[key]) return;
+    inFlightRef.current[key] = true;
+    try {
+      await fn();
+    } finally {
+      inFlightRef.current[key] = false;
+    }
+  };
+
+  const handleToggleJobStatus = (job) =>
+    runOnce(`jobStatus-${job._id}`, async () => {
+      const next = job.status === 'closed' ? 'active' : 'closed';
+      const question = next === 'closed'
+        ? `Close "${job.title}" to new applications? Existing applicants are not affected.`
+        : `Reopen "${job.title}" for applications?`;
+      if (!window.confirm(question)) return;
+      try {
+        await api.put(`/api/company/jobs/${job._id}/status`, { status: next });
+        await fetchMyDrives();
+      } catch (err) {
+        alert(err.response?.data?.message || 'Could not update the drive');
+      }
+    });
+
+  const handleCreateRound = (e) => runOnce('createRound', () => createRound(e));
+  const createRound = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const payload = {
@@ -272,7 +299,8 @@ const RecruiterDashboard = () => {
     }
   };
 
-  const handleUpdateRound = async (e) => {
+  const handleUpdateRound = (e) => runOnce('updateRound', () => updateRound(e));
+  const updateRound = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const payload = {
@@ -345,8 +373,8 @@ const RecruiterDashboard = () => {
       studentId: c.studentId?._id,
       name: c.studentId?.name,
       rollNumber: c.studentId?.rollNumber,
-      result: 'Selected',
-      score: '100',
+      result: '',
+      score: '',
       remarks: ''
     })));
   };
@@ -357,13 +385,18 @@ const RecruiterDashboard = () => {
 
   const handleManualResultsSubmit = async (e) => {
     e.preventDefault();
-    if (manualRoundResultsList.length === 0) return;
+    if (isSubmittingManualResults) return;
+    const marked = manualRoundResultsList.filter((item) => item.result);
+    if (marked.length === 0) {
+      setManualResultsError('Choose a result for at least one candidate.');
+      return;
+    }
     setIsSubmittingManualResults(true);
     setManualResultsSuccess('');
     setManualResultsError('');
     try {
       const response = await api.post(`/api/company/jobs/${selectedJob._id}/rounds/${selectedRoundForResults._id}/manual-results`, {
-        results: manualRoundResultsList.map(item => ({
+        results: marked.map(item => ({
           studentId: item.studentId,
           result: item.result,
           score: parseFloat(item.score) || 0,
@@ -384,13 +417,12 @@ const RecruiterDashboard = () => {
   };
 
   const handleAtsShortlist = async () => {
-    if (!selectedJob) return;
+    if (!selectedJob || isAtsProcessing) return;
     setIsAtsProcessing(true);
     setActionSuccess('');
     try {
       const response = await api.post(`/api/company/jobs/${selectedJob._id}/ats-shortlist`, {
-        threshold: Number(atsThreshold),
-        roundName: atsRoundName
+        threshold: Number(atsThreshold)
       });
       if (response.status === 200) {
         setActionSuccess(response.data.message || 'Candidates shortlisted successfully via ATS!');
@@ -646,6 +678,24 @@ const RecruiterDashboard = () => {
       setFormError('Please fill in all fields');
       return;
     }
+    if (!(parseFloat(pkg) > 0)) {
+      setFormError('Package must be greater than 0');
+      return;
+    }
+    if (new Date(deadline) <= new Date()) {
+      setFormError('Application deadline must be a future date');
+      return;
+    }
+    const openingsNum = Number(numOpenings);
+    if (!Number.isInteger(openingsNum) || openingsNum < 1) {
+      setFormError('Number of openings must be a whole number of at least 1');
+      return;
+    }
+    const thresholdNum = Number(atsThreshold);
+    if (atsThreshold === '' || !(thresholdNum >= 0 && thresholdNum <= 100)) {
+      setFormError('ATS threshold must be between 0 and 100');
+      return;
+    }
 
     const eligibleBranches = Object.keys(branches).filter(k => branches[k]);
     const eligibleYears = Object.keys(years).filter(k => years[k]).map(Number);
@@ -670,13 +720,14 @@ const RecruiterDashboard = () => {
           branches: eligibleBranches,
           years: eligibleYears
         },
-        deadline: deadline,
+        // End of the chosen day, so the drive stays open through that date.
+        deadline: new Date(`${deadline}T23:59:59`).toISOString(),
         rounds: postRounds.map((r, idx) => ({ number: idx + 1, name: r.name, description: r.description })),
         requiredSkills: requiredSkills ? requiredSkills.split(',').map(s => s.trim()).filter(Boolean) : [],
         preferredSkills: preferredSkills ? preferredSkills.split(',').map(s => s.trim()).filter(Boolean) : [],
         experienceRequired: experienceRequired || "0 years",
-        numOpenings: parseInt(numOpenings) || 5,
-        atsThreshold: parseFloat(atsThreshold) || 60
+        numOpenings: openingsNum,
+        atsThreshold: thresholdNum
       };
 
       const response = await api.post('/api/company/jobs', payload);
@@ -923,13 +974,25 @@ const RecruiterDashboard = () => {
                         <div className="flex justify-between items-start gap-2">
                           <h3 className="font-bold text-[#111827] text-sm tracking-tight leading-snug">{job.title}</h3>
                           <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                            isExpired 
-                              ? 'bg-rose-50 border border-rose-250 text-rose-600' 
+                            isExpired || job.status === 'closed'
+                              ? 'bg-rose-50 border border-rose-250 text-rose-600'
                               : 'bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#22C55E]'
                           }`}>
-                            {isExpired ? 'Expired' : 'Active'}
+                            {job.status === 'closed' ? 'Closed' : isExpired ? 'Expired' : 'Active'}
                           </span>
                         </div>
+                        {!isExpired && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleJobStatus(job);
+                            }}
+                            className="text-[10px] font-bold text-[#0B3D91] hover:underline"
+                          >
+                            {job.status === 'closed' ? 'Reopen applications' : 'Close applications'}
+                          </button>
+                        )}
                         
                         <div className="flex items-center gap-4 text-[11px] font-semibold text-[#4B5563]">
                           <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-[#94A3B8]" /> {job.package} LPA</span>
@@ -1382,36 +1445,61 @@ const RecruiterDashboard = () => {
                                         </button>
                                       )}
 
-                                      {/* Manual override button */}
-                                      <button
-                                        onClick={() => {
-                                          setOverrideApp(app);
-                                          setOverrideForm({ status: app.status === 'Rejected' ? 'Shortlisted' : 'Rejected', reason: '' });
-                                          setIsOverrideModalOpen(true);
-                                        }}
-                                        className="px-3 py-1.5 text-xs bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100 rounded-lg transition-all flex items-center gap-1"
-                                      >
-                                        <Sparkles className="w-3 h-3 text-purple-650" /> Override AI
-                                      </button>
+                                      {/* Manual override: only while the screening decision is still open */}
+                                      {['AI Screening', 'Under Review', 'Applied', 'Shortlisted', 'Rejected'].includes(app.status) &&
+                                        !(app.rounds || []).some((r) => !['Applied', 'Resume Screening'].includes(r.name) && r.result !== 'Pending') &&
+                                        !['Pending Approval', 'Approved'].includes(app.offerLetterStatus) && (
+                                        <button
+                                          onClick={() => {
+                                            setOverrideApp(app);
+                                            setOverrideForm({ status: app.status === 'Rejected' ? 'Shortlisted' : 'Rejected', reason: '' });
+                                            setIsOverrideModalOpen(true);
+                                          }}
+                                          className="px-3 py-1.5 text-xs bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100 rounded-lg transition-all flex items-center gap-1"
+                                        >
+                                          <Sparkles className="w-3 h-3 text-purple-650" /> Override AI
+                                        </button>
+                                      )}
 
-                                      {app.offerLetterStatus && app.offerLetterStatus !== 'None' ? (
-                                        <span className={`px-2.5 py-1.5 text-[10px] rounded-lg font-bold border uppercase ${
-                                          app.offerLetterStatus === 'Approved' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
-                                          app.offerLetterStatus === 'Rejected' ? 'bg-rose-50 border-rose-200 text-rose-600' :
-                                          'bg-amber-50 border-amber-200 text-amber-700'
-                                        }`}>
-                                          Offer: {app.offerLetterStatus}
+                                      {app.status === 'Withdrawn' && (
+                                        <span className="px-2.5 py-1.5 text-[10px] rounded-lg font-bold border uppercase bg-slate-50 border-slate-200 text-slate-500">
+                                          Withdrawn by student
                                         </span>
-                                      ) : (
-                                        app.status !== 'Rejected' && app.status !== 'Applied' && app.status !== 'AI Screening' && (
-                                          <button
-                                            onClick={() => handleOpenOfferModal(app)}
-                                            disabled={actionLoadingId !== null}
-                                            className="px-3 py-1.5 text-xs bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold rounded-lg transition-all active:scale-95 cursor-pointer"
-                                          >
-                                            Issue Offer
-                                          </button>
-                                        )
+                                      )}
+
+                                      {app.offerLetterStatus && app.offerLetterStatus !== 'None' && (
+                                        <span
+                                          className={`px-2.5 py-1.5 text-[10px] rounded-lg font-bold border uppercase ${
+                                            app.offerResponse === 'Accepted' ? 'bg-emerald-100 border-emerald-300 text-emerald-800' :
+                                            app.offerResponse === 'Declined' ? 'bg-slate-50 border-slate-200 text-slate-500' :
+                                            app.offerLetterStatus === 'Approved' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                                            app.offerLetterStatus === 'Rejected' ? 'bg-rose-50 border-rose-200 text-rose-600' :
+                                            'bg-amber-50 border-amber-200 text-amber-700'
+                                          }`}
+                                          title={app.offerLetterStatus === 'Rejected' && app.offerRejectionReason ? `Placement Cell: ${app.offerRejectionReason}` : undefined}
+                                        >
+                                          {app.offerResponse === 'Accepted' ? 'Offer accepted by student'
+                                            : app.offerResponse === 'Declined' ? 'Offer declined by student'
+                                            : app.offerLetterStatus === 'Approved' ? 'Offer sent, awaiting student'
+                                            : app.offerLetterStatus === 'Rejected' ? 'Offer rejected by Placement Cell'
+                                            : 'Offer pending Placement Cell approval'}
+                                        </span>
+                                      )}
+
+                                      {app.status === 'Selected' && ['None', 'Rejected', undefined].includes(app.offerLetterStatus) && (
+                                        <button
+                                          onClick={() => handleOpenOfferModal(app)}
+                                          disabled={actionLoadingId !== null}
+                                          className="px-3 py-1.5 text-xs bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold rounded-lg transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                                        >
+                                          {app.offerLetterStatus === 'Rejected' ? 'Re-issue Offer' : 'Issue Offer'}
+                                        </button>
+                                      )}
+
+                                      {app.offerLetterStatus === 'Rejected' && app.offerRejectionReason && (
+                                        <p className="w-full text-[11px] font-semibold text-rose-600">
+                                          Placement Cell: {app.offerRejectionReason}
+                                        </p>
                                       )}
                                     </div>
                                   </div>
@@ -2575,19 +2663,12 @@ const RecruiterDashboard = () => {
             </p>
 
             <div className="space-y-4">
-              <div className="space-y-1">
-                <label htmlFor="recruite-field-40" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Evaluation Stage / Round Name *</label>
-                <select id="recruite-field-40"
-                  value={atsRoundName}
-                  onChange={(e) => setAtsRoundName(e.target.value)}
-                  className="block w-full py-2.5 px-3 bg-white border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#111827] focus:outline-none"
-                >
-                  {(selectedJob.rounds && selectedJob.rounds.length > 0 ? selectedJob.rounds.map(r => r.name) : [
-                    'Aptitude Test', 'Group Discussion (GD)', 'Technical Interview', 'HR Round'
-                  ]).map((rName, idx) => (
-                    <option key={idx} value={rName}>{rName}</option>
-                  ))}
-                </select>
+              <div className="rounded-xl border border-[#0B3D91]/15 bg-[#0B3D91]/5 px-3 py-2.5 text-xs font-semibold text-[#0B3D91]">
+                Shortlisted candidates move into the first round
+                {jobRounds.length > 0
+                  ? <>: <strong>{[...jobRounds].sort((a, b) => a.sequence - b.sequence)[0].name}</strong></>
+                  : ' (add rounds to this drive to schedule them)'}
+                . Only candidates still under resume review are considered.
               </div>
 
               <div className="space-y-1">
@@ -2612,7 +2693,7 @@ const RecruiterDashboard = () => {
 
               {/* Match preview count */}
               {(() => {
-                const count = applicants.filter(a => a.status === 'Applied' && a.atsScore >= atsThreshold).length;
+                const count = applicants.filter(a => ['Under Review', 'Applied'].includes(a.status) && a.atsScore >= atsThreshold).length;
                 return (
                   <div className="p-3 bg-[#FAF5FF] border border-[#F3E8FF] rounded-xl text-center">
                     <p className="text-xs font-bold text-[#0B3D91]">
@@ -2631,7 +2712,7 @@ const RecruiterDashboard = () => {
                 Cancel
               </button>
               <button
-                disabled={isAtsProcessing || applicants.filter(a => a.status === 'Applied' && a.atsScore >= atsThreshold).length === 0}
+                disabled={isAtsProcessing || applicants.filter(a => ['Under Review', 'Applied'].includes(a.status) && a.atsScore >= atsThreshold).length === 0}
                 onClick={handleAtsShortlist}
                 className="px-4 py-2 bg-[#0B3D91] hover:bg-[#082F70] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
               >
@@ -2967,6 +3048,7 @@ const RecruiterDashboard = () => {
                               onChange={(e) => handleManualResultFieldChange(idx, 'result', e.target.value)}
                               className="py-1 px-2.5 bg-white border border-[#E5E7EB] rounded-lg text-xs font-semibold text-[#111827] focus:outline-none cursor-pointer"
                             >
+                              <option value="">Choose result</option>
                               <option value="Selected">Selected (Passed)</option>
                               <option value="Rejected">Rejected (Eliminated)</option>
                               <option value="Absent">Absent</option>

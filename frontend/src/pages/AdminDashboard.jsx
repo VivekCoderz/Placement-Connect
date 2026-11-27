@@ -1848,7 +1848,7 @@ const AdminDashboard = () => {
                                   <Eye className="w-3.5 h-3.5" />
                                 </button>
                                 <button 
-                                  onClick={() => handleToggleStudentSuspension(student.id)}
+                                  onClick={() => handleToggleStudentSuspension(student.userId)}
                                   className={`p-1.5 rounded-lg border border-transparent hover:bg-slate-100 cursor-pointer ${student.resumeStatus === 'Suspended' ? 'text-emerald-500 hover:text-emerald-600' : 'text-slate-400 hover:text-slate-650'}`}
                                   title={student.resumeStatus === 'Suspended' ? 'Activate Account' : 'Suspend Account'}
                                 >

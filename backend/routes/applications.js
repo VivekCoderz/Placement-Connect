@@ -13,6 +13,10 @@ router.get(
   applicationsController.getMyApplications
 );
 
+// Student: withdraw an application, or accept / decline an approved offer
+router.put("/:id/withdraw", jwtVerify, authorizeRoles("student"), applicationsController.withdrawApplication);
+router.put("/:id/offer-response", jwtVerify, authorizeRoles("student"), applicationsController.respondToOffer);
+
 // Update application status and upload offer letters (owning company, placement cell, admin)
 router.put(
   "/:id/status",

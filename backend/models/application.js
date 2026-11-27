@@ -66,6 +66,19 @@ const applicationSchema = new mongoose.Schema(
       enum: ["None", "Pending Approval", "Approved", "Rejected"],
       default: "None",
     },
+    // Offer lifecycle: issued by the recruiter -> approved/rejected by the placement cell
+    // -> accepted/declined by the student before offerDeadline.
+    offerIssuedAt: { type: Date },
+    offerApprovedAt: { type: Date },
+    offerRejectionReason: { type: String },
+    offerDeadline: { type: Date },
+    offerResponse: {
+      type: String,
+      enum: ["None", "Accepted", "Declined"],
+      default: "None",
+    },
+    offerRespondedAt: { type: Date },
+    withdrawnAt: { type: Date },
   },
   { timestamps: true }
 );

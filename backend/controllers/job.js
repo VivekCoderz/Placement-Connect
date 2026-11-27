@@ -10,100 +10,77 @@ const ResumeAnalysis = require("../models/ResumeAnalysis");
 const Round = require("../models/Round");
 const StudentProgress = require("../models/StudentProgress");
 const { analyzeResume } = require("../services/aiService");
+const { checkEligibility } = require("../utils/eligibility");
 
-// Get eligible jobs for students or all jobs for other roles
+// List jobs.
+// - Students: every open drive (active, deadline not passed) plus drives they already
+//   applied to, each with "eligible" + "ineligibleReasons" so the UI can explain why.
+// - Companies: only their own drives.
+// - Placement cell / admin: all drives.
 module.exports.getJobs = ErrorWrapper(async (req, res, next) => {
+  if (req.user.role === "company") {
+    const company = await Company.findOne({ recruiterId: req.user.id });
+    const jobs = company
+      ? await Job.find({ companyId: company._id }).populate("companyId").sort({ createdAt: -1 })
+      : [];
+    return res.status(200).json({ jobs });
+  }
+
   if (req.user.role !== "student") {
-    // If not a student, return all jobs populated with company info
     const jobs = await Job.find().populate("companyId").sort({ createdAt: -1 });
     return res.status(200).json({ jobs });
   }
 
-  // If a student, find student profile and return only eligible active jobs
   const student = await Student.findOne({ userId: req.user.id });
   if (!student) {
     throw new ErrorHandler(404, "Student profile not found");
   }
 
-  const allActiveJobs = await Job.find({
-    status: "active",
-    deadline: { $gte: new Date() },
+  const studentApplications = await Application.find({ studentId: student._id }).select("jobId status");
+  const appliedJobIds = studentApplications.map((a) => a.jobId);
+  const appliedSet = new Set(appliedJobIds.map(String));
+
+  const jobs = await Job.find({
+    $or: [{ status: "active", deadline: { $gte: new Date() } }, { _id: { $in: appliedJobIds } }],
   })
     .populate("companyId")
     .sort({ createdAt: -1 });
 
-  let studentApplications = [];
-  studentApplications = await Application.find({ studentId: student._id }).select("jobId status");
-  const appliedJobIds = new Set(studentApplications.map((a) => a.jobId.toString()));
-
-  const studentBranch = student.branch ? student.branch.trim().toUpperCase() : "";
-  const studentYear = parseInt(student.year);
-  const studentCgpa = parseFloat(student.cgpa || 0);
-
-  // Filter only jobs the student is eligible for
-  const eligibleJobs = allActiveJobs.filter((job) => {
-    // 1. CGPA Check
-    const minCgpa = job.eligibility?.cgpa !== undefined ? parseFloat(job.eligibility.cgpa) : 0;
-    if (studentCgpa < minCgpa) return false;
-
-    // 2. Branch Check
-    const eligibleBranches = (job.eligibility?.branches || []).map((b) => b.trim().toUpperCase());
-    if (eligibleBranches.length > 0 && !eligibleBranches.includes("ALL") && !eligibleBranches.includes("ANY")) {
-      const cseAliases = ["CSE", "CS", "COMPUTER SCIENCE", "COMPUTER SCIENCE & ENGINEERING", "COMPUTER ENGINEERING"];
-      const itAliases = ["IT", "INFORMATION TECHNOLOGY"];
-      const eceAliases = ["ECE", "ELECTRONICS", "ELECTRONICS & COMMUNICATION"];
-      const eeeAliases = ["EEE", "ELECTRICAL", "ELECTRICAL & ELECTRONICS"];
-      const mechAliases = ["MECH", "MECHANICAL", "MECHANICAL ENGINEERING"];
-      const civilAliases = ["CIVIL", "CIVIL ENGINEERING"];
-      const groups = [cseAliases, itAliases, eceAliases, eeeAliases, mechAliases, civilAliases];
-
-      let branchMatched = eligibleBranches.includes(studentBranch);
-      if (!branchMatched) {
-        for (const group of groups) {
-          if (group.some((alias) => alias === studentBranch || studentBranch.includes(alias))) {
-            if (group.some((alias) => eligibleBranches.some((eb) => eb === alias || eb.includes(alias)))) {
-              branchMatched = true;
-              break;
-            }
-          }
-        }
-      }
-      if (!branchMatched) return false;
-    }
-
-    // 3. Year Check
-    const eligibleYears = job.eligibility?.years || [];
-    if (eligibleYears.length > 0) {
-      let yearMatched = eligibleYears.some((ey) => parseInt(ey) === studentYear);
-      if (!yearMatched) {
-        if (studentYear === 4 && (eligibleYears.includes(2026) || eligibleYears.includes(2027))) yearMatched = true;
-        if (studentYear === 3 && (eligibleYears.includes(2027) || eligibleYears.includes(2028))) yearMatched = true;
-        if (studentYear === 2 && (eligibleYears.includes(2028) || eligibleYears.includes(2029))) yearMatched = true;
-        if (studentYear === 1 && (eligibleYears.includes(2029) || eligibleYears.includes(2030))) yearMatched = true;
-      }
-      if (!yearMatched) return false;
-    }
-
-    return true;
+  return res.status(200).json({
+    jobs: jobs.map((job) => {
+      const { eligible, reasons } = checkEligibility(student, job);
+      const jobObj = job.toObject();
+      jobObj.applied = appliedSet.has(job._id.toString());
+      jobObj.eligible = eligible;
+      jobObj.ineligibleReasons = reasons;
+      jobObj.companyInfo = jobObj.companyId || {};
+      return jobObj;
+    }),
   });
-
-  const jobs = eligibleJobs.map((job) => {
-    const jobObj = job.toObject();
-    jobObj.applied = appliedJobIds.has(job._id.toString());
-    jobObj.companyInfo = jobObj.companyId || {};
-    return jobObj;
-  });
-
-  return res.status(200).json({ jobs });
 });
 
-// Get job details by ID
+// Get job details by ID (students also get their eligibility and applied state)
 module.exports.getJobById = ErrorWrapper(async (req, res, next) => {
   const job = await Job.findById(req.params.id).populate("companyId");
   if (!job) {
     throw new ErrorHandler(404, "Job drive not found");
   }
-  return res.status(200).json({ job });
+
+  if (req.user.role !== "student") {
+    return res.status(200).json({ job });
+  }
+
+  const student = await Student.findOne({ userId: req.user.id });
+  if (!student) {
+    throw new ErrorHandler(404, "Student profile not found");
+  }
+  const applied = await Application.exists({ studentId: student._id, jobId: job._id });
+  const { eligible, reasons } = checkEligibility(student, job);
+  const jobObj = job.toObject();
+  jobObj.applied = Boolean(applied);
+  jobObj.eligible = eligible;
+  jobObj.ineligibleReasons = reasons;
+  return res.status(200).json({ job: jobObj });
 });
 
 // Apply to job drive
@@ -113,73 +90,22 @@ module.exports.applyJob = ErrorWrapper(async (req, res, next) => {
     throw new ErrorHandler(404, "Student profile not found");
   }
 
-  // Check if student has uploaded a resume
-  if (!student.resumeUrl) {
-    throw new ErrorHandler(400, "Please upload your resume in your profile before applying to placement drives.");
-  }
-
   const job = await Job.findById(req.params.id).populate("companyId");
   if (!job) {
     throw new ErrorHandler(404, "Job drive not found");
   }
 
-  // 1. Check status and deadline
-  if (job.status !== "active") {
-    throw new ErrorHandler(400, "This placement drive is closed");
-  }
-  if (new Date() > new Date(job.deadline)) {
-    throw new ErrorHandler(400, "Application deadline has passed");
+  // 1. Eligibility: open drive, deadline, not already placed, CGPA, branch, batch
+  const { eligible, reasons } = checkEligibility(student, job);
+  if (!eligible) {
+    throw new ErrorHandler(400, `Ineligible: ${reasons.join(" ")}`);
   }
 
-  // 2. Check CGPA eligibility
-  if (student.cgpa !== undefined && job.eligibility?.cgpa !== undefined && student.cgpa < job.eligibility.cgpa) {
-    throw new ErrorHandler(400, `Ineligible: CGPA requirement is ${job.eligibility.cgpa}`);
+  if (!student.resumeUrl) {
+    throw new ErrorHandler(400, "Please upload your resume in your profile before applying to placement drives.");
   }
 
-  // 3. Check Branch eligibility (smart alias matching)
-  const studentBranch = student.branch ? student.branch.trim().toUpperCase() : "";
-  const eligibleBranches = (job.eligibility?.branches || []).map((b) => b.trim().toUpperCase());
-
-  const isBranchEligible = () => {
-    if (eligibleBranches.length === 0 || eligibleBranches.includes("ALL") || eligibleBranches.includes("ANY")) return true;
-    if (eligibleBranches.includes(studentBranch)) return true;
-    const cseAliases = ["CSE", "CS", "COMPUTER SCIENCE", "COMPUTER SCIENCE & ENGINEERING", "COMPUTER ENGINEERING"];
-    const itAliases = ["IT", "INFORMATION TECHNOLOGY"];
-    const eceAliases = ["ECE", "ELECTRONICS", "ELECTRONICS & COMMUNICATION"];
-    const eeeAliases = ["EEE", "ELECTRICAL", "ELECTRICAL & ELECTRONICS"];
-    const mechAliases = ["MECH", "MECHANICAL", "MECHANICAL ENGINEERING"];
-    const civilAliases = ["CIVIL", "CIVIL ENGINEERING"];
-    const groups = [cseAliases, itAliases, eceAliases, eeeAliases, mechAliases, civilAliases];
-    for (const group of groups) {
-      if (group.some((alias) => alias === studentBranch || studentBranch.includes(alias))) {
-        if (group.some((alias) => eligibleBranches.some((eb) => eb === alias || eb.includes(alias)))) {
-          return true;
-        }
-      }
-    }
-    return false;
-  };
-
-  if (!isBranchEligible()) {
-    throw new ErrorHandler(400, `Ineligible: Open only to branches: ${job.eligibility.branches.join(", ")}`);
-  }
-
-  // 4. Check Graduation Year eligibility (supports academic year 3, 4 and calendar graduation years)
-  const eligibleYears = job.eligibility?.years || [];
-  const isYearEligible = () => {
-    if (eligibleYears.length === 0) return true;
-    if (eligibleYears.includes(student.year)) return true;
-    if (student.year === 4 && (eligibleYears.includes(2026) || eligibleYears.includes(2027))) return true;
-    if (student.year === 3 && (eligibleYears.includes(2027) || eligibleYears.includes(2028))) return true;
-    if (student.year === 2 && (eligibleYears.includes(2028) || eligibleYears.includes(2029))) return true;
-    return false;
-  };
-
-  if (!isYearEligible()) {
-    throw new ErrorHandler(400, `Ineligible: Open only to year cohorts: ${job.eligibility.years.join(", ")}`);
-  }
-
-  // 5. Check if already applied
+  // 2. Check if already applied (a concurrent double-submit is caught by the unique index)
   const existingApp = await Application.findOne({ studentId: student._id, jobId: job._id });
   if (existingApp) {
     throw new ErrorHandler(400, "You have already applied to this placement drive");
@@ -221,8 +147,8 @@ module.exports.applyJob = ErrorWrapper(async (req, res, next) => {
       strengths: ["Academic eligibility"],
       weaknesses: ["AI service error"],
       recommendedLearning: ["Technical preparation"],
-      status: "Rejected",
-      rejectionReason: "Resume screening score below threshold."
+      status: "Borderline",
+      rejectionReason: "Automatic screening was unavailable; needs manual review."
     };
   }
 

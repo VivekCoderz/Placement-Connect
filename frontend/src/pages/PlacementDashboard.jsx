@@ -1850,7 +1850,7 @@ const PlacementDashboard = () => {
                               <tbody>
                                 {appr.results?.map((resItem, rIdx) => {
                                   const student = resItem.studentId || {};
-                                  const passed = resItem.result === 'Passed';
+                                  const passed = ['Passed', 'Selected'].includes(resItem.result);
                                   return (
                                     <tr key={rIdx} className="bg-white border-b border-[#F1F5F9] hover:bg-slate-50/50">
                                       <td className="px-4 py-2.5 font-bold text-[#111827]">{student.name || "Student"}</td>

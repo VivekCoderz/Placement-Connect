@@ -16,6 +16,7 @@ const {
 const companyOnly = [jwtVerify, authorizeRoles("company"), getAssociatedDetails];
 
 router.post("/jobs", ...companyOnly, companyController.postJob);
+router.put("/jobs/:jobId/status", ...companyOnly, companyController.updateJobStatus);
 router.get("/applications/:jobId", ...companyOnly, companyController.getApplications);
 router.post("/propose-schedule", ...companyOnly, companyController.proposeSchedule);
 router.post("/submit-shortlist", ...companyOnly, companyController.submitShortlist);

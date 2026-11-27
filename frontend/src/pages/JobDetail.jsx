@@ -26,9 +26,9 @@ const JobDetail = () => {
             id: jobData.job._id,
             companyName: jobData.job.companyId?.name || "Company",
             eligibility: {
-              minCgpa: jobData.job.eligibility?.cgpa !== undefined ? jobData.job.eligibility.cgpa : 6.0,
-              eligibleBranches: jobData.job.eligibility?.branches || ['CSE', 'IT', 'ECE'],
-              eligibleYears: jobData.job.eligibility?.years || [4]
+              minCgpa: jobData.job.eligibility?.cgpa ?? 0,
+              eligibleBranches: jobData.job.eligibility?.branches || [],
+              eligibleYears: jobData.job.eligibility?.years || []
             }
           };
           setJob(mappedJob);
@@ -55,47 +55,15 @@ const JobDetail = () => {
     }
   }, [id, user]);
 
-  const isBranchMatch = (studentBranch, eligibleBranches) => {
-    if (!eligibleBranches || eligibleBranches.length === 0) return true;
-    if (!studentBranch) return true;
-    const sBranch = studentBranch.trim().toUpperCase();
-    const cseKeywords = ['CSE', 'CS', 'COMPUTER SCIENCE', 'COMPUTER SCIENCE & ENGINEERING', 'COMPUTER ENGINEERING'];
-    const itKeywords = ['IT', 'INFORMATION TECHNOLOGY'];
-    const eceKeywords = ['ECE', 'ELECTRONICS', 'ELECTRONICS & COMMUNICATION', 'ELECTRONICS AND COMMUNICATION'];
-    const eeeKeywords = ['EEE', 'ELECTRICAL', 'ELECTRICAL & ELECTRONICS', 'ELECTRICAL AND ELECTRONICS'];
-    const mechKeywords = ['MECH', 'MECHANICAL', 'MECHANICAL ENGINEERING'];
-    const civilKeywords = ['CIVIL', 'CIVIL ENGINEERING'];
-
-    const getGroup = (b) => {
-      const ub = b.trim().toUpperCase();
-      if (cseKeywords.some(k => ub === k || ub.includes(k))) return 'CSE';
-      if (itKeywords.some(k => ub === k || ub.includes(k))) return 'IT';
-      if (eceKeywords.some(k => ub === k || ub.includes(k))) return 'ECE';
-      if (eeeKeywords.some(k => ub === k || ub.includes(k))) return 'EEE';
-      if (mechKeywords.some(k => ub === k || ub.includes(k))) return 'MECH';
-      if (civilKeywords.some(k => ub === k || ub.includes(k))) return 'CIVIL';
-      return ub;
-    };
-
-    const studentGroup = getGroup(sBranch);
-    return eligibleBranches.some(eb => {
-      const ebUpper = eb.trim().toUpperCase();
-      if (ebUpper === 'ALL' || ebUpper === 'ANY' || ebUpper === 'OPEN TO ALL') return true;
-      if (ebUpper === sBranch) return true;
-      return getGroup(ebUpper) === studentGroup;
-    });
-  };
-
+  // Eligibility comes from the server (same rules as applying), with the reasons.
   const checkEligibility = () => {
-    if (!job || !user) return { eligible: false };
-    const userCgpa = user.cgpa !== undefined && user.cgpa !== null ? parseFloat(user.cgpa) : 10;
-    const minCgpa = job.eligibility?.minCgpa !== undefined ? parseFloat(job.eligibility.minCgpa) : 0;
-    const cgpaEligible = isNaN(userCgpa) || userCgpa >= minCgpa;
-    const branchEligible = isBranchMatch(user.branch, job.eligibility?.eligibleBranches);
+    if (!job) return { eligible: false, reasons: [] };
+    const reasons = job.ineligibleReasons || [];
     return {
-      eligible: cgpaEligible && branchEligible,
-      cgpaEligible,
-      branchEligible
+      eligible: job.eligible !== false,
+      reasons,
+      cgpaEligible: !reasons.some((r) => /CGPA/i.test(r)),
+      branchEligible: !reasons.some((r) => /^Open only to:/i.test(r)),
     };
   };
 
@@ -152,7 +120,7 @@ const JobDetail = () => {
     );
   }
 
-  const { eligible, cgpaEligible, branchEligible } = checkEligibility();
+  const { eligible, reasons, cgpaEligible, branchEligible } = checkEligibility();
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-8 animate-in fade-in duration-300 text-[#4B5563]">
@@ -331,12 +299,21 @@ const JobDetail = () => {
                   )}
                 </button>
               ) : (
-                <button
-                  disabled
-                  className="w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] text-[#94A3B8] font-bold rounded-xl text-xs cursor-not-allowed"
-                >
-                  Ineligible for this Drive
-                </button>
+                <div className="space-y-2">
+                  <button
+                    disabled
+                    className="w-full py-3 px-4 bg-[#F8FAFC] border border-[#E5E7EB] text-[#94A3B8] font-bold rounded-xl text-xs cursor-not-allowed"
+                  >
+                    You cannot apply to this drive
+                  </button>
+                  {reasons.length > 0 && (
+                    <ul className="space-y-1 text-[11px] font-semibold text-rose-600">
+                      {reasons.map((reason) => (
+                        <li key={reason}>• {reason}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               )}
             </div>
           </div>

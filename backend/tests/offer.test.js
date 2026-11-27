@@ -41,7 +41,7 @@ test("issue-offer stores sanitized offer letter HTML", async () => {
   const { user, company } = await createCompany();
   const job = await createJob(company);
   const { student } = await createStudent();
-  const application = await createApplication(student, job);
+  const application = await createApplication(student, job, { status: "Selected" });
 
   const res = await request(app)
     .put(`/api/applications/${application._id}/issue-offer`)

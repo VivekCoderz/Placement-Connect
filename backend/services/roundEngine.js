@@ -17,6 +17,7 @@ const ErrorHandler = require("../utils/ErrorHandle");
  * @param {number} [score] - Score in the round
  * @param {string} [remarks] - Evaluator notes / remarks
  * @param {string} [recruiterUserId] - ID of user saving the result
+ * @returns {Promise<{processed: boolean, reason?: string}>} skipped candidates carry a reason
  */
 async function processCandidateResult({ jobId, roundId, studentId, result, score, remarks, recruiterUserId }) {
   // 1. Fetch Job and Round details
@@ -40,28 +41,47 @@ async function processCandidateResult({ jobId, roundId, studentId, result, score
       populate: { path: "companyId", select: "name" }
     });
   if (!app) {
-    console.error(`Application not found for student ${studentId} and job ${jobId}`);
-    return;
+    return { processed: false, reason: "has not applied to this drive" };
   }
 
   const student = app.studentId;
   const job = app.jobId;
   const company = job.companyId;
 
-  // 3. Save to RoundResult
-  const roundResult = new RoundResult({
-    applicationId: app._id,
-    studentId,
-    roundId,
-    result,
-    score: score || 0,
-    remarks: remarks || "",
-    uploadedBy: recruiterUserId
-  });
-  await roundResult.save();
+  // Only candidates who are still in the process, and currently at this round, can get
+  // a result for it (stops e.g. a rejected applicant being marked "Selected" in the
+  // final round). Before the first round, a candidate can only enter round 1.
+  if (["Rejected", "Withdrawn", "Selected"].includes(app.status)) {
+    return { processed: false, reason: `is already ${app.status}` };
+  }
+  if (["Pending Approval", "Approved"].includes(app.offerLetterStatus)) {
+    return { processed: false, reason: "already has an offer" };
+  }
+
+  let progress = await StudentProgress.findOne({ applicationId: app._id });
+  const atThisRound = progress?.currentRoundId
+    ? progress.currentRoundId.toString() === roundId.toString()
+    : currentRoundIdx === 0;
+  if (!atThisRound) {
+    return { processed: false, reason: `is not in the ${round.name} round` };
+  }
+
+  // 3. Save to RoundResult (one per application and round; re-uploads update it)
+  await RoundResult.findOneAndUpdate(
+    { applicationId: app._id, roundId },
+    {
+      applicationId: app._id,
+      studentId,
+      roundId,
+      result,
+      score: score || 0,
+      remarks: remarks || "",
+      uploadedBy: recruiterUserId,
+    },
+    { upsert: true, setDefaultsOnInsert: true },
+  );
 
   // 4. Update/Create StudentProgress
-  let progress = await StudentProgress.findOne({ applicationId: app._id });
   if (!progress) {
     progress = new StudentProgress({
       applicationId: app._id,
@@ -150,11 +170,7 @@ async function processCandidateResult({ jobId, roundId, studentId, result, score
         app.rounds[appRoundIdx].notes = remarks || "Cleared final round. Selected!";
       }
 
-      // Update student table to placed
-      if (student) {
-        student.isPlaced = true;
-        await student.save();
-      }
+      // The student is marked placed only when they accept an approved offer.
     }
   } else if (result === "Rejected" || result === "Absent") {
     // Candidates fail and stop here
@@ -223,6 +239,8 @@ async function processCandidateResult({ jobId, roundId, studentId, result, score
       `
     }).catch(err => console.error("Round progression email delivery failed:", err));
   }
+
+  return { processed: true };
 }
 
 module.exports = {

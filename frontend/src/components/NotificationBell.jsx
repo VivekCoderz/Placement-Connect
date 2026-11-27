@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Bell, Check, Info, Briefcase, Calendar } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import api from '../utils/api';
+import { createSocket } from '../utils/socket';
 import { playNotificationChime, playClickSound } from '../utils/audio';
 
 const NotificationBell = () => {
@@ -41,7 +42,10 @@ const NotificationBell = () => {
   useEffect(() => {
     fetchNotifications(true);
 
-    const interval = setInterval(() => fetchNotifications(false), 5000);
+    // New notifications arrive live over the socket; the slow poll is only a fallback.
+    const socket = user ? createSocket() : null;
+    socket?.on('notification', () => fetchNotifications(false));
+    const interval = setInterval(() => fetchNotifications(false), 30000);
 
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -52,9 +56,10 @@ const NotificationBell = () => {
 
     return () => {
       clearInterval(interval);
+      socket?.disconnect();
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [fetchNotifications]);
+  }, [fetchNotifications, user]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

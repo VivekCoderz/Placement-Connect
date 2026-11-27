@@ -7,5 +7,7 @@ router.get("/", jwtVerify, notificationsController.getNotifications);
 router.get("/:userId", jwtVerify, notificationsController.getNotifications);
 router.put("/read-all", jwtVerify, notificationsController.markAllAsRead);
 router.put("/:id/read", jwtVerify, notificationsController.markAsRead);
+router.delete("/", jwtVerify, notificationsController.deleteAllNotifications);
+router.delete("/:id", jwtVerify, notificationsController.deleteNotification);
 
 module.exports = router;

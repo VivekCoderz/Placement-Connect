@@ -9,6 +9,7 @@ const ErrorWrapper = require("../utils/ErrorWrapper");
 const ErrorHandler = require("../utils/ErrorHandle");
 const { sendEmail, generateICS } = require("../utils/email");
 const { assertJobOwner } = require("../utils/ownership");
+const { processCandidateResult } = require("../services/roundEngine");
 
 // Upload round-wise CSV shortlist and notify students
 module.exports.uploadShortlist = ErrorWrapper(async (req, res, next) => {
@@ -190,8 +191,12 @@ module.exports.uploadShortlist = ErrorWrapper(async (req, res, next) => {
 
 // Get all drives / jobs in the system
 module.exports.getDrives = ErrorWrapper(async (req, res, next) => {
-  const drives = await Job.find().populate("companyId");
-  return res.status(200).json({ drives });
+  const drives = await Job.find().populate("companyId").sort({ createdAt: -1 }).lean();
+  const counts = await Application.aggregate([{ $group: { _id: "$jobId", count: { $sum: 1 } } }]);
+  const countByJob = new Map(counts.map((c) => [String(c._id), c.count]));
+  return res.status(200).json({
+    drives: drives.map((d) => ({ ...d, applicantsCount: countByJob.get(String(d._id)) || 0 })),
+  });
 });
 
 // Get all applications in the system
@@ -502,75 +507,32 @@ module.exports.approveResult = ErrorWrapper(async (req, res, next) => {
   }
 
   const job = approval.jobId;
-  const company = job.companyId;
   const roundName = approval.roundName;
 
-  // Process each result item
+  if (!approval.roundId) {
+    throw new ErrorHandler(400, "This older result upload has no round attached and cannot be applied. Ask the recruiter to upload it again.");
+  }
+
+  // Apply each result through the round engine: it advances or rejects the candidate,
+  // records the result and notifies the student. Candidates who are no longer in this
+  // round (withdrawn, rejected earlier, already moved on) are skipped with a reason.
+  const skipped = [];
+  let applied = 0;
   for (const item of approval.results) {
-    const studentId = item.studentId;
-    const result = item.result; // "Passed" or "Failed"
-    const notes = item.notes || "";
-
-    const app = await Application.findOne({ studentId, jobId: job._id }).populate("studentId");
-    if (!app) continue;
-
-    // Update round-by-round status
-    const roundIdx = app.rounds.findIndex(r => r.name.toLowerCase() === roundName.toLowerCase());
-    
-    if (roundIdx > -1) {
-      app.rounds[roundIdx].result = result;
-      app.rounds[roundIdx].notes = notes;
+    const outcome = await processCandidateResult({
+      jobId: job._id,
+      roundId: approval.roundId,
+      studentId: item.studentId,
+      result: item.result,
+      score: item.score,
+      remarks: item.notes,
+      recruiterUserId: approval.uploadedBy,
+    });
+    if (outcome && outcome.processed) {
+      applied += 1;
     } else {
-      app.rounds.push({
-        name: roundName,
-        result,
-        scheduledAt: new Date(),
-        notes,
-      });
-    }
-
-    // If candidate failed, overall status is Rejected
-    if (result === "Failed") {
-      app.status = "Rejected";
-    } else if (result === "Passed") {
-      app.status = "Shortlisted";
-    }
-
-    app.markModified("rounds");
-    await app.save();
-
-    // Create Notification for Student
-    const student = app.studentId;
-    if (student) {
-      const message = result === "Passed"
-        ? `Congratulations! You have passed the ${roundName} round for ${job.title} at ${company.name}.`
-        : `Update: You were not selected in the ${roundName} round for ${job.title} at ${company.name}.`;
-
-      const notif = new Notification({
-        userId: student.userId,
-        message,
-        type: "application_status",
-      });
-      await notif.save();
-
-      // Send Email Notification
-      sendEmail({
-        to: student.email,
-        subject: `Placement Round Update: ${roundName} for ${job.title} at ${company.name}`,
-        html: `
-          <h3>Dear ${student.name},</h3>
-          <p>We have an update regarding your application for <strong>${job.title}</strong> at <strong>${company.name}</strong>.</p>
-          <div style="background:#f1f5f9; padding: 15px; border-left: 4px solid ${result === 'Passed' ? '#10b981' : '#f43f5e'}; margin: 15px 0;">
-            <p><strong>Round Name:</strong> ${roundName}</p>
-            <p><strong>Result:</strong> <strong style="color: ${result === 'Passed' ? '#10b981' : '#f43f5e'};">${result}</strong></p>
-            ${notes ? `<p><strong>Feedback:</strong> ${notes}</p>` : ""}
-          </div>
-          <p>Please log in to PlacementConnect to track your applications and check other drives.</p>
-          <br/>
-          <p>Regards,</p>
-          <p>Training & Placement Cell, Geeta University</p>
-        `,
-      }).catch(err => console.error("Result update email error:", err));
+      const student = await Student.findById(item.studentId).select("name rollNumber");
+      skipped.push(`${student ? `${student.name} (${student.rollNumber})` : item.studentId} ${outcome?.reason || "was skipped"}`);
     }
   }
 
@@ -583,15 +545,17 @@ module.exports.approveResult = ErrorWrapper(async (req, res, next) => {
   if (companyUser) {
     const notif = new Notification({
       userId: companyUser.recruiterId,
-      message: `Placement Cell approved your round results for ${roundName} round of "${job.title}". Student statuses have been updated.`,
+      message: `Placement Cell approved your results for the ${roundName} round of "${job.title}": ${applied} candidate(s) updated${skipped.length ? `, ${skipped.length} skipped` : ""}.`,
       type: "general"
     });
     await notif.save();
   }
 
   return res.status(200).json({
-    message: "Round results approved and candidate applications updated successfully",
+    message: `Results approved: ${applied} candidate(s) updated${skipped.length ? `, ${skipped.length} skipped` : ""}.`,
     approval,
+    applied,
+    skipped,
   });
 });
 

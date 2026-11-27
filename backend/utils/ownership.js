@@ -113,6 +113,7 @@ const requireApplicationOwner = (param = "id") => async (req, res, next) => {
 };
 
 module.exports = {
+  assertValidId,
   requireJobOwner,
   requireApplicationOwner,
   isStaff,

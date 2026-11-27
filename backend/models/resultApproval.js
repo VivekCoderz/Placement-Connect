@@ -11,6 +11,10 @@ const resultApprovalSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    roundId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Round",
+    },
     results: [
       {
         studentId: {
@@ -18,10 +22,15 @@ const resultApprovalSchema = new mongoose.Schema(
           ref: "Student",
           required: true,
         },
+        // Round results submitted by recruiters use the round engine's values;
+        // "Passed"/"Failed" are kept for older records.
         result: {
           type: String,
-          enum: ["Passed", "Failed"],
+          enum: ["Selected", "Rejected", "Absent", "Waiting", "Passed", "Failed"],
           required: true,
+        },
+        score: {
+          type: Number,
         },
         notes: {
           type: String,

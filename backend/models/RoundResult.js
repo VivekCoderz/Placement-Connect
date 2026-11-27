@@ -36,4 +36,7 @@ const roundResultSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// One result per application per round (re-uploads update it).
+roundResultSchema.index({ applicationId: 1, roundId: 1 });
+
 module.exports = mongoose.model("RoundResult", roundResultSchema);

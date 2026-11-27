@@ -13,6 +13,7 @@ const JobListings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
+  const [showIneligible, setShowIneligible] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,9 +27,9 @@ const JobListings = () => {
           id: job._id,
           companyName: job.companyId?.name || job.companyInfo?.name || "Company",
           eligibility: {
-            minCgpa: job.eligibility?.cgpa !== undefined ? job.eligibility.cgpa : 6.0,
-            eligibleBranches: job.eligibility?.branches || ['CSE', 'IT', 'ECE'],
-            eligibleYears: job.eligibility?.years || [3, 4]
+            minCgpa: job.eligibility?.cgpa ?? 0,
+            eligibleBranches: job.eligibility?.branches || [],
+            eligibleYears: job.eligibility?.years || []
           }
         }));
         setJobs(mapped);
@@ -52,71 +53,16 @@ const JobListings = () => {
     fetchData();
   }, [user, reloadKey]);
 
-  const isBranchMatch = (studentBranch, eligibleBranches) => {
-    if (!eligibleBranches || eligibleBranches.length === 0) return true;
-    if (!studentBranch) return true;
-    const sBranch = studentBranch.trim().toUpperCase();
-    const cseKeywords = ['CSE', 'CS', 'COMPUTER SCIENCE', 'COMPUTER SCIENCE & ENGINEERING', 'COMPUTER ENGINEERING'];
-    const itKeywords = ['IT', 'INFORMATION TECHNOLOGY'];
-    const eceKeywords = ['ECE', 'ELECTRONICS', 'ELECTRONICS & COMMUNICATION', 'ELECTRONICS AND COMMUNICATION'];
-    const eeeKeywords = ['EEE', 'ELECTRICAL', 'ELECTRICAL & ELECTRONICS', 'ELECTRICAL AND ELECTRONICS'];
-    const mechKeywords = ['MECH', 'MECHANICAL', 'MECHANICAL ENGINEERING'];
-    const civilKeywords = ['CIVIL', 'CIVIL ENGINEERING'];
+  // Eligibility comes from the server (same rules as applying), with the reasons.
+  const checkEligibility = (job) => ({
+    eligible: job.eligible !== false,
+    reason: (job.ineligibleReasons || []).join(' ') || 'Not eligible',
+  });
 
-    const getGroup = (b) => {
-      const ub = b.trim().toUpperCase();
-      if (cseKeywords.some(k => ub === k || ub.includes(k))) return 'CSE';
-      if (itKeywords.some(k => ub === k || ub.includes(k))) return 'IT';
-      if (eceKeywords.some(k => ub === k || ub.includes(k))) return 'ECE';
-      if (eeeKeywords.some(k => ub === k || ub.includes(k))) return 'EEE';
-      if (mechKeywords.some(k => ub === k || ub.includes(k))) return 'MECH';
-      if (civilKeywords.some(k => ub === k || ub.includes(k))) return 'CIVIL';
-      return ub;
-    };
-
-    const studentGroup = getGroup(sBranch);
-    return eligibleBranches.some(eb => {
-      const ebUpper = eb.trim().toUpperCase();
-      if (ebUpper === 'ALL' || ebUpper === 'ANY' || ebUpper === 'OPEN TO ALL') return true;
-      if (ebUpper === sBranch) return true;
-      return getGroup(ebUpper) === studentGroup;
-    });
-  };
-
-  const isYearMatch = (studentYear, eligibleYears) => {
-    if (!eligibleYears || eligibleYears.length === 0) return true;
-    if (!studentYear) return true;
-    const sYear = parseInt(studentYear);
-    return eligibleYears.some(ey => {
-      const num = parseInt(ey);
-      if (num === sYear) return true;
-      if (sYear === 4 && (num === 2026 || num === 2027)) return true;
-      if (sYear === 3 && (num === 2027 || num === 2028)) return true;
-      if (sYear === 2 && (num === 2028 || num === 2029)) return true;
-      if (sYear === 1 && (num === 2029 || num === 2030)) return true;
-      return false;
-    });
-  };
-
-  const checkEligibility = (job) => {
-    if (!user) return { eligible: false, reason: 'Not logged in' };
-    
-    const userCgpa = user.cgpa !== undefined && user.cgpa !== null ? parseFloat(user.cgpa) : 10;
-    const minCgpa = job.eligibility?.minCgpa !== undefined ? parseFloat(job.eligibility.minCgpa) : 0;
-    const cgpaEligible = isNaN(userCgpa) || userCgpa >= minCgpa;
-    const branchEligible = isBranchMatch(user.branch, job.eligibility?.eligibleBranches);
-    const yearEligible = isYearMatch(user.year, job.eligibility?.eligibleYears);
-
-    if (!cgpaEligible || !branchEligible || !yearEligible) {
-      return { eligible: false };
-    }
-
-    return { eligible: true };
-  };
+  const ineligibleCount = jobs.filter((job) => job.eligible === false && !job.applied).length;
 
   const filteredJobs = jobs.filter(job => {
-    const { eligible } = checkEligibility(job);
-    if (!eligible) return false;
+    if (job.eligible === false && !job.applied && !showIneligible) return false;
 
     const matchesSearch = 
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -195,6 +141,18 @@ const JobListings = () => {
           </select>
         </div>
       </div>
+
+      {ineligibleCount > 0 && (
+        <label className="flex items-center gap-2 text-xs font-semibold text-[#4B5563] select-none cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showIneligible}
+            onChange={(e) => setShowIneligible(e.target.checked)}
+            className="h-4 w-4 rounded border-[#E5E7EB] accent-[#0B3D91]"
+          />
+          Also show {ineligibleCount} drive{ineligibleCount === 1 ? '' : 's'} I am not eligible for (with the reason)
+        </label>
+      )}
 
       {/* Grid of Job Cards */}
       {isLoading ? (

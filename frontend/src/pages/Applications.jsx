@@ -1,21 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Sparkles, CheckCircle2, XCircle, ListChecks, Calendar, FileText } from 'lucide-react';
+import { ChevronRight, CheckCircle2, XCircle, ListChecks, Calendar, FileText, Clock, PartyPopper, AlertCircle, Undo2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import Stepper from '../components/Stepper';
-import api from '../utils/api';
+import api, { getErrorMessage } from '../utils/api';
 import { createSocket } from '../utils/socket';
 import { sanitizeHtml, writePrintDocument } from '../utils/sanitize';
+
+const formatDate = (value, withTime = false) =>
+  value
+    ? new Date(value).toLocaleString('en-IN', withTime
+      ? { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }
+      : { day: 'numeric', month: 'short', year: 'numeric' })
+    : '';
+
+// Only http(s) links are rendered as clickable.
+const safeHref = (url) => {
+  const value = String(url || '').trim();
+  if (!value) return null;
+  const withScheme = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+  try {
+    const parsed = new URL(withScheme);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.href : null;
+  } catch {
+    return null;
+  }
+};
+
+const hasOpenOffer = (app) => ['Pending Approval', 'Approved'].includes(app.offerLetterStatus);
+const canWithdraw = (app) => !['Selected', 'Rejected', 'Withdrawn'].includes(app.status) && !hasOpenOffer(app);
 
 const Applications = () => {
   const user = useSelector((state) => state.auth.user);
   const [applications, setApplications] = useState([]);
   const [jobs, setJobs] = useState([]);
-  const [showSimulator, setShowSimulator] = useState({});
   const [selectedOfferContent, setSelectedOfferContent] = useState('');
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState('active');
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [isPlaced, setIsPlaced] = useState(false);
+  const [actionMsg, setActionMsg] = useState(null); // { type, text }
+  const [busyAppId, setBusyAppId] = useState(null);
 
   const handlePrintOffer = (content) => {
     const printWindow = window.open('', '_blank');
@@ -54,10 +80,48 @@ const Applications = () => {
         return null;
       }).filter(Boolean);
       setJobs(populatedJobs);
+      setIsPlaced(Boolean(data.isPlaced));
+      setLoadError('');
     } catch (err) {
-      console.error("Failed to fetch applications:", err);
+      setLoadError(getErrorMessage(err, 'Could not load your applications.'));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleOfferResponse = async (app, decision) => {
+    const job = getJobDetails(app.jobId);
+    const question = decision === 'Accept'
+      ? `Accept the offer from ${job.companyName || 'this company'}? You can accept only one offer, and you will not be able to apply to other drives after this.`
+      : `Decline the offer from ${job.companyName || 'this company'}? This cannot be undone.`;
+    if (!window.confirm(question)) return;
+
+    setBusyAppId(app.id);
+    setActionMsg(null);
+    try {
+      const response = await api.put(`/api/applications/${app.id}/offer-response`, { decision });
+      setActionMsg({ type: 'success', text: response.data.message });
+      await fetchApplicationsData();
+    } catch (err) {
+      setActionMsg({ type: 'error', text: getErrorMessage(err, 'Could not save your response.') });
+    } finally {
+      setBusyAppId(null);
+    }
+  };
+
+  const handleWithdraw = async (app) => {
+    const job = getJobDetails(app.jobId);
+    if (!window.confirm(`Withdraw your application for ${job.title || 'this drive'}? You cannot re-apply to it.`)) return;
+    setBusyAppId(app.id);
+    setActionMsg(null);
+    try {
+      await api.put(`/api/applications/${app.id}/withdraw`);
+      setActionMsg({ type: 'success', text: 'Application withdrawn.' });
+      await fetchApplicationsData();
+    } catch (err) {
+      setActionMsg({ type: 'error', text: getErrorMessage(err, 'Could not withdraw the application.') });
+    } finally {
+      setBusyAppId(null);
     }
   };
 
@@ -94,21 +158,10 @@ const Applications = () => {
     return jobs.find(j => j.id === jobId) || {};
   };
 
-  const handleSimulateStatus = (appId, nextStatus) => {
-    setApplications(prev => prev.map(a => a.id === appId ? { ...a, status: nextStatus } : a));
-  };
-
-  const toggleSimulatorDrawer = (appId) => {
-    setShowSimulator(prev => ({
-      ...prev,
-      [appId]: !prev[appId]
-    }));
-  };
-
-  const activeApps = applications.filter(app => app.status !== 'Selected' && app.status !== 'Rejected');
+  const activeApps = applications.filter(app => !['Selected', 'Rejected', 'Withdrawn'].includes(app.status));
   const selectedApps = applications.filter(app => app.status === 'Selected');
   const rejectedApps = applications.filter(app => app.status === 'Rejected');
-  const completedApps = applications.filter(app => app.status === 'Selected' || app.status === 'Rejected');
+  const completedApps = applications.filter(app => ['Selected', 'Rejected', 'Withdrawn'].includes(app.status));
 
   let displayedApps = [];
   if (currentSection === 'active') displayedApps = activeApps;
@@ -127,6 +180,23 @@ const Applications = () => {
           Track the evaluation progress of your active placement and internship drives.
         </p>
       </div>
+
+      {isPlaced && (
+        <div className="pc-alert-success" role="status">
+          <PartyPopper className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+          <div>
+            <p className="font-semibold">You are placed. Congratulations!</p>
+            <p className="mt-0.5 text-xs">You have accepted an offer, so you can no longer apply to new drives.</p>
+          </div>
+        </div>
+      )}
+
+      {actionMsg && (
+        <div className={actionMsg.type === 'success' ? 'pc-alert-success' : 'pc-alert-error'} role={actionMsg.type === 'success' ? 'status' : 'alert'}>
+          {actionMsg.type === 'success' ? <CheckCircle2 className="h-5 w-5 flex-shrink-0" /> : <AlertCircle className="h-5 w-5 flex-shrink-0" />}
+          <p className="text-sm font-semibold">{actionMsg.text}</p>
+        </div>
+      )}
 
       {/* Navigation Sections */}
       <div className="flex flex-wrap border-b border-[#E5E7EB] gap-2 font-bold text-xs select-none">
@@ -182,6 +252,16 @@ const Applications = () => {
             </div>
           ))}
         </div>
+      ) : loadError ? (
+        <div className="pc-alert-error" role="alert">
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold text-sm">{loadError}</p>
+            <button type="button" onClick={() => { setIsLoading(true); fetchApplicationsData(); }} className="mt-2 text-xs font-bold underline">
+              Try again
+            </button>
+          </div>
+        </div>
       ) : displayedApps.length === 0 ? (
         <div className="pc-empty space-y-3 animate-slide-up">
           <p className="text-[#4B5563] text-sm font-semibold">
@@ -200,7 +280,7 @@ const Applications = () => {
         <div className="space-y-6 animate-slide-up">
           {displayedApps.map((app) => {
             const job = getJobDetails(app.jobId);
-            const isDrawerOpen = !!showSimulator[app.id];
+            const isBusy = busyAppId === app.id;
 
             return (
               <div
@@ -216,7 +296,10 @@ const Applications = () => {
                     <div>
                       <div className="flex items-center gap-2.5">
                         <h4 className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-wider">{job.companyName}</h4>
-                        <span className="text-[10px] text-[#94A3B8] font-mono font-semibold">Applied: {new Date(app.appliedAt).toLocaleDateString()}</span>
+                        <span className="text-[10px] text-[#94A3B8] font-mono font-semibold">Applied: {formatDate(app.createdAt)}</span>
+                        {app.status === 'Withdrawn' && (
+                          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Withdrawn</span>
+                        )}
                       </div>
                       <h3 className="text-sm font-bold text-[#111827] mt-1">{job.title}</h3>
                     </div>
@@ -244,14 +327,17 @@ const Applications = () => {
                       </button>
                     )}
 
-                    {/* Simulator Trigger button */}
-                    <button
-                      onClick={() => toggleSimulatorDrawer(app.id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E5E7EB] hover:border-[#22C55E]/20 rounded-lg text-[10px] text-[#4B5563] hover:text-[#22C55E] font-bold transition-all shadow-sm"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-[#22C55E]" />
-                      Simulate Stage
-                    </button>
+                    {canWithdraw(app) && (
+                      <button
+                        type="button"
+                        onClick={() => handleWithdraw(app)}
+                        disabled={isBusy}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E5E7EB] hover:border-rose-200 rounded-lg text-[10px] text-[#4B5563] hover:text-rose-600 font-bold transition-all shadow-sm disabled:opacity-50"
+                      >
+                        <Undo2 className="w-3.5 h-3.5" />
+                        Withdraw
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -259,6 +345,78 @@ const Applications = () => {
                 <div className="p-6 md:p-8 bg-white">
                   <Stepper currentStatus={app.status} rounds={job.rounds} appRounds={app.rounds} />
                 </div>
+
+                {/* Offer status */}
+                {app.status === 'Selected' && app.offerLetterStatus !== 'Approved' && (
+                  <div className="mx-6 md:mx-8 mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 flex items-start gap-3">
+                    <Clock className="h-5 w-5 flex-shrink-0 text-amber-600" />
+                    <div>
+                      <p className="text-sm font-bold text-amber-900">You have been selected!</p>
+                      <p className="mt-0.5 text-xs text-amber-800">
+                        {app.offerLetterStatus === 'Pending Approval'
+                          ? 'Your offer letter has been issued and is being verified by the Placement Cell. It will appear here once approved.'
+                          : 'The company will issue your offer letter soon. You will be notified when it is ready.'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {app.offerLetterStatus === 'Approved' && (
+                  <div className={`mx-6 md:mx-8 mb-6 rounded-2xl border p-5 space-y-3 ${
+                    app.offerResponse === 'Accepted' ? 'border-emerald-200 bg-emerald-50'
+                      : app.offerResponse === 'Declined' ? 'border-slate-200 bg-slate-50'
+                      : 'border-[#0B3D91]/20 bg-[#0B3D91]/5'
+                  }`}>
+                    {app.offerResponse === 'Accepted' ? (
+                      <div className="flex items-start gap-3">
+                        <PartyPopper className="h-5 w-5 flex-shrink-0 text-emerald-600" />
+                        <div>
+                          <p className="text-sm font-bold text-emerald-900">Offer accepted</p>
+                          <p className="text-xs text-emerald-800">You accepted this offer on {formatDate(app.offerRespondedAt)}. Congratulations!</p>
+                        </div>
+                      </div>
+                    ) : app.offerResponse === 'Declined' ? (
+                      <div className="flex items-start gap-3">
+                        <XCircle className="h-5 w-5 flex-shrink-0 text-slate-500" />
+                        <p className="text-sm font-semibold text-slate-700">You declined this offer on {formatDate(app.offerRespondedAt)}.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-start gap-3">
+                          <FileText className="h-5 w-5 flex-shrink-0 text-[#0B3D91]" />
+                          <div>
+                            <p className="text-sm font-bold text-[#111827]">Your offer letter is ready</p>
+                            <p className="text-xs text-[#4B5563]">
+                              Please review it and respond{app.offerDeadline ? <> by <strong>{formatDate(app.offerDeadline)}</strong></> : ''}.
+                              {isPlaced && ' You have already accepted another offer, so you can only decline this one.'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleOfferResponse(app, 'Accept')}
+                            disabled={isBusy || isPlaced || (app.offerDeadline && new Date(app.offerDeadline) < new Date())}
+                            className="pc-btn-primary text-xs px-4 py-2 disabled:opacity-50"
+                          >
+                            <CheckCircle2 className="h-4 w-4" /> Accept offer
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOfferResponse(app, 'Decline')}
+                            disabled={isBusy || (app.offerDeadline && new Date(app.offerDeadline) < new Date())}
+                            className="pc-btn-secondary text-xs px-4 py-2 text-rose-600 disabled:opacity-50"
+                          >
+                            <XCircle className="h-4 w-4" /> Decline
+                          </button>
+                        </div>
+                        {app.offerDeadline && new Date(app.offerDeadline) < new Date() && (
+                          <p className="text-xs font-semibold text-rose-600">The response deadline has passed. Please contact the Placement Cell.</p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
 
                 {app.status === 'Rejected' && (
                   <div className="mx-6 md:mx-8 mb-6 p-5 bg-rose-50/50 border border-rose-200 rounded-2xl space-y-4 animate-in fade-in duration-300">
@@ -270,22 +428,22 @@ const Applications = () => {
                       </div>
                     </div>
 
-                    {app.aiAnalysis && (
+                    {app.atsScore !== undefined && (
                       <div className="bg-white border border-rose-100 p-5 rounded-2xl space-y-4 shadow-sm text-xs font-semibold text-[#4B5563]">
                         {/* ATS Score details */}
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                          <span className="text-slate-500 font-bold text-[10px] uppercase tracking-wider">AI Assessment Status</span>
+                          <span className="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Resume Match</span>
                           <span className="bg-rose-50 text-rose-600 border border-rose-100 px-2.5 py-0.5 rounded-full text-[10px] font-bold">
-                            ATS Score: {app.aiAnalysis.atsScore}%
+                            ATS Score: {app.atsScore}%
                           </span>
                         </div>
 
                         {/* Rejection Reasons */}
-                        {app.aiAnalysis.rejectionReason && (
+                        {app.rejectionReason && (
                           <div className="space-y-1.5">
                             <span className="text-rose-600 font-bold text-[10px] uppercase tracking-wider block">Reason:</span>
                             <ul className="list-disc pl-4 space-y-1 text-slate-500 leading-relaxed font-semibold">
-                              {app.aiAnalysis.rejectionReason
+                              {app.rejectionReason
                                 .split(/[;\n•]+/)
                                 .map(p => p.trim())
                                 .filter(p => p.length > 0 && !p.toLowerCase().startsWith('reason:'))
@@ -298,11 +456,11 @@ const Applications = () => {
                         )}
 
                         {/* Suggestions / Recommended preparation */}
-                        {app.aiAnalysis.recommendedLearning && app.aiAnalysis.recommendedLearning.length > 0 && (
+                        {app.recommendedLearning && app.recommendedLearning.length > 0 && (
                           <div className="pt-3 border-t border-slate-100 space-y-1.5">
                             <span className="text-indigo-600 font-bold text-[10px] uppercase tracking-wider block">Suggestions:</span>
                             <ul className="list-disc pl-4 space-y-1 text-slate-500 leading-relaxed font-semibold">
-                              {app.aiAnalysis.recommendedLearning.map((topic, idx) => (
+                              {app.recommendedLearning.map((topic, idx) => (
                                 <li key={idx}>{topic}</li>
                               ))}
                             </ul>
@@ -370,7 +528,7 @@ const Applications = () => {
                             {round.scheduledAt && (
                               <p className="text-[10px] text-[#4B5563] font-medium mt-2 flex items-center gap-1">
                                 <Calendar className="w-3.5 h-3.5 text-[#94A3B8]" />
-                                <span>Scheduled: {new Date(round.scheduledAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+                                <span>Scheduled: {formatDate(round.scheduledAt, true)}</span>
                               </p>
                             )}
 
@@ -380,11 +538,11 @@ const Applications = () => {
                                 <span className="text-[#111827]">{round.venue}</span>
                               </p>
                             )}
-                            {round.roundType !== 'Physical' && round.testLink && (
+                            {round.roundType !== 'Physical' && safeHref(round.testLink) && round.result === 'Pending' && (
                               <div className="mt-2 bg-[#EEF2FF] border border-[#E0E7FF] p-1.5 rounded flex flex-col gap-1.5">
                                 <p className="text-[9px] text-[#4B5563] font-semibold">🔗 Online Evaluation Link:</p>
-                                <a 
-                                  href={round.testLink.startsWith('http') ? round.testLink : `https://${round.testLink}`}
+                                <a
+                                  href={safeHref(round.testLink)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex justify-center items-center gap-1 px-2 py-1 text-[9px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded text-center transition-colors select-none shadow-sm cursor-pointer"
@@ -406,67 +564,6 @@ const Applications = () => {
                   </div>
                 )}
 
-                {/* Simulator Drawer Panel */}
-                {isDrawerOpen && (
-                  <div className="p-5 bg-[#F8FAFC] border-t border-[#E5E7EB] animate-in slide-in-from-bottom-2 duration-200">
-                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
-                      <div className="space-y-0.5">
-                        <h4 className="text-[10px] font-bold text-[#0B3D91] bg-[#0B3D91]/10 border border-[#0B3D91]/20 px-2.5 py-0.5 rounded inline-flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 text-[#0B3D91]" /> Stage Evaluation Simulator
-                        </h4>
-                        <p className="text-[10px] text-[#4B5563] font-medium">
-                          Advance stages or trigger selection/rejection outcomes to inspect the tracker UI and notifications.
-                        </p>
-                      </div>
-
-                      {/* Simulator buttons */}
-                      <div className="flex flex-wrap gap-2 font-semibold">
-                        <button
-                          onClick={() => handleSimulateStatus(app.id, 'Applied')}
-                          disabled={app.status === 'Applied'}
-                          className="px-3 py-1.5 bg-white border border-[#E5E7EB] hover:bg-[#F8FAFC] disabled:opacity-30 text-[10px] text-[#4B5563] rounded-lg transition-colors shadow-sm"
-                        >
-                          Applied
-                        </button>
-                        <button
-                          onClick={() => handleSimulateStatus(app.id, 'Aptitude')}
-                          disabled={app.status === 'Aptitude'}
-                          className="px-3 py-1.5 bg-white border border-[#E5E7EB] hover:bg-[#F8FAFC] disabled:opacity-30 text-[10px] text-[#4B5563] rounded-lg transition-colors shadow-sm"
-                        >
-                          Aptitude
-                        </button>
-                        <button
-                          onClick={() => handleSimulateStatus(app.id, 'GD')}
-                          disabled={app.status === 'GD'}
-                          className="px-3 py-1.5 bg-white border border-[#E5E7EB] hover:bg-[#F8FAFC] disabled:opacity-30 text-[10px] text-[#4B5563] rounded-lg transition-colors shadow-sm"
-                        >
-                          GD Round
-                        </button>
-                        <button
-                          onClick={() => handleSimulateStatus(app.id, 'HR')}
-                          disabled={app.status === 'HR'}
-                          className="px-3 py-1.5 bg-white border border-[#E5E7EB] hover:bg-[#F8FAFC] disabled:opacity-30 text-[10px] text-[#4B5563] rounded-lg transition-colors shadow-sm"
-                        >
-                          HR Round
-                        </button>
-                        <button
-                          onClick={() => handleSimulateStatus(app.id, 'Selected')}
-                          disabled={app.status === 'Selected'}
-                          className="px-3 py-1.5 bg-[#22C55E]/10 border border-[#22C55E]/25 hover:bg-[#22C55E]/20 disabled:opacity-30 text-[10px] text-[#22C55E] rounded-lg flex items-center gap-1 transition-all shadow-sm"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#22C55E]" /> Select
-                        </button>
-                        <button
-                          onClick={() => handleSimulateStatus(app.id, 'Rejected')}
-                          disabled={app.status === 'Rejected'}
-                          className="px-3 py-1.5 bg-rose-50 border border-rose-200 hover:bg-rose-100 disabled:opacity-30 text-[10px] text-rose-600 rounded-lg flex items-center gap-1 transition-all shadow-sm"
-                        >
-                          <XCircle className="w-3.5 h-3.5 text-rose-600" /> Reject
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             );
           })}

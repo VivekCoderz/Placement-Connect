@@ -96,6 +96,14 @@ const studentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Set when the student accepts an approved offer.
+    placedApplicationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Application",
+    },
+    placedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

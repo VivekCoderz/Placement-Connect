@@ -4,14 +4,15 @@ const ErrorHandler = require("../utils/ErrorHandle");
 
 // Get notifications (chronological)
 module.exports.getNotifications = ErrorWrapper(async (req, res, next) => {
-  const userId = req.params.userId || req.user.id;
+  const userId = String(req.params.userId || req.user.id);
 
-  // Security: only allow the user themselves, or placementCell/admin to view notifications
-  if (req.user.id !== userId && req.user.role !== "admin" && req.user.role !== "placementCell") {
+  // Security: users read their own notifications; only an admin may read someone else's.
+  if (String(req.user.id) !== userId && req.user.role !== "admin") {
     throw new ErrorHandler(403, "Access Denied: You are not authorized to view these notifications");
   }
 
-  const notifications = await Notification.find({ userId }).sort({ createdAt: -1 });
+  // Latest 100 are enough for the bell and the notifications page.
+  const notifications = await Notification.find({ userId }).sort({ createdAt: -1 }).limit(100);
 
   return res.status(200).json({ notifications });
 });
@@ -37,6 +38,21 @@ module.exports.markAsRead = ErrorWrapper(async (req, res, next) => {
     message: "Notification marked as read",
     notification,
   });
+});
+
+// Delete one of my notifications
+module.exports.deleteNotification = ErrorWrapper(async (req, res, next) => {
+  const result = await Notification.deleteOne({ _id: req.params.id, userId: req.user.id });
+  if (result.deletedCount === 0) {
+    throw new ErrorHandler(404, "Notification not found");
+  }
+  return res.status(200).json({ message: "Notification deleted" });
+});
+
+// Delete all of my notifications
+module.exports.deleteAllNotifications = ErrorWrapper(async (req, res, next) => {
+  await Notification.deleteMany({ userId: req.user.id });
+  return res.status(200).json({ message: "All notifications deleted" });
 });
 
 // Mark all notifications as read for logged in user

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import api from '../utils/api';
+import { createSocket } from '../utils/socket';
 import { playNotificationChime as playNotificationSound, playClickSound } from '../utils/audio';
 
 const Notifications = () => {
@@ -41,9 +42,15 @@ const Notifications = () => {
 
   useEffect(() => {
     fetchNotifs(true);
-    const interval = setInterval(() => fetchNotifs(false), 5000);
-    return () => clearInterval(interval);
-  }, [fetchNotifs]);
+    // New notifications arrive live over the socket; the slow poll is only a fallback.
+    const socket = user ? createSocket() : null;
+    socket?.on('notification', () => fetchNotifs(false));
+    const interval = setInterval(() => fetchNotifs(false), 30000);
+    return () => {
+      clearInterval(interval);
+      socket?.disconnect();
+    };
+  }, [fetchNotifs, user]);
 
   const handleMarkRead = async (id) => {
     playClickSound();
@@ -65,14 +72,27 @@ const Notifications = () => {
     }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     playClickSound();
     setNotifications(prev => prev.filter(n => n.id !== id));
+    try {
+      await api.delete(`/api/notifications/${id}`);
+    } catch (err) {
+      console.error(err);
+      fetchNotifs(true);
+    }
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
+    if (!window.confirm('Delete all notifications?')) return;
     playClickSound();
     setNotifications([]);
+    try {
+      await api.delete('/api/notifications');
+    } catch (err) {
+      console.error(err);
+      fetchNotifs(true);
+    }
   };
 
   const getNotifIcon = (type) => {

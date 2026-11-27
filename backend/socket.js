@@ -84,6 +84,7 @@ const attachSocket = (server, { checkOrigin } = {}) => {
     });
   });
 
+  require("./utils/realtime").setIO(io);
   return io;
 };
 
