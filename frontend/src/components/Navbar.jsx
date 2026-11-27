@@ -62,6 +62,9 @@ const Navbar = () => {
         { name: 'My Profile', path: '/profile', icon: User },
       ];
 
+  // Only render http(s) image URLs (the value comes from the stored profile).
+  const photoUrl = /^https?:\/\//i.test(user?.profilePictureUrl || '') ? user.profilePictureUrl : '';
+
   const initials = (user?.name || '?')
     .split(' ')
     .filter(Boolean)
@@ -125,9 +128,13 @@ const Navbar = () => {
                 <NotificationBell />
                 <div className="h-8 w-px bg-white/10" />
                 <div className="flex items-center space-x-3">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-[#F5A623] to-[#E0921B] flex items-center justify-center font-bold text-sm text-white ring-2 ring-[#F5A623]/60 shadow-md">
-                    {initials}
-                  </div>
+                  {photoUrl ? (
+                    <img src={photoUrl} alt="" className="h-10 w-10 rounded-full object-cover ring-2 ring-[#F5A623]/60 shadow-md bg-white" />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-[#F5A623] to-[#E0921B] flex items-center justify-center font-bold text-sm text-white ring-2 ring-[#F5A623]/60 shadow-md">
+                      {initials}
+                    </div>
+                  )}
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-white max-w-[130px] truncate leading-tight">{user.name}</span>
                     <span className="text-[10px] text-slate-300 font-mono mt-0.5">{user.role === 'company' ? 'Recruiter' : user.role === 'placementCell' ? 'T&P Cell' : user.role === 'admin' ? 'Admin' : user.rollNumber}</span>
@@ -223,9 +230,13 @@ const Navbar = () => {
             })}
             <div className="border-t border-[#082F70] my-3 pt-3 px-4 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-[#F5A623] to-[#E0921B] flex items-center justify-center font-bold text-white shadow">
-                  {initials}
-                </div>
+                {photoUrl ? (
+                  <img src={photoUrl} alt="" className="h-10 w-10 rounded-full object-cover shadow bg-white" />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-[#F5A623] to-[#E0921B] flex items-center justify-center font-bold text-white shadow">
+                    {initials}
+                  </div>
+                )}
                 <div className="flex flex-col">
                   <span className="text-sm font-bold text-white max-w-[150px] truncate">{user.name}</span>
                   <span className="text-xs text-slate-300 font-mono">{user.role === 'admin' ? 'Admin' : user.role === 'placementCell' ? 'T&P Cell' : user.role === 'company' ? 'Recruiter' : user.rollNumber}</span>

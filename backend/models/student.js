@@ -46,9 +46,34 @@ const studentSchema = new mongoose.Schema(
     resumeUrl: {
       type: String, // Cloudinary link
     },
+    resumeFileName: {
+      type: String, // original file name shown in the UI
+    },
+    resumeUploadedAt: {
+      type: Date,
+    },
+    resumePublicId: {
+      type: String, // Cloudinary public id, used to delete the old file
+    },
     profilePictureUrl: {
       type: String, // Cloudinary link
     },
+    profilePicturePublicId: {
+      type: String,
+    },
+    headline: {
+      type: String, // e.g. "Full-stack developer | MERN"
+      trim: true,
+      maxlength: 120,
+    },
+    about: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
+    linkedinUrl: { type: String, trim: true },
+    githubUrl: { type: String, trim: true },
+    portfolioUrl: { type: String, trim: true },
     projects: [
       {
         title: String,

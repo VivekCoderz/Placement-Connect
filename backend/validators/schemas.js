@@ -110,9 +110,31 @@ const project = z
   })
   .strip();
 
+// Empty string clears a link; otherwise it must be an http(s) URL.
+const optionalLink = z
+  .string()
+  .trim()
+  .max(300)
+  .refine((value) => value === "" || /^https?:\/\/[^\s]+$/i.test(value), {
+    message: "Links must start with http:// or https://",
+  })
+  .optional();
+
 const profileUpdateSchema = z
   .object({
-    phone: shortText(20).optional(),
+    phone: z
+      .string()
+      .trim()
+      .max(20)
+      .refine((value) => value === "" || /^\+?[0-9\s-]{7,20}$/.test(value), {
+        message: "Enter a valid phone number",
+      })
+      .optional(),
+    headline: shortText(120).optional(),
+    about: shortText(1000).optional(),
+    linkedinUrl: optionalLink,
+    githubUrl: optionalLink,
+    portfolioUrl: optionalLink,
     skills: z.array(shortText(100)).max(100).optional(),
     projects: z.array(project).max(50).optional(),
     certifications: z.array(certification).max(50).optional(),
