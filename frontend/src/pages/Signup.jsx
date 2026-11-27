@@ -13,6 +13,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import api from "../utils/api";
 import GoogleSignInButton from "../components/GoogleSignInButton";
+import AuthLoadingOverlay from '../components/AuthLoadingOverlay';
 import { completeSignIn, homeForRole } from "../utils/session";
 import { passwordProblem, PASSWORD_HINT } from "../utils/password";
 
@@ -376,6 +377,7 @@ const Signup = () => {
         </form>
 
         {!google && <GoogleSignInButton onCredential={handleGoogleCredential} disabled={isLoading} text="signup_with" />}
+        <AuthLoadingOverlay show={isLoading} title={google ? "Setting up your account…" : "Creating your account…"} />
 
         <div className="text-center">
           <p className="text-sm text-[#4B5563] font-medium">

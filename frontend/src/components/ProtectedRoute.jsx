@@ -1,14 +1,14 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import PageLoader from './PageLoader';
+import AuthLoadingOverlay from './AuthLoadingOverlay';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const user = useSelector((state) => state.auth.user);
   const loading = useSelector((state) => state.auth.loading);
 
   if (loading) {
-    return <PageLoader label="Checking your session…" />;
+    return <AuthLoadingOverlay show title="Checking your session…" subtitle="Just a moment." />;
   }
 
   if (!user) {

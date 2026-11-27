@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { setUser } from '../redux/authSlice';
 import api from '../utils/api';
+import AuthLoadingOverlay from '../components/AuthLoadingOverlay';
 import { sanitizeHtml } from '../utils/sanitize';
 
 const RecruiterDashboard = () => {
@@ -585,8 +586,10 @@ const RecruiterDashboard = () => {
     }
   }, [dispatch]);
 
+  // Full-screen loader until the first load finishes (not on later refreshes).
+  const [initialLoading, setInitialLoading] = useState(true);
   useEffect(() => {
-    fetchMyDrives();
+    fetchMyDrives().finally(() => setInitialLoading(false));
   }, [fetchMyDrives]);
 
   const handleFetchApplicants = async (job, silent = false) => {
@@ -753,6 +756,10 @@ const RecruiterDashboard = () => {
   };
 
   const isPendingApproval = user?.isApproved === false || user?.approved === false;
+
+  if (initialLoading) {
+    return <AuthLoadingOverlay show title="Loading your dashboard…" subtitle="Fetching your latest data." />;
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-8 font-sans px-0 sm:px-6 py-2 sm:py-6 text-[#4B5563]">

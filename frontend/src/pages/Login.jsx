@@ -4,6 +4,7 @@ import { Mail, Lock, LogIn, AlertCircle, Clock, GraduationCap, Building2 } from 
 import { useDispatch, useSelector } from 'react-redux';
 import AuthShell from '../components/AuthShell';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import AuthLoadingOverlay from '../components/AuthLoadingOverlay';
 import api, { getErrorMessage } from '../utils/api';
 import { completeSignIn, clearLocalSession, homeForRole } from '../utils/session';
 
@@ -196,6 +197,7 @@ const Login = () => {
       </form>
 
       <GoogleSignInButton onCredential={handleGoogleCredential} disabled={isLoading} />
+      <AuthLoadingOverlay show={isLoading} />
     </AuthShell>
   );
 };

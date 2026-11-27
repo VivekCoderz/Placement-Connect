@@ -9,7 +9,7 @@ import api from './utils/api';
 // Eagerly loaded: the public entry points.
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
-import PageLoader from './components/PageLoader';
+import AuthLoadingOverlay from './components/AuthLoadingOverlay';
 
 // Route-level code splitting: each of these becomes its own chunk.
 const Signup = lazy(() => import('./pages/Signup'));
@@ -58,7 +58,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Suspense fallback={<PageLoader />}>
+      <Suspense fallback={<AuthLoadingOverlay show title="Loading…" subtitle="Almost there." />}>
       <Routes>
           {/* Public Auth Routes */}
           <Route path="/login" element={<Login />} />

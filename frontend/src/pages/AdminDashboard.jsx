@@ -23,7 +23,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [, setMobileMenuOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
   // Notifications and messages panel toggle states

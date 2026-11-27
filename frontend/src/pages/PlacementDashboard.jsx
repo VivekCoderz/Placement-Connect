@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { playSuccessFanfare, playFailureBuzz } from '../utils/audio';
 import api from '../utils/api';
+import AuthLoadingOverlay from '../components/AuthLoadingOverlay';
 import { sanitizeHtml, writePrintDocument } from '../utils/sanitize';
 
 // Helper component for Company analytics row expansion in Placement Dashboard
@@ -345,8 +346,10 @@ const PlacementDashboard = () => {
     }
   };
 
+  // Full-screen loader until the first load finishes (not on later refreshes).
+  const [initialLoading, setInitialLoading] = useState(true);
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardData().finally(() => setInitialLoading(false));
   }, []);
 
   const handleSendNotification = async (e) => {
@@ -479,6 +482,10 @@ const PlacementDashboard = () => {
     const pad = (n) => n.toString().padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
+
+  if (initialLoading) {
+    return <AuthLoadingOverlay show title="Loading your dashboard…" subtitle="Fetching your latest data." />;
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 sm:space-y-8 font-sans px-0 sm:px-6 py-2 sm:py-6 text-[#4B5563]">

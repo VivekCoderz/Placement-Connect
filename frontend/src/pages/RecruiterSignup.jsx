@@ -4,6 +4,7 @@ import { Building2, Mail, Lock, User, Globe, Phone, MapPin, Briefcase, AlertCirc
 import { useDispatch, useSelector } from 'react-redux';
 import api, { getErrorMessage } from '../utils/api';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import AuthLoadingOverlay from '../components/AuthLoadingOverlay';
 import { completeSignIn, clearLocalSession, homeForRole } from '../utils/session';
 import { passwordProblem, PASSWORD_HINT } from '../utils/password';
 
@@ -435,6 +436,7 @@ const RecruiterSignup = () => {
                 <GoogleSignInButton onCredential={handleGoogleCredential} disabled={isLoading} text="signup_with" />
               </div>
             )}
+            <AuthLoadingOverlay show={isLoading} title="Registering your company…" />
 
             <div className="text-center mt-6">
               <p className="text-sm text-[#4B5563] font-medium">
