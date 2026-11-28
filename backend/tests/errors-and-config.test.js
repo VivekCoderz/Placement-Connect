@@ -93,3 +93,10 @@ describe("access and config hardening", () => {
     expect(res.headers["x-content-type-options"]).toBe("nosniff");
   });
 });
+
+test("health endpoint answers without auth (for uptime monitors)", async () => {
+  const res = await request(app).get("/health");
+  expect(res.status).toBe(200);
+  expect(res.body.status).toBe("ok");
+  expect((await request(app).head("/health")).status).toBe(200);
+});

@@ -25,6 +25,16 @@ const checkOrigin = (origin, callback) => {
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
+// Health check for uptime monitors (e.g. UptimeRobot) and the hosting platform.
+// No auth, no database work, so frequent pings stay cheap.
+const health = (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.status(200).json({ status: "ok", uptime: Math.round(process.uptime()) });
+};
+app.get("/health", health);
+app.head("/health", health);
+app.get("/api/health", health);
+
 app.use(
   cors({
     origin: checkOrigin,
