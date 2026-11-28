@@ -42,7 +42,7 @@ const registerSchema = z
     address: shortText(500).optional(),
   })
   .strip()
-  .refine((body) => body.googleCredential || (body.email && body.password), {
+  .refine((body) => body.password && (body.googleCredential || body.email), {
     message: "Email and password are required",
   });
 

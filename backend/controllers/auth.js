@@ -68,7 +68,8 @@ module.exports.postRegister = ErrorWrapper(async (req, res, next) => {
     const identity = await verifyGoogleCredential(googleCredential);
     email = identity.email;
     googleId = identity.googleId;
-    password = undefined;
+    // The password chosen on the sign-up form is kept, so the account can also sign in
+    // with email + password later.
   }
 
   if (!name || !email || (!password && !googleId) || !role) {

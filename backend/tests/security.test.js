@@ -156,6 +156,7 @@ describe("continue with Google", () => {
       name: "Google User",
       email: "attacker-chosen@example.com",
       googleCredential: CREDENTIAL,
+      password: "googleUser1",
       role: "student",
       branch: "CSE",
       year: 4,
@@ -166,7 +167,7 @@ describe("continue with Google", () => {
 
     const user = await User.findOne({ googleId: "google-sub-123" });
     expect(user.email).toBe("google.user@example.com");
-    expect(user.password).toBeUndefined();
+    expect(user.authProvider).toBe("google");
     expect(await Student.countDocuments({ email: "google.user@example.com" })).toBe(1);
 
     const res = await request(app).post("/api/auth/google").send({ credential: CREDENTIAL });
@@ -174,7 +175,8 @@ describe("continue with Google", () => {
     expect(res.body.data.token).toBeTruthy();
     expect(res.headers["set-cookie"].join(";")).toMatch(/HttpOnly/i);
 
-    // A Google-only account cannot be used with an empty / guessed password.
+    // The password chosen at sign-up also works with email login; a guess does not.
+    expect((await login("google.user@example.com", "googleUser1")).status).toBe(200);
     expect((await login("google.user@example.com", "anything123")).status).toBe(401);
   });
 

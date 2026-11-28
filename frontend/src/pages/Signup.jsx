@@ -64,17 +64,15 @@ const Signup = () => {
     setError("");
 
     const { name, email, password, rollNumber, branch, year, cgpa } = formData;
-    if (!name || !email || (!google && !password) || !rollNumber || !cgpa) {
+    if (!name || !email || !password || !rollNumber || !cgpa) {
       setError("Please fill in all fields");
       return;
     }
 
-    if (!google) {
-      const problem = passwordProblem(password);
-      if (problem) {
-        setError(problem);
-        return;
-      }
+    const problem = passwordProblem(password);
+    if (problem) {
+      setError(problem);
+      return;
     }
 
     const parsedCgpa = parseFloat(cgpa);
@@ -95,7 +93,7 @@ const Signup = () => {
       };
       await api.post(
         "/api/auth/register",
-        google ? { ...profile, googleCredential: google.credential } : { ...profile, email, password },
+        google ? { ...profile, password, googleCredential: google.credential } : { ...profile, email, password },
       );
 
       // Log in automatically
@@ -214,12 +212,7 @@ const Signup = () => {
               </div>
             </div>
 
-            {/* Password (not needed when signing up with Google) */}
-            {google ? (
-              <div className="flex items-center rounded-xl border border-[#22C55E]/30 bg-[#22C55E]/5 px-4 py-3 text-xs font-medium text-[#166534]">
-                Signing up with your Google account. No password needed.
-              </div>
-            ) : (
+            {/* Password (also set when signing up with Google, so email login works later) */}
             <div>
               <label
                 htmlFor="password"
@@ -244,9 +237,10 @@ const Signup = () => {
                   placeholder="••••••••"
                 />
               </div>
-              <p className="mt-1.5 text-[11px] text-[#94A3B8]">{PASSWORD_HINT}</p>
+              <p className="mt-1.5 text-[11px] text-[#94A3B8]">
+                {google ? 'Set a password so you can also sign in with your email. ' : ''}{PASSWORD_HINT}
+              </p>
             </div>
-            )}
 
             {/* Roll Number */}
             <div>

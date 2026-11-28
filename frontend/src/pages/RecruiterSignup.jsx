@@ -85,17 +85,15 @@ const RecruiterSignup = () => {
     setError('');
 
     const { name, email, password, companyName, industry, website, phone, address } = formData;
-    if (!name || !email || (!google && !password) || !companyName || !phone) {
+    if (!name || !email || !password || !companyName || !phone) {
       setError('Please fill in all required fields (Name, Corporate Email, Password, Company Name, Contact Phone)');
       return;
     }
 
-    if (!google) {
-      const problem = passwordProblem(password);
-      if (problem) {
-        setError(problem);
-        return;
-      }
+    const problem = passwordProblem(password);
+    if (problem) {
+      setError(problem);
+      return;
     }
 
     setIsLoading(true);
@@ -112,7 +110,7 @@ const RecruiterSignup = () => {
       };
       await api.post(
         '/api/auth/register',
-        google ? { ...profile, googleCredential: google.credential } : { ...profile, email, password },
+        google ? { ...profile, password, googleCredential: google.credential } : { ...profile, email, password },
       );
 
       // Try to sign in straight away. If the company still needs admin
@@ -280,12 +278,7 @@ const RecruiterSignup = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  {/* Password (not needed when signing up with Google) */}
-                  {google ? (
-                    <div className="flex items-center rounded-xl border border-[#22C55E]/30 bg-[#22C55E]/5 px-4 py-3 text-xs font-medium text-[#166534]">
-                      Signing up with your Google account. No password needed.
-                    </div>
-                  ) : (
+                  {/* Password (also set when signing up with Google, so email login works later) */}
                   <div className="space-y-1.5">
                     <label htmlFor="recruite-field-3" className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Password *</label>
                     <div className="relative">
@@ -304,9 +297,10 @@ const RecruiterSignup = () => {
                         placeholder="Minimum 8 characters"
                       />
                     </div>
-                    <p className="text-[11px] text-[#94A3B8]">{PASSWORD_HINT}</p>
+                    <p className="text-[11px] text-[#94A3B8]">
+                      {google ? 'Set a password so you can also sign in with your email. ' : ''}{PASSWORD_HINT}
+                    </p>
                   </div>
-                  )}
 
                   {/* Phone */}
                   <div className="space-y-1.5">
