@@ -1,16 +1,35 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { PDFParse } = require("pdf-parse");
+const { analyzeWithGemini, isGeminiConfigured } = require("./geminiScreening");
+
+const MAX_PDF_BYTES = 6 * 1024 * 1024;
+
+// Resumes are uploaded to Cloudinary; only fetch from there (no arbitrary URLs).
+const isAllowedResumeUrl = (url) => {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" && (parsed.hostname === "res.cloudinary.com" || parsed.hostname.endsWith(".cloudinary.com"));
+  } catch {
+    return false;
+  }
+};
 
 /**
  * Helper to download and parse raw text from PDF resume URL
  */
 async function extractTextFromPdf(url) {
   if (!url) return "";
+  if (!isAllowedResumeUrl(url)) {
+    console.warn("[ai] Skipping resume download from a non-Cloudinary URL");
+    return "";
+  }
   try {
-    console.log(`Downloading and parsing PDF resume from URL: ${url}`);
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
     if (!response.ok) {
       console.warn(`Failed to download PDF resume, status: ${response.status}`);
+      return "";
+    }
+    if (Number(response.headers.get("content-length")) > MAX_PDF_BYTES) {
+      console.warn("[ai] Resume PDF is too large to analyse");
       return "";
     }
     const arrayBuffer = await response.arrayBuffer();
@@ -200,8 +219,12 @@ function parseResumeText(text) {
  * Perform AI Resume screening by comparing student profile with Job description.
  * Queries the local Ollama service.
  */
+// Ollama is only used when OLLAMA_URL is set (e.g. http://127.0.0.1:11434 on a machine
+// that runs it); production hosts usually do not have it.
+const getOllamaUrl = () => (process.env.OLLAMA_URL || "").trim().replace(/\/+$/, "");
+
 async function analyzeWithOllama(student, job, resumeText) {
-  const url = "http://127.0.0.1:11434/api/chat";
+  const url = `${getOllamaUrl()}/api/chat`;
   
   const jdString = `
 Title: ${job.title}
@@ -262,7 +285,7 @@ Below 60 = Not Recommended
 Do not invent information that is not present in the resume. If data is missing, reduce the score accordingly and explain why in the 'reason' field.`;
 
   const payload = {
-    model: "qwen2.5:3b",
+    model: process.env.OLLAMA_MODEL || "qwen2.5:3b",
     messages: [
       {
         role: "system",
@@ -282,7 +305,8 @@ Do not invent information that is not present in the resume. If data is missing,
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(Number(process.env.AI_TIMEOUT_MS || 25000)),
   });
 
   if (!response.ok) {
@@ -333,111 +357,38 @@ Do not invent information that is not present in the resume. If data is missing,
   } else {
     parsed.status = "Rejected";
   }
-  
+
+  parsed.aiProvider = "ollama";
   return parsed;
 }
 
 /**
- * Perform AI Resume screening by comparing student profile with Job description.
- * Utilizes local Ollama model qwen2.5:3b, falling back to a rules engine on failure.
+ * Screen a student's resume against a job description.
+ * Engines, in order: Gemini (GEMINI_API_KEY), Ollama (OLLAMA_URL), then the built-in
+ * rules engine, which always works. The result records which engine produced it.
  */
 async function analyzeResume(student, job) {
-  let resumeText = "";
-  
-  if (student.resumeUrl) {
-    resumeText = await extractTextFromPdf(student.resumeUrl);
-  } else {
-    console.log("No resume url found on candidate profile. Using structured database fields only.");
-  }
-  
-  try {
-    console.log("Analyzing resume using local Ollama model...");
-    return await analyzeWithOllama(student, job, resumeText);
-  } catch (err) {
-    console.error("Ollama resume analysis failed, falling back to rules engine:", err);
-    return analyzeWithRules(student, job, resumeText);
-  }
-}
+  const resumeText = student.resumeUrl ? await extractTextFromPdf(student.resumeUrl) : "";
 
-/**
- * Call Gemini Generative AI to screen the candidate profile against the JD
- */
-async function analyzeWithGemini(student, job, resumeText, apiKey) {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash",
-    generationConfig: { responseMimeType: "application/json" }
-  });
-
-  const prompt = `
-    You are an expert ATS (Applicant Tracking System) parser and technical recruiter.
-    Analyze the following Student profile and their raw Resume Text against the Job Description.
-    Ensure you read the raw Resume Text to check for required and preferred skills, matching experience, projects, and certifications.
-    Do not reject a candidate if the required skills or experience are present in the Resume Text, even if they are missing in the structured profile.
-
-    === JOB DESCRIPTION ===
-    Title: ${job.title}
-    Company: ${job.companyName || "the Company"}
-    Description: ${job.description}
-    Required Skills: ${JSON.stringify(job.requiredSkills || [])}
-    Preferred Skills: ${JSON.stringify(job.preferredSkills || [])}
-    Minimum CGPA: ${job.eligibility?.cgpa || 0}
-    Eligible Branches: ${JSON.stringify(job.eligibility?.branches || [])}
-    Required Experience: ${job.experienceRequired || "0 years"}
-    ATS Score Threshold: ${job.atsThreshold || 60}
-
-    === STUDENT PROFILE ===
-    Name: ${student.name}
-    CGPA: ${student.cgpa}
-    Branch: ${student.branch}
-    Graduation Year: ${student.year}
-    Structured Skills: ${JSON.stringify(student.skills || [])}
-
-    === STUDENT RAW RESUME TEXT ===
-    ${resumeText || "No raw resume text provided."}
-
-    Provide your response strictly as a JSON object with the following fields:
-    {
-      "atsScore": (number between 0 and 100),
-      "matchPercentage": (number between 0 and 100),
-      "skillsMatch": [array of matched skills strings],
-      "missingSkills": [array of missing required skills strings],
-      "experienceMatch": "Brief explanation of how their experience matches",
-      "educationMatch": "Brief explanation of how their branch/CGPA matches requirements",
-      "aiSummary": "1-2 sentence overall summary of the candidate's fit",
-      "aiCandidateSummary": "Feedback directly addressed to the student explaining how they can improve",
-      "aiRecruiterSummary": "Internal recommendation notes for the recruiter",
-      "strengths": [array of 2-4 candidate strengths],
-      "weaknesses": [array of 1-3 gaps or weaknesses],
-      "recommendedLearning": [array of 2-3 specific topics they should learn/courses to take],
-      "selectionReason": "Detailed reason why they were shortlisted (empty if rejected)",
-      "rejectionReason": "Detailed rejection reason list of bullet points explaining why they failed (empty if shortlisted)",
-      "status": "Shortlisted" or "Borderline" or "Rejected" (determine based on: atsScore >= 80 -> "Shortlisted"; atsScore >= ATS Score Threshold -> "Borderline"; atsScore < ATS Score Threshold -> "Rejected"; verify CGPA eligibility)
+  if (isGeminiConfigured()) {
+    try {
+      return await analyzeWithGemini(student, job, resumeText);
+    } catch (err) {
+      console.error("[ai] Gemini screening failed, trying the next engine:", err.message);
     }
-  `;
-
-  const result = await model.generateContent(prompt);
-  const responseText = result.response.text();
-  const parsedData = JSON.parse(responseText);
-  
-  // Safety checks on parsed data
-  parsedData.atsScore = Number(parsedData.atsScore) || 50;
-  parsedData.matchPercentage = Number(parsedData.matchPercentage) || parsedData.atsScore;
-
-  const threshold = job.atsThreshold || 60;
-  if (parsedData.atsScore >= 80) {
-    parsedData.status = "Shortlisted";
-  } else if (parsedData.atsScore >= threshold) {
-    parsedData.status = "Borderline";
-  } else {
-    parsedData.status = "Rejected";
   }
 
-  // Ensure flat fields are fully populated
-  parsedData.matchedKeywords = parsedData.skillsMatch;
-  parsedData.missingKeywords = parsedData.missingSkills;
+  if (getOllamaUrl()) {
+    try {
+      return await analyzeWithOllama(student, job, resumeText);
+    } catch (err) {
+      console.error("[ai] Ollama screening failed, using the rules engine:", err.message);
+    }
+  }
 
-  return parsedData;
+  const result = analyzeWithRules(student, job, resumeText);
+  result.aiProvider = "rules";
+  return result;
 }
 
 /**

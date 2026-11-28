@@ -110,6 +110,11 @@ const resumeAnalysisSchema = new mongoose.Schema(
       enum: ["Shortlisted", "Rejected", "Borderline"],
       required: true,
     },
+    // Which engine produced this analysis: gemini, ollama or rules.
+    aiProvider: {
+      type: String,
+      default: "rules",
+    },
     isOverridden: {
       type: Boolean,
       default: false,

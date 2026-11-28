@@ -180,6 +180,7 @@ module.exports.applyJob = ErrorWrapper(async (req, res, next) => {
     rejectionReason: analysisResult.rejectionReason,
     selectionReason: analysisResult.selectionReason,
     status: analysisResult.status,
+    aiProvider: analysisResult.aiProvider || "rules",
   });
   await analysisDoc.save();
 
