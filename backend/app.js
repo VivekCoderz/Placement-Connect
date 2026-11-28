@@ -70,6 +70,7 @@ const analyticsRoutes = require("./routes/analytics");
 const notificationsRoutes = require("./routes/notifications");
 const adminRoutes = require("./routes/admin");
 const chatRoutes = require("./routes/chat");
+const reportsRoutes = require("./routes/reports");
 
 app.use("/auth", authRoutes); // Backward compatibility
 app.use("/api/auth", authRoutes);
@@ -82,6 +83,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/reports", reportsRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route not found" });

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { 
   Building2, Briefcase, Users, Calendar, DollarSign, Award, Plus, FileText, ArrowRight, Clock, Globe, Phone, AlertCircle, RefreshCw, CheckCircle2, XCircle, ChevronRight, Download, Send, Lock, Upload, Sparkles, ListChecks
 } from 'lucide-react';
@@ -1025,6 +1026,12 @@ const RecruiterDashboard = () => {
                     <p className="text-xs text-[#4B5563] font-semibold mt-1">Review student profile cards, credentials, portfolios and download resume.</p>
                   </div>
                   <div className="flex flex-wrap gap-2 md:self-end">
+                    <Link
+                      to={`/reports/jobs/${selectedJob._id}`}
+                      className="px-3 py-1.5 border border-[#22C55E] text-[#16A34A] hover:bg-[#22C55E]/5 text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1 active:scale-95"
+                    >
+                      Round-wise Lists &amp; Print
+                    </Link>
                     <button
                       onClick={() => setIsAtsModalOpen(true)}
                       className="px-3 py-1.5 border border-[#0B3D91] text-[#0B3D91] hover:bg-[#0B3D91]/5 text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1 active:scale-95 cursor-pointer"

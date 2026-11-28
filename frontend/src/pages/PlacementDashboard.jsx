@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { 
   Building2, Briefcase, Users, Calendar, Award, Eye, FileText, Clock, AlertCircle, RefreshCw, CheckCircle2, XCircle, ChevronRight, Download, Send, Search, BarChart3,
   Upload, TrendingUp, GraduationCap, BellRing, Sparkles, Info
@@ -770,6 +771,13 @@ const PlacementDashboard = () => {
                         <p className="text-sm font-bold text-[#22C55E] mt-1">{driveSelected}</p>
                       </div>
                     </div>
+
+                    <Link
+                      to={`/reports/jobs/${drive._id}`}
+                      className="block w-full rounded-xl border border-[#0B3D91]/20 bg-white py-2 text-center text-[11px] font-bold text-[#0B3D91] hover:bg-[#0B3D91]/5"
+                    >
+                      Round-wise &amp; Selection Lists (Print / Excel)
+                    </Link>
 
                     <div className="flex justify-between items-center text-[10px] text-[#94A3B8] font-semibold pt-2.5 border-t border-[#E5E7EB]">
                       <span>Cut-off: &gt;={drive.eligibility?.cgpa} CGPA</span>

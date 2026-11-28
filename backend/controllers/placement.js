@@ -10,6 +10,8 @@ const ErrorHandler = require("../utils/ErrorHandle");
 const { sendEmail, generateICS } = require("../utils/email");
 const { assertJobOwner } = require("../utils/ownership");
 const { processCandidateResult } = require("../services/roundEngine");
+const Round = require("../models/Round");
+const User = require("../models/User");
 
 // Upload round-wise CSV shortlist and notify students
 module.exports.uploadShortlist = ErrorWrapper(async (req, res, next) => {
@@ -545,10 +547,19 @@ module.exports.approveResult = ErrorWrapper(async (req, res, next) => {
   if (companyUser) {
     const notif = new Notification({
       userId: companyUser.recruiterId,
-      message: `Placement Cell approved your results for the ${roundName} round of "${job.title}": ${applied} candidate(s) updated${skipped.length ? `, ${skipped.length} skipped` : ""}.`,
+      message: `Placement Cell approved your results for the ${roundName} round of "${job.title}": ${applied} candidate(s) updated${skipped.length ? `, ${skipped.length} skipped` : ""}. The result list is ready to view and print in Drive Reports.`,
       type: "general"
     });
     await notif.save();
+  }
+
+  // After the last round, everyone involved gets told the final selection list is ready.
+  const lastRound = await Round.findOne({ jobId: job._id }).sort({ sequence: -1 }).select("_id");
+  if (lastRound && String(lastRound._id) === String(approval.roundId)) {
+    const selectedCount = await Application.countDocuments({ jobId: job._id, status: "Selected" });
+    const message = `Final selection list for "${job.title}" (${job.companyId?.name || "company"}) is ready: ${selectedCount} student(s) selected. View and print it in Drive Reports.`;
+    const cellUsers = await User.find({ role: "placementCell", isActive: true }).select("_id");
+    await Notification.insertMany(cellUsers.map((u) => ({ userId: u._id, message, type: "general" })));
   }
 
   return res.status(200).json({

@@ -24,6 +24,7 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 const RecruiterDashboard = lazy(() => import('./pages/RecruiterDashboard'));
 const PlacementDashboard = lazy(() => import('./pages/PlacementDashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const DriveReports = lazy(() => import('./pages/DriveReports'));
 
 function App() {
   const dispatch = useDispatch();
@@ -86,6 +87,16 @@ function App() {
                 <Layout>
                   <PlacementDashboard />
                 </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Round-wise and final selection lists (printable) */}
+          <Route
+            path="/reports/jobs/:jobId"
+            element={
+              <ProtectedRoute allowedRoles={['company', 'placementCell', 'admin']}>
+                <DriveReports />
               </ProtectedRoute>
             }
           />
